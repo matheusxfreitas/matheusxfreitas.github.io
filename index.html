@@ -209,8 +209,6 @@
         function initializeStudyPlan() {
             let plan = { tasks: {}, reviews: {} };
             
-                // LISTA PRINCIPAL DE AULAS (A QUE VOCÊ JÁ TEM)
-
             let allTasks = [
                 // --- JUNHO 2025 ---
                 { date: '2025-06-24', subject: 'Língua Portuguesa', lesson: '1', topic: 'Panorama das Classes Gramaticais', type: 'video', completed: true },
@@ -322,7 +320,6 @@
                 { date: '2025-07-31', subject: 'Língua Portuguesa', lesson: '2', topic: 'Sintaxe da Oração: Sujeito', type: 'video', completed: true },
                 { date: '2025-07-31', subject: 'Língua Portuguesa', lesson: '3', topic: 'Sintaxe da Oração: Sujeito II', type: 'video', completed: true },
                 { date: '2025-07-31', subject: 'Língua Portuguesa', lesson: '4', topic: 'Sintaxe da Oração: Sujeito III', type: 'video', completed: true },
-                
                 // --- AGOSTO 2025 ---
                 { date: '2025-08-01', subject: 'Língua Portuguesa', lesson: '4', topic: 'Sintaxe da Oração: Sujeito III', type: 'video', completed: true },
                 { date: '2025-08-01', subject: 'Conhecimentos Específicos', lesson: '6', topic: 'Psicologia Educacional', type: 'pdf', completed: true },
@@ -485,7 +482,6 @@
                 { date: '2025-08-31', subject: 'Língua Portuguesa', lesson: '1', topic: 'A Coerência Textual', type: 'video' },
                 { date: '2025-08-31', subject: 'Língua Portuguesa', lesson: '2', topic: 'Mecanismos de Coesão Textual', type: 'video' },
                 { date: '2025-08-31', subject: 'Conhecimentos Específicos', lesson: '18', topic: 'Lei Federal n. 8.069/1990 - Estatuto da Criança e do Adolescente - Parte Especial', type: 'pdf' },
-                
                 // --- SETEMBRO 2025 ---
                 { date: '2025-09-01', subject: 'Raciocínio Lógico-Matemático', lesson: '4', topic: 'Razão e Proporção, Regra de Três e Porcentagem', type: 'pdf' },
                 { date: '2025-09-01', subject: 'Administração Pública', lesson: '4', topic: 'Nacionalidade', type: 'pdf' },
@@ -698,7 +694,6 @@
                 { date: '2025-09-30', subject: 'Conhecimentos Específicos', lesson: '1', topic: 'Educação Inclusiva', type: 'video' },
                 { date: '2025-09-30', subject: 'Conhecimentos Específicos', lesson: '2', topic: 'Educação Inclusiva II', type: 'video' },
                 { date: '2025-09-30', subject: 'Conhecimentos Específicos', lesson: '3', topic: 'Educação Inclusiva III', type: 'video' },
-
                 // --- OUTUBRO 2025 ---
                 { date: '2025-10-01', subject: 'Raciocínio Lógico-Matemático', lesson: '12', topic: 'Geometria Plana: Áreas', type: 'pdf' },
                 { date: '2025-10-01', subject: 'Administração Pública', lesson: '4', topic: 'Lei n. 12.527/2011-Acesso à Informação', type: 'pdf' },
@@ -814,7 +809,7 @@
                 { date: '2025-10-18', subject: 'Conhecimentos Específicos', lesson: '2', topic: 'Resolução CFP 10/2005 II - Código de Ética do Psicólogo', type: 'video' },
                 { date: '2025-10-18', subject: 'Conhecimentos Específicos', lesson: '3', topic: 'Resolução CFP 10/2005 III - Código de Ética do Psicólogo', type: 'video' },
             ];
-            // =================== NOVA SEÇÃO: LEGISLAÇÃO MUNICIPAL ===================
+
             const legislacaoMunicipalTasks = [
                 { subject: 'Administração Pública', lesson: 'L1', topic: 'Lei Orgânica do Município de Uberlândia - Art. 1º ao 15º', type: 'legis' },
                 { subject: 'Administração Pública', lesson: 'L2', topic: 'Lei Orgânica do Município de Uberlândia - Art. 16º ao 30º', type: 'legis' },
@@ -845,8 +840,6 @@
                 }
                 currentDate.setDate(currentDate.getDate() + 1);
             }
-            // =================== FIM DA NOVA SEÇÃO ===================
-
 
             allTasks.forEach(task => {
                 const id = generateUniqueId(task);
