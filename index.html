@@ -204,6 +204,55 @@
             let plan = { tasks: {}, reviews: {} };
             
             const allTasks = [
+                    // --- DIA 10 - DOMINGO ---
+                { date: '2025-08-10', subject: 'Conhecimentos Específicos do Cargo', lesson: '9', topic: 'Psicologia Social', type: 'pdf' },
+                { date: '2025-08-10', subject: 'Língua Portuguesa', lesson: '6', topic: 'A Sintaxe do Período Composto', type: 'pdf' },
+
+                // --- DIA 11 - SEGUNDA-FEIRA ---
+                { date: '2025-08-11', subject: 'Língua Portuguesa', lesson: '6', topic: 'A Sintaxe do Período Composto', type: 'pdf' },
+
+                // --- DIA 12 - TERÇA-FEIRA ---
+                { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '6', topic: 'A Sintaxe do Período Composto', type: 'pdf' },
+                { date: '2025-08-12', subject: 'Conhecimentos Específicos do Cargo', lesson: '44', topic: 'Decreto 7.508/11 - Questões - Parte 1', type: 'video' },
+                { date: '2025-08-12', subject: 'Conhecimentos Específicos do Cargo', lesson: '45', topic: 'Decreto 7.508/11 - Arts. 3 a 7', type: 'video' },
+                { date: '2025-08-12', subject: 'Conhecimentos Específicos do Cargo', lesson: '46', topic: 'Decreto 7.508/11 - Questões - Parte 2', type: 'video' },
+                { date: '2025-08-12', subject: 'Conhecimentos Específicos do Cargo', lesson: '47', topic: 'Decreto 7.508/11 - Arts. 8 a 14', type: 'video' },
+                { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '17', topic: 'Funções Sintáticas dos Pronomes Pessoais Oblíquos', type: 'video' },
+                { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '1', topic: 'Regência Verbal e Nominal', type: 'video' },
+                { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '2', topic: 'Regência Verbal e Nominal II', type: 'video' },
+                { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '3', topic: 'Regência Verbal e Nominal III', type: 'video' },
+
+                // --- DIA 13 - QUARTA-FEIRA ---
+                { date: '2025-08-13', subject: 'Língua Portuguesa', lesson: '3', topic: 'Regência Verbal e Nominal III', type: 'video' },
+                { date: '2025-08-13', subject: 'Conhecimentos Específicos do Cargo', lesson: '10', topic: 'Avaliação Psicológica – Parte I', type: 'pdf' },
+                { date: '2025-08-13', subject: 'Língua Portuguesa', lesson: '7', topic: 'Concordância, Regência, Colocação, Crase e Pontuação', type: 'pdf' },
+                
+                // --- DIA 14 - QUINTA-FEIRA ---
+                { date: '2025-08-14', subject: 'Língua Portuguesa', lesson: '7', topic: 'Concordância, Regência, Colocação, Crase e Pontuação', type: 'pdf' },
+                { date: '2025-08-14', subject: 'Conhecimentos Específicos do Cargo', lesson: '48', topic: 'Decreto 7.508/11 - Questões', type: 'video' },
+                { date: '2025-08-14', subject: 'Conhecimentos Específicos do Cargo', lesson: '49', topic: 'Decreto 7.508/11 - Arts. 15 ao 25', type: 'video' },
+
+                // --- DIA 15 - SEXTA-FEIRA ---
+                { date: '2025-08-15', subject: 'Conhecimentos Específicos do Cargo', lesson: '49', topic: 'Decreto 7.508/11 - Arts. 15 ao 25', type: 'video' },
+                { date: '2025-08-15', subject: 'Conhecimentos Específicos do Cargo', lesson: '50', topic: 'Decreto 7.508/11 - Arts. 26 a 30', type: 'video' },
+                { date: '2025-08-15', subject: 'Conhecimentos Específicos do Cargo', lesson: '51', topic: 'Decreto 7.508/11 - Arts. 31 a 44', type: 'video' },
+                { date: '2025-08-15', subject: 'Língua Portuguesa', lesson: '1', topic: 'Emprego do Sinal Indicativo de Crase', type: 'video' },
+                { date: '2025-08-15', subject: 'Língua Portuguesa', lesson: '2', topic: 'Emprego do Sinal Indicativo de Crase II', type: 'video' },
+                { date: '2025-08-15', subject: 'Língua Portuguesa', lesson: '3', topic: 'Emprego do Sinal Indicativo de Crase III', type: 'video' },
+                { date: '2025-08-15', subject: 'Língua Portuguesa', lesson: '1', topic: 'Coordenação Vs Subordinação', type: 'video' },
+
+                // --- DIA 16 - SÁBADO ---
+                { date: '2025-08-16', subject: 'Língua Portuguesa', lesson: '1', topic: 'Coordenação Vs Subordinação', type: 'video' },
+                { date: '2025-08-16', subject: 'Conhecimentos Específicos do Cargo', lesson: '11', topic: 'Avaliação Psicológica – Parte II', type: 'pdf' },
+
+                // --- DIA 17 - DOMINGO ---
+                { date: '2025-08-17', subject: 'Conhecimentos Específicos do Cargo', lesson: '11', topic: 'Avaliação Psicológica – Parte II', type: 'pdf' },
+                { date: '2025-08-17', subject: 'Conhecimentos Específicos do Cargo', lesson: '52', topic: 'Decreto 7.508/11 - Questões', type: 'video' },
+                { date: '2025-08-17', subject: 'Conhecimentos Específicos do Cargo', lesson: '53', topic: 'Decreto 7.508/11 - Questões II', type: 'video' },
+                { date: '2025-08-17', subject: 'Conhecimentos Específicos do Cargo', lesson: '54', topic: 'Decreto 7.508/11 - Questões III', type: 'video' },
+                { date: '2025-08-17', subject: 'Conhecimentos Específicos do Cargo', lesson: '1', topic: 'Estatuto do Idoso - Lei nº 10.741/2003 I', type: 'video' },
+                { date: '2025-08-17', subject: 'Língua Portuguesa', lesson: '2', topic: 'Período Composto - Oração Subordinada Adjetiva', type: 'video' },
+                { date: '2025-08-17', subject: 'Língua Portuguesa', lesson: '3', topic: 'Período Composto - Oração Subordinada Adjetiva e Função Sintática do Pronome Relativo', type: 'video' },
                 { date: '2025-08-18', subject: 'Língua Portuguesa', lesson: '4', topic: 'Período Composto - Oração Subordinada Substantiva', type: 'video' },
                 { date: '2025-08-18', subject: 'Língua Portuguesa', lesson: '5', topic: 'Período Composto - Oração Subordinada Adverbial', type: 'video' },
                 { date: '2025-08-18', subject: 'Conhecimentos Específicos', lesson: '12', topic: 'Psicologia da Saúde e Intervenções', type: 'pdf' },
