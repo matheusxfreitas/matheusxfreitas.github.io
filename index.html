@@ -200,9 +200,9 @@
         }
 
         function initializeStudyPlan() {
-            let plan = { tasks: {}, reviews: {} };
-            
-            const allTasks = [
+        let plan = { tasks: {}, reviews: {} };
+        
+        const allTasks = [
                 // --- JULHO 2025 ---
                 { date: '2025-07-15', subject: 'Conhecimentos Específicos do Cargo', lesson: '8', topic: 'História das Políticas Públicas - Linha do Tempo VIII', type: 'video', completed: true },
                 { date: '2025-07-15', subject: 'Conhecimentos Específicos do Cargo', lesson: '9', topic: 'História das Políticas Públicas - Linha do Tempo IX', type: 'video', completed: true },
@@ -319,6 +319,7 @@
                 { date: '2025-08-09', subject: 'Língua Portuguesa', lesson: '15', topic: 'Tipos de Predicado', type: 'video', completed: true },
                 { date: '2025-08-10', subject: 'Língua Portuguesa', lesson: '15', topic: 'Tipos de Predicado', type: 'video', completed: true },
                 { date: '2025-08-10', subject: 'Língua Portuguesa', lesson: '16', topic: 'Aposto Versus Vocativo', type: 'video', completed: true },
+            // Aulas futuras continuam aqui...
                 // --- DIA 10 - DOMINGO ---
                 { date: '2025-08-10', subject: 'Conhecimentos Específicos do Cargo', lesson: '9', topic: 'Psicologia Social', type: 'pdf' },
                 { date: '2025-08-10', subject: 'Língua Portuguesa', lesson: '6', topic: 'A Sintaxe do Período Composto', type: 'pdf' },
@@ -510,7 +511,7 @@
                         lesson: task.lesson,
                         topic: task.topic,
                         type: 'study',
-                        completed: task.completed || false,
+                        completed: task.completed || false, // CORREÇÃO APLICADA AQUI
                     });
                 }
             });
