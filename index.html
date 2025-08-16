@@ -40,7 +40,7 @@
         
         <header class="mb-8">
             <div class="text-center">
-                <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Meu Painel de Estudos 2.0<</h1>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Meu Painel de Estudos 2.0</h1>
                 <p class="text-lg text-gray-600 mt-2">Missão: Aprovação Psicólogo(a) - Prefeitura de Uberlândia</p>
             </div>
             <div class="mt-6 flex flex-wrap justify-center gap-2">
@@ -144,6 +144,21 @@
     </div>
 
     <script>
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+    apiKey: "AIzaSyAVd3uPqsJdyi1a3VYZbncrLZeq7zF-vNE",
+    authDomain: "meu-painel-de-estudos-5d0ee.firebaseapp.com",
+    projectId: "meu-painel-de-estudos-5d0ee",
+    storageBucket: "meu-painel-de-estudos-5d0ee.firebasestorage.app",
+    messagingSenderId: "700808378235",
+    appId: "1:700808378235:web:64bc3701361324c2c36fde"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = firebase.firestore(); // Nosso banco de dados!
+
         const STORAGE_KEY = 'studyPlanProgress_psicologoUdi_v5';
         let viewDate = new Date();
         viewDate.setHours(0, 0, 0, 0);
@@ -924,28 +939,7 @@
     startCountdown();
     document.getElementById('currentDate').textContent = formatDateDMY(new Date());
 });
-    </script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-<script>
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from "firebase/app";
-    // TODO: Add SDKs for Firebase products that you want to use
-    // https://firebase.google.com/docs/web/setup#available-libraries
-
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-    apiKey: "AIzaSyAVd3uPqsJdyi1a3VYZbncrLZeq7zF-vNE",
-    authDomain: "meu-painel-de-estudos-5d0ee.firebaseapp.com",
-    projectId: "meu-painel-de-estudos-5d0ee",
-    storageBucket: "meu-painel-de-estudos-5d0ee.firebasestorage.app",
-    messagingSenderId: "700808378235",
-    appId: "1:700808378235:web:64bc3701361324c2c36fde"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = firebase.firestore(); // Nosso banco de dados!
+    
 </script>
 </body>
 </html>
