@@ -403,17 +403,34 @@
         }
 
         const saveState = () => {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(studyPlan));
-        };
+    // Agora salvamos no Firestore em vez do localStorage
+    db.collection("progresso").doc("meuPlano").set(studyPlan)
+        .then(() => {
+            console.log("Progresso salvo com sucesso no Firebase!");
+        })
+        .catch((error) => {
+            console.error("Erro ao salvar progresso: ", error);
+        });
+};
 
-        const loadState = () => {
-            const savedData = localStorage.getItem(STORAGE_KEY);
-            if (savedData) {
-                studyPlan = JSON.parse(savedData);
-            } else {
-                studyPlan = initializeStudyPlan();
-            }
-        };
+        const loadState = async () => {
+    const docRef = db.collection("progresso").doc("meuPlano");
+    try {
+        const doc = await docRef.get();
+        if (doc.exists) {
+            console.log("Progresso carregado do Firebase!");
+            studyPlan = doc.data();
+        } else {
+            // Documento não existe (primeiro acesso), inicializa o plano
+            console.log("Nenhum progresso encontrado, inicializando novo plano.");
+            studyPlan = initializeStudyPlan();
+        }
+    } catch (error) {
+        console.error("Erro ao carregar progresso: ", error);
+        // Em caso de erro, carrega o plano padrão para não quebrar a aplicação
+        studyPlan = initializeStudyPlan();
+    }
+};
 
         const renderCalendar = (date) => {
             const calendarContainer = document.getElementById('calendar-container');
@@ -847,15 +864,39 @@
             }
         });
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadState();
-            renderPlan(viewDate);
-            setupChart();
-            updateProgress();
-            startCountdown();
-            document.getElementById('currentDate').textContent = formatDateDMY(new Date());
-        });
+        document.addEventListener('DOMContentLoaded', async () => {
+    // Agora esperamos o loadState terminar antes de renderizar
+    await loadState(); 
+
+    renderPlan(viewDate);
+    setupChart();
+    updateProgress();
+    startCountdown();
+    document.getElementById('currentDate').textContent = formatDateDMY(new Date());
+});
     </script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script>
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "firebase/app";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+    apiKey: "AIzaSyAVd3uPqsJdyi1a3VYZbncrLZeq7zF-vNE",
+    authDomain: "meu-painel-de-estudos-5d0ee.firebaseapp.com",
+    projectId: "meu-painel-de-estudos-5d0ee",
+    storageBucket: "meu-painel-de-estudos-5d0ee.firebasestorage.app",
+    messagingSenderId: "700808378235",
+    appId: "1:700808378235:web:64bc3701361324c2c36fde"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = firebase.firestore(); // Nosso banco de dados!
+</script>
 </body>
 </html>
 
