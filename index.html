@@ -985,11 +985,18 @@
             const card = document.createElement('div');
             let cardClasses = 'task-card p-4 rounded-lg shadow-sm';
             if (task.type.startsWith('review')) cardClasses += ` ${task.type}`;
+            if (task.type === 'legis') cardClasses += ' legis'; // Adiciona a classe para legislação
             if (isOverdue) cardClasses += ' overdue';
 
             card.className = cardClasses;
 
-            let title = task.type === 'study' ? `${task.subject} - Aula ${task.lesson}` : `${task.reviewType}: ${task.subject} - Aula ${task.lesson}`;
+            // LÓGICA DO TÍTULO CORRIGIDA
+            let title = '';
+            if (task.type.startsWith('review')) {
+                title = `${task.reviewType}: ${task.subject} - Aula ${task.lesson}`;
+            } else {
+                title = `${task.subject} - Aula ${task.lesson}`;
+            }
 
             card.innerHTML = `
                 <div class="flex items-start space-x-4">
