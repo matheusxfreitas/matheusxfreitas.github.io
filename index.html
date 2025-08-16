@@ -24,6 +24,7 @@
         .task-card.overdue { border-left-color: #ef4444; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
         .task-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .task-card.legis { border-left-color: #38bdf8; } /* Cor para Legislação */
         .task-checkbox:checked + label { text-decoration: line-through; color: #9A9A9A; }
         .chart-container { position: relative; width: 100%; max-width: 250px; margin-left: auto; margin-right: auto; height: 250px; }
         .modal.hidden { display: none; }
@@ -208,7 +209,9 @@
         function initializeStudyPlan() {
             let plan = { tasks: {}, reviews: {} };
             
-            const allTasks = [
+                // LISTA PRINCIPAL DE AULAS (A QUE VOCÊ JÁ TEM)
+
+            let allTasks = [
                 // --- JUNHO 2025 ---
                 { date: '2025-06-24', subject: 'Língua Portuguesa', lesson: '1', topic: 'Panorama das Classes Gramaticais', type: 'video', completed: true },
                 { date: '2025-06-24', subject: 'Língua Portuguesa', lesson: '2', topic: 'Panorama das Classes Gramaticais II', type: 'video', completed: true },
@@ -811,7 +814,39 @@
                 { date: '2025-10-18', subject: 'Conhecimentos Específicos', lesson: '2', topic: 'Resolução CFP 10/2005 II - Código de Ética do Psicólogo', type: 'video' },
                 { date: '2025-10-18', subject: 'Conhecimentos Específicos', lesson: '3', topic: 'Resolução CFP 10/2005 III - Código de Ética do Psicólogo', type: 'video' },
             ];
-            // =================== FIM DA LISTA DE AULAS COMPLETA ===================
+            // =================== NOVA SEÇÃO: LEGISLAÇÃO MUNICIPAL ===================
+            const legislacaoMunicipalTasks = [
+                { subject: 'Administração Pública', lesson: 'L1', topic: 'Lei Orgânica do Município de Uberlândia - Art. 1º ao 15º', type: 'legis' },
+                { subject: 'Administração Pública', lesson: 'L2', topic: 'Lei Orgânica do Município de Uberlândia - Art. 16º ao 30º', type: 'legis' },
+                { subject: 'Administração Pública', lesson: 'L3', topic: 'Lei Orgânica - Competências do Município', type: 'legis' },
+                { subject: 'Administração Pública', lesson: 'L4', topic: 'Lei Orgânica - Servidores Públicos', type: 'legis' },
+                { subject: 'Administração Pública', lesson: 'L5', topic: 'Estatuto dos Servidores (LC nº 40/1992) - Disposições Preliminares', type: 'legis' },
+                { subject: 'Administração Pública', lesson: 'L6', topic: 'Estatuto dos Servidores - Direitos e Vantagens', type: 'legis' },
+                { subject: 'Administração Pública', lesson: 'L7', topic: 'Estatuto dos Servidores - Regime Disciplinar', type: 'legis' },
+                { subject: 'Administração Pública', lesson: 'L8', topic: 'Estatuto dos Servidores - Responsabilidades', type: 'legis' },
+                { subject: 'Administração Pública', lesson: 'L9', topic: 'Plano de Cargos e Carreiras (LC nº 671/2018) - Estrutura Geral', type: 'legis' },
+                { subject: 'Administração Pública', lesson: 'L10', topic: 'Revisão Geral - Legislação Municipal', type: 'legis' },
+            ];
+
+            let currentDate = new Date('2025-08-18T00:00:00');
+            const endDate = new Date('2025-10-20T00:00:00');
+            let legislacaoIndex = 0;
+
+            while (currentDate <= endDate && legislacaoIndex < legislacaoMunicipalTasks.length) {
+                const dayOfWeek = currentDate.getDay();
+                // Adiciona apenas de Segunda (1) a Quinta (4)
+                if (dayOfWeek >= 1 && dayOfWeek <= 4) {
+                    const task = legislacaoMunicipalTasks[legislacaoIndex];
+                    allTasks.push({
+                        ...task,
+                        date: formatDateYMD(currentDate),
+                    });
+                    legislacaoIndex++;
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            // =================== FIM DA NOVA SEÇÃO ===================
+
 
             allTasks.forEach(task => {
                 const id = generateUniqueId(task);
@@ -826,7 +861,7 @@
                         subject: task.subject,
                         lesson: task.lesson,
                         topic: task.topic,
-                        type: 'study',
+                        type: task.type || 'study',
                         completed: task.completed || false, 
                     });
                 }
@@ -912,28 +947,44 @@
             const today = new Date();
             today.setHours(0,0,0,0);
 
-            let tasksForDay = studyPlan.tasks[dateStr] || [];
-            let reviewsForDay = studyPlan.reviews[dateStr] || [];
-            
+            const tasksForDay = studyPlan.tasks[dateStr] || [];
+            const reviewsForDay = studyPlan.reviews[dateStr] || [];
+
+            // FILTROS PARA OS BLOCOS DE ESTUDO
+            const bloco1 = tasksForDay.filter(t => t.type === 'video' && (t.subject === 'Língua Portuguesa' || t.subject === 'Conhecimentos Específicos'));
+            const bloco2 = tasksForDay.filter(t => t.type === 'pdf' && (t.subject === 'Raciocínio Lógico-Matemático' || t.subject === 'Administração Pública'));
+            const bloco3Legis = tasksForDay.filter(t => t.type === 'legis');
+
             if (tasksForDay.length === 0 && reviewsForDay.length === 0) {
-                planContent.innerHTML = `<div class="text-center p-4 bg-gray-50 rounded-lg"><p class="text-gray-500">Nenhuma tarefa agendada para hoje.</p></div>`;
+                planContent.innerHTML = `<div class="text-center p-4 bg-gray-50 rounded-lg"><p class="text-gray-500">Nenhuma tarefa agendada para hoje. Dia de descanso!</p></div>`;
                 return;
             }
 
-            if (tasksForDay.length > 0) {
-                planContent.innerHTML += `<h3 class="text-lg font-semibold text-gray-700 mt-4 border-b pb-2">📚 Aulas do Dia</h3>`;
-                tasksForDay.forEach(task => {
-                    const isOverdue = !task.completed && isBefore(new Date(task.date), today);
-                    planContent.appendChild(createTaskCard(task, isOverdue));
-                });
+            // Renderiza Bloco 1: Vídeoaulas (Manhã)
+            if(bloco1.length > 0) {
+                planContent.innerHTML += `<h3 class="text-lg font-bold text-gray-800 mt-4 border-b-2 border-amber-500 pb-2">☕ Bloco 1: Conteúdo Principal (Manhã)</h3>`;
+                bloco1.forEach(task => planContent.appendChild(createTaskCard(task, !task.completed && isBefore(new Date(task.date), today))));
             }
 
+            // Renderiza Bloco 2: PDFs (Tarde)
+            if(bloco2.length > 0) {
+                planContent.innerHTML += `<h3 class="text-lg font-bold text-gray-800 mt-6 border-b-2 border-sky-500 pb-2">📖 Bloco 2: Leitura e Lógica (Tarde)</h3>`;
+                bloco2.forEach(task => planContent.appendChild(createTaskCard(task, !task.completed && isBefore(new Date(task.date), today))));
+            }
+            
+            // Renderiza Bloco 3: Estudo Ativo
+            planContent.innerHTML += `<h3 class="text-lg font-bold text-gray-800 mt-6 border-b-2 border-emerald-500 pb-2">🎯 Bloco 3: Estudo Ativo e Fixação</h3>`;
+            if (bloco3Legis.length > 0) {
+                bloco3Legis.forEach(task => planContent.appendChild(createTaskCard(task, !task.completed && isBefore(new Date(task.date), today))));
+            }
+            // Card Fixo para Exercícios (preparação para o próximo módulo)
+            planContent.innerHTML += `<div class="task-card p-4 rounded-lg shadow-sm border-l-4 border-gray-400"> <p class="font-semibold text-gray-700">🎯 Meta de Exercícios do Dia</p> <p class="text-gray-600 text-sm">Focar em 2 matérias conforme o plano de rotação semanal.</p></div>`;
+
+
+            // Renderiza Revisões Agendadas
             if (reviewsForDay.length > 0) {
-                planContent.innerHTML += `<h3 class="text-lg font-semibold text-gray-700 mt-6 border-b pb-2">🔁 Revisões Agendadas</h3>`;
-                reviewsForDay.forEach(review => {
-                    const isOverdue = !review.completed && isBefore(new Date(review.date), today);
-                    planContent.appendChild(createTaskCard(review, isOverdue));
-                });
+                planContent.innerHTML += `<h3 class="text-lg font-bold text-gray-800 mt-6 border-b-2 border-red-400 pb-2">🔁 Revisões Agendadas</h3>`;
+                reviewsForDay.forEach(review => planContent.appendChild(createTaskCard(review, !review.completed && isBefore(new Date(review.date), today))));
             }
         };
 
