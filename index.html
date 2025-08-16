@@ -26,8 +26,6 @@
         .task-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         .task-checkbox:checked + label { text-decoration: line-through; color: #9A9A9A; }
         .chart-container { position: relative; width: 100%; max-width: 250px; margin-left: auto; margin-right: auto; height: 250px; }
-        .gemini-button { background-color: #f0e9e0; color: #8a6c3a; transition: all 0.2s ease-in-out; }
-        .gemini-button:hover { background-color: #e9dccf; transform: translateY(-1px); }
         .modal.hidden { display: none; }
         .modal-content { white-space: pre-wrap; }
         .control-button { background-color: #fff; border: 1px solid #ddd; transition: all 0.2s ease; }
@@ -153,7 +151,6 @@
 
         const planContent = document.getElementById('plan-content');
         const progressText = document.getElementById('progressText');
-        const geminiModal = document.getElementById('geminiModal');
         const allTasksModal = document.getElementById('allTasksModal');
         const modalTitle = document.getElementById('modalTitle');
         const modalContent = document.getElementById('modalContent');
@@ -539,7 +536,7 @@
                         </label>
                     </div>
                 </div>
-                ${geminiButtonsHTML}
+                
             `;
             return card;
         }
@@ -612,50 +609,6 @@
             });
         };
         
-        async function callGemini(prompt, maxRetries = 3) {
-            let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
-            const payload = { contents: chatHistory };
-            const apiKey = "";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-            
-            for (let attempt = 0; attempt < maxRetries; attempt++) {
-                try {
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    const result = await response.json();
-                    if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts) {
-                        return result.candidates[0].content.parts[0].text;
-                    } else {
-                        throw new Error("Resposta da API inválida ou vazia.");
-                    }
-                } catch (error) {
-                    if (attempt === maxRetries - 1) return `Erro ao contatar o assistente de IA: ${error.message}. Por favor, tente novamente mais tarde.`;
-                    await new Promise(res => setTimeout(res, Math.pow(2, attempt) * 1000));
-                }
-            }
-        }
-
-        const handleGeminiAction = async (action, topic) => {
-            geminiModal.classList.remove('hidden');
-            modalLoading.style.display = 'block';
-            modalContent.innerHTML = '';
-            
-            let prompt = '';
-            if (action === 'explain') {
-                modalTitle.textContent = `✨ Explicando: ${topic}`;
-                prompt = `Com base no edital para Psicólogo da Prefeitura de Uberlândia (banca Consulplan), explique o seguinte tópico de forma clara, objetiva e focada para concursos: "${topic}". Estruture a resposta com os pontos mais importantes.`;
-            } else if (action === 'generate_questions') {
-                modalTitle.textContent = `✨ Questões sobre: ${topic}`;
-                prompt = `Você é um especialista na banca Consulplan. Elabore 3 questões inéditas de múltipla escolha (A, B, C, D) sobre o tópico "${topic}", seguindo o estilo de cobrança da Consulplan para o concurso de Psicólogo da Prefeitura de Uberlândia. Ao final, apresente o gabarito comentado, explicando o porquê de cada alternativa correta e incorreta.`;
-            }
-            const responseText = await callGemini(prompt);
-            modalLoading.style.display = 'none';
-            modalContent.innerHTML = responseText;
-        };
 
         function renderAllTasksTable(filter = '') {
             const tableBody = document.getElementById('all-tasks-table-body');
@@ -733,15 +686,6 @@
                     saveState();
                     renderPlan(viewDate);
                 }
-            }
-        });
-
-        planContent.addEventListener('click', (e) => {
-            if (e.target.closest('.gemini-button')) {
-                const button = e.target.closest('.gemini-button');
-                const action = button.dataset.action;
-                const topic = button.dataset.topic;
-                handleGeminiAction(action, topic);
             }
         });
 
