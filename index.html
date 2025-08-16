@@ -44,6 +44,7 @@
                 <p class="text-lg text-gray-600 mt-2">Missão: Aprovação Psicólogo(a) - Prefeitura de Uberlândia</p>
             </div>
             <div class="mt-6 flex flex-wrap justify-center gap-2">
+                <button id="view-overdue-tasks-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-red-600 border-red-300">Visualizar Aulas Atrasadas</button>
                 <button id="view-all-tasks-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Visualizar Aulas Cadastradas</button>
                 <button id="export-backup-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Exportar Backup (Progresso)</button>
                 <button id="import-backup-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Importar Backup (Progresso)</button>
@@ -680,7 +681,55 @@
             });
             tableBody.innerHTML = html;
         }
-        
+        function renderOverdueTasks() {
+          // Esconde o calendário, já que estamos em uma visualização de lista
+          const calendarContainer = document.getElementById('calendar-container');
+          if(calendarContainer) calendarContainer.innerHTML = '';
+          
+          // Limpa a área de conteúdo principal
+          planContent.innerHTML = '';
+
+          // Pega a data de hoje sem as horas para comparação
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          // Junta todas as tarefas de estudo e revisão em uma única lista
+          const allTasksAndReviews = Object.values(studyPlan.tasks).flat().concat(Object.values(studyPlan.reviews).flat());
+
+          // Filtra para encontrar apenas as tarefas atrasadas (não completas e com data anterior a hoje)
+          const overdueTasks = allTasksAndReviews.filter(task => {
+              const taskDate = new Date(task.date + 'T00:00:00');
+              return !task.completed && taskDate < today;
+          });
+
+          // Ordena as tarefas da mais antiga para a mais nova
+          overdueTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+          // Cria um botão para voltar à visualização do calendário
+          const backButton = document.createElement('button');
+          backButton.innerHTML = '&#x2B05;&#xFE0F; Voltar ao Calendário';
+          backButton.className = 'control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm mb-4';
+          backButton.onclick = () => renderPlan(viewDate); // Re-renderiza a visão normal
+          planContent.appendChild(backButton);
+          
+          // Se não houver tarefas atrasadas, mostra uma mensagem de parabéns
+          if (overdueTasks.length === 0) {
+              planContent.innerHTML += `<div class="text-center p-4 bg-green-50 rounded-lg border border-green-200"><p class="text-green-700 font-semibold">Parabéns! Nenhuma tarefa atrasada.</p></div>`;
+              return;
+          }
+          
+          // Se houver tarefas, mostra o título e a lista
+          const title = document.createElement('h3');
+          title.className = "text-lg font-semibold text-gray-700 mt-4 border-b pb-2 mb-4";
+          title.textContent = `🚨 ${overdueTasks.length} Tarefa(s) Atrasada(s)`;
+          planContent.appendChild(title);
+
+          // Cria e adiciona o card de cada tarefa atrasada na tela
+          overdueTasks.forEach(task => {
+              const taskCard = createTaskCard(task, true); // O 'true' força o estilo de atrasado
+              planContent.appendChild(taskCard);
+          });
+      }
         planContent.addEventListener('change', (e) => {
             if (e.target.matches('.task-checkbox')) {
                 const { id, date, type } = e.target.dataset;
@@ -861,6 +910,7 @@
                 renderPlan(viewDate);
                 updateProgress();
                 alert('Progresso resetado.');
+        document.getElementById('view-overdue-tasks-btn').addEventListener('click', renderOverdueTasks);
             }
         });
 
