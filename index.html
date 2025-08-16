@@ -510,7 +510,7 @@
                         lesson: task.lesson,
                         topic: task.topic,
                         type: 'study',
-                        completed: false,
+                        completed: task.completed || false,
                     });
                 }
             });
