@@ -144,802 +144,800 @@
     </div>
 
     <script>
-
-    // Your web app's Firebase configuration
+// =================== INÍCIO DO CÓDIGO CORRIGIDO ===================
     const firebaseConfig = {
-    apiKey: "AIzaSyAVd3uPqsJdyi1a3VYZbncrLZeq7zF-vNE",
-    authDomain: "meu-painel-de-estudos-5d0ee.firebaseapp.com",
-    projectId: "meu-painel-de-estudos-5d0ee",
-    storageBucket: "meu-painel-de-estudos-5d0ee.firebasestorage.app",
-    messagingSenderId: "700808378235",
-    appId: "1:700808378235:web:64bc3701361324c2c36fde"
+        apiKey: "AIzaSyAVd3uPqsJdyi1a3VYZbncrLZeq7zF-vNE",
+        authDomain: "meu-painel-de-estudos-5d0ee.firebaseapp.com",
+        projectId: "meu-painel-de-estudos-5d0ee",
+        storageBucket: "meu-painel-de-estudos-5d0ee.appspot.com",
+        messagingSenderId: "700808378235",
+        appId: "1:700808378235:web:64bc3701361324c2c36fde"
     };
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
+    // CORREÇÃO 1: A chamada de inicialização foi corrigida para o formato da v8 (firebase.initializeApp)
+    const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore(); // Nosso banco de dados!
 
-        const STORAGE_KEY = 'studyPlanProgress_psicologoUdi_v5';
-        let viewDate = new Date();
-        viewDate.setHours(0, 0, 0, 0);
-        
-        let studyPlan = {};
+    const STORAGE_KEY = 'studyPlanProgress_psicologoUdi_v5';
+    let viewDate = new Date();
+    viewDate.setHours(0, 0, 0, 0);
+    
+    let studyPlan = {};
 
-        const planContent = document.getElementById('plan-content');
-        const progressText = document.getElementById('progressText');
-        const geminiModal = document.getElementById('geminiModal');
-        const allTasksModal = document.getElementById('allTasksModal');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalContent = document.getElementById('modalContent');
-        const modalLoading = document.getElementById('modalLoading');
-        let progressChart;
+    const planContent = document.getElementById('plan-content');
+    const progressText = document.getElementById('progressText');
+    const geminiModal = document.getElementById('geminiModal');
+    const allTasksModal = document.getElementById('allTasksModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalContent = document.getElementById('modalContent');
+    const modalLoading = document.getElementById('modalLoading');
+    let progressChart;
 
-        function formatDateYMD(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        function formatDateDMY(date) {
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = date.getFullYear();
-            return `${day}/${month}/${year}`;
-        }
-
-        function addDays(date, days) {
-            const result = new Date(date);
-            result.setDate(result.getDate() + days);
-            return result;
-        }
-
-        function subDays(date, days) {
-            const result = new Date(date);
-            result.setDate(result.getDate() - days);
-            return result;
-        }
-        
-        function isSameDay(date1, date2) {
-            return date1.getFullYear() === date2.getFullYear() &&
-                   date1.getMonth() === date2.getMonth() &&
-                   date1.getDate() === date2.getDate();
-        }
-
-        function isBefore(date1, date2) {
-            const d1 = new Date(date1.getFullYear(), date1.getMonth(), date1.getDate());
-            const d2 = new Date(date2.getFullYear(), date2.getMonth(), date2.getDate());
-            return d1.getTime() < d2.getTime();
-        }
-
-        function generateUniqueId(task) {
-             return `${task.subject.replace(/[^a-zA-Z0-9]/g, '')}-${task.lesson.replace(/[^a-zA-Z0-9]/g, '')}-${task.type}`;
-        }
-
-        function initializeStudyPlan() {
-            let plan = { tasks: {}, reviews: {} };
-            
-            const allTasks = [
-                    // --- DIA 10 - DOMINGO ---
-                { date: '2025-08-10', subject: 'Conhecimentos Específicos do Cargo', lesson: '9', topic: 'Psicologia Social', type: 'pdf' },
-                { date: '2025-08-10', subject: 'Língua Portuguesa', lesson: '6', topic: 'A Sintaxe do Período Composto', type: 'pdf' },
-
-                // --- DIA 11 - SEGUNDA-FEIRA ---
-                { date: '2025-08-11', subject: 'Língua Portuguesa', lesson: '6', topic: 'A Sintaxe do Período Composto', type: 'pdf' },
-
-                // --- DIA 12 - TERÇA-FEIRA ---
-                { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '6', topic: 'A Sintaxe do Período Composto', type: 'pdf' },
-                { date: '2025-08-12', subject: 'Conhecimentos Específicos do Cargo', lesson: '44', topic: 'Decreto 7.508/11 - Questões - Parte 1', type: 'video' },
-                { date: '2025-08-12', subject: 'Conhecimentos Específicos do Cargo', lesson: '45', topic: 'Decreto 7.508/11 - Arts. 3 a 7', type: 'video' },
-                { date: '2025-08-12', subject: 'Conhecimentos Específicos do Cargo', lesson: '46', topic: 'Decreto 7.508/11 - Questões - Parte 2', type: 'video' },
-                { date: '2025-08-12', subject: 'Conhecimentos Específicos do Cargo', lesson: '47', topic: 'Decreto 7.508/11 - Arts. 8 a 14', type: 'video' },
-                { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '17', topic: 'Funções Sintáticas dos Pronomes Pessoais Oblíquos', type: 'video' },
-                { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '1', topic: 'Regência Verbal e Nominal', type: 'video' },
-                { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '2', topic: 'Regência Verbal e Nominal II', type: 'video' },
-                { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '3', topic: 'Regência Verbal e Nominal III', type: 'video' },
-
-                // --- DIA 13 - QUARTA-FEIRA ---
-                { date: '2025-08-13', subject: 'Língua Portuguesa', lesson: '3', topic: 'Regência Verbal e Nominal III', type: 'video' },
-                { date: '2025-08-13', subject: 'Conhecimentos Específicos do Cargo', lesson: '10', topic: 'Avaliação Psicológica – Parte I', type: 'pdf' },
-                { date: '2025-08-13', subject: 'Língua Portuguesa', lesson: '7', topic: 'Concordância, Regência, Colocação, Crase e Pontuação', type: 'pdf' },
-                
-                // --- DIA 14 - QUINTA-FEIRA ---
-                { date: '2025-08-14', subject: 'Língua Portuguesa', lesson: '7', topic: 'Concordância, Regência, Colocação, Crase e Pontuação', type: 'pdf' },
-                { date: '2025-08-14', subject: 'Conhecimentos Específicos do Cargo', lesson: '48', topic: 'Decreto 7.508/11 - Questões', type: 'video' },
-                { date: '2025-08-14', subject: 'Conhecimentos Específicos do Cargo', lesson: '49', topic: 'Decreto 7.508/11 - Arts. 15 ao 25', type: 'video' },
-
-                // --- DIA 15 - SEXTA-FEIRA ---
-                { date: '2025-08-15', subject: 'Conhecimentos Específicos do Cargo', lesson: '49', topic: 'Decreto 7.508/11 - Arts. 15 ao 25', type: 'video' },
-                { date: '2025-08-15', subject: 'Conhecimentos Específicos do Cargo', lesson: '50', topic: 'Decreto 7.508/11 - Arts. 26 a 30', type: 'video' },
-                { date: '2025-08-15', subject: 'Conhecimentos Específicos do Cargo', lesson: '51', topic: 'Decreto 7.508/11 - Arts. 31 a 44', type: 'video' },
-                { date: '2025-08-15', subject: 'Língua Portuguesa', lesson: '1', topic: 'Emprego do Sinal Indicativo de Crase', type: 'video' },
-                { date: '2025-08-15', subject: 'Língua Portuguesa', lesson: '2', topic: 'Emprego do Sinal Indicativo de Crase II', type: 'video' },
-                { date: '2025-08-15', subject: 'Língua Portuguesa', lesson: '3', topic: 'Emprego do Sinal Indicativo de Crase III', type: 'video' },
-                { date: '2025-08-15', subject: 'Língua Portuguesa', lesson: '1', topic: 'Coordenação Vs Subordinação', type: 'video' },
-
-                // --- DIA 16 - SÁBADO ---
-                { date: '2025-08-16', subject: 'Língua Portuguesa', lesson: '1', topic: 'Coordenação Vs Subordinação', type: 'video' },
-                { date: '2025-08-16', subject: 'Conhecimentos Específicos do Cargo', lesson: '11', topic: 'Avaliação Psicológica – Parte II', type: 'pdf' },
-
-                // --- DIA 17 - DOMINGO ---
-                { date: '2025-08-17', subject: 'Conhecimentos Específicos do Cargo', lesson: '11', topic: 'Avaliação Psicológica – Parte II', type: 'pdf' },
-                { date: '2025-08-17', subject: 'Conhecimentos Específicos do Cargo', lesson: '52', topic: 'Decreto 7.508/11 - Questões', type: 'video' },
-                { date: '2025-08-17', subject: 'Conhecimentos Específicos do Cargo', lesson: '53', topic: 'Decreto 7.508/11 - Questões II', type: 'video' },
-                { date: '2025-08-17', subject: 'Conhecimentos Específicos do Cargo', lesson: '54', topic: 'Decreto 7.508/11 - Questões III', type: 'video' },
-                { date: '2025-08-17', subject: 'Conhecimentos Específicos do Cargo', lesson: '1', topic: 'Estatuto do Idoso - Lei nº 10.741/2003 I', type: 'video' },
-                { date: '2025-08-17', subject: 'Língua Portuguesa', lesson: '2', topic: 'Período Composto - Oração Subordinada Adjetiva', type: 'video' },
-                { date: '2025-08-17', subject: 'Língua Portuguesa', lesson: '3', topic: 'Período Composto - Oração Subordinada Adjetiva e Função Sintática do Pronome Relativo', type: 'video' },
-                { date: '2025-08-18', subject: 'Língua Portuguesa', lesson: '4', topic: 'Período Composto - Oração Subordinada Substantiva', type: 'video' },
-                { date: '2025-08-18', subject: 'Língua Portuguesa', lesson: '5', topic: 'Período Composto - Oração Subordinada Adverbial', type: 'video' },
-                { date: '2025-08-18', subject: 'Conhecimentos Específicos', lesson: '12', topic: 'Psicologia da Saúde e Intervenções', type: 'pdf' },
-                { date: '2025-08-18', subject: 'Raciocínio Lógico-Matemático', lesson: '1', topic: 'Operadores Lógicos Fundamentais', type: 'pdf' },
-                { date: '2025-08-19', subject: 'Conhecimentos Específicos', lesson: '2', topic: 'Estatuto do Idoso - Lei nº 10.741/2003 II', type: 'video' },
-                { date: '2025-08-19', subject: 'Conhecimentos Específicos', lesson: '3', topic: 'Estatuto do Idoso - Lei nº 10.741/2003 III', type: 'video' },
-                { date: '2025-08-19', subject: 'Conhecimentos Específicos', lesson: '4', topic: 'Estatuto do Idoso - Lei nº 10.741/2003 IV', type: 'video' },
-                { date: '2025-08-19', subject: 'Conhecimentos Específicos', lesson: '5', topic: 'Estatuto do Idoso - Lei nº 10.741/2003 V', type: 'video' },
-                { date: '2025-08-19', subject: 'Língua Portuguesa', lesson: '6', topic: 'Período Composto - Oração Subordinada Adverbial II', type: 'video' },
-                { date: '2025-08-19', subject: 'Língua Portuguesa', lesson: '7', topic: 'Período Composto - Orações Reduzidas', type: 'video' },
-                { date: '2025-08-19', subject: 'Língua Portuguesa', lesson: '8', topic: 'Período Composto - Orações Coordenadas', type: 'video' },
-                { date: '2025-08-19', subject: 'Raciocínio Lógico-Matemático', lesson: '1', topic: 'Operadores Lógicos Fundamentais', type: 'pdf' },
-                { date: '2025-08-19', subject: 'Administração Pública', lesson: '1', topic: 'Princípios Fundamentais', type: 'pdf' },
-                { date: '2025-08-20', subject: 'Língua Portuguesa', lesson: '9', topic: 'Período Composto - Orações Coordenadas II', type: 'video' },
-                { date: '2025-08-20', subject: 'Conhecimentos Específicos', lesson: '13', topic: 'Psicologia Organizacional - Parte I', type: 'pdf' },
-                { date: '2025-08-20', subject: 'Administração Pública', lesson: '1', topic: 'Princípios Fundamentais', type: 'pdf' },
-                { date: '2025-08-20', subject: 'Raciocínio Lógico-Matemático', lesson: '2', topic: 'Operador Condicional', type: 'pdf' },
-                { date: '2025-08-21', subject: 'Conhecimentos Específicos', lesson: '6', topic: 'Estatuto do Idoso - Lei nº 10.741/2003 VI', type: 'video' },
-                { date: '2025-08-21', subject: 'Conhecimentos Específicos', lesson: '7', topic: 'Estatuto do Idoso - Lei nº 10.741/2003 VII', type: 'video' },
-                { date: '2025-08-21', subject: 'Conhecimentos Específicos', lesson: '8', topic: 'Estatuto do Idoso - Resumo e Jurisprudência', type: 'video' },
-                { date: '2025-08-21', subject: 'Conhecimentos Específicos', lesson: '9', topic: 'Estatuto do Idoso - Exercícios', type: 'video' },
-                { date: '2025-08-21', subject: 'Língua Portuguesa', lesson: '10', topic: 'Funções do SE', type: 'video' },
-                { date: '2025-08-21', subject: 'Língua Portuguesa', lesson: '1', topic: 'Pontuação', type: 'video' },
-                { date: '2025-08-21', subject: 'Conhecimentos Específicos', lesson: '13', topic: 'Psicologia Organizacional - Parte I', type: 'pdf' },
-                { date: '2025-08-21', subject: 'Raciocínio Lógico-Matemático', lesson: '2', topic: 'Operador Condicional', type: 'pdf' },
-                { date: '2025-08-22', subject: 'Língua Portuguesa', lesson: '2', topic: 'Pontuação II', type: 'video' },
-                { date: '2025-08-22', subject: 'Língua Portuguesa', lesson: '3', topic: 'Pontuação III', type: 'video' },
-                { date: '2025-08-22', subject: 'Conhecimentos Específicos', lesson: '14', topic: 'Psicologia Organizacional - Parte II', type: 'pdf' },
-                { date: '2025-08-22', subject: 'Raciocínio Lógico-Matemático', lesson: '2', topic: 'Operador Condicional', type: 'pdf' },
-                { date: '2025-08-22', subject: 'Administração Pública', lesson: '2', topic: 'Direitos e Deveres Individuais e Coletivos', type: 'pdf' },
-                { date: '2025-08-23', subject: 'Conhecimentos Específicos', lesson: '14', topic: 'Psicologia Organizacional - Parte II', type: 'pdf' },
-                { date: '2025-08-23', subject: 'Conhecimentos Específicos', lesson: '10', topic: 'Estatuto do Idoso - Exercícios II', type: 'video' },
-                { date: '2025-08-23', subject: 'Conhecimentos Específicos', lesson: '1', topic: 'Lei nº 13.146/15 - Disposições Gerais', type: 'video' },
-                { date: '2025-08-23', subject: 'Conhecimentos Específicos', lesson: '2', topic: 'Lei nº 13.146/15 - Disposições Gerais II', type: 'video' },
-                { date: '2025-08-23', subject: 'Conhecimentos Específicos', lesson: '3', topic: 'Lei nº 13.146/15 - Igualdade e Não Discriminação', type: 'video' },
-                { date: '2025-08-23', subject: 'Língua Portuguesa', lesson: '4', topic: 'Pontuação IV', type: 'video' },
-                { date: '2025-08-23', subject: 'Língua Portuguesa', lesson: '1', topic: 'Concordância Verbal', type: 'video' },
-                { date: '2025-08-25', subject: 'Conhecimentos Específicos', lesson: '15', topic: 'Gestão de Pessoas nas Organizações Públicas e Privadas', type: 'pdf' },
-                { date: '2025-08-25', subject: 'Conhecimentos Específicos', lesson: '4', topic: 'Lei nº 13.146/15 - Direito à Vida, Habilitação e Reabilitação', type: 'video' },
-                { date: '2025-08-25', subject: 'Conhecimentos Específicos', lesson: '5', topic: 'Lei nº 13.146/15 - Direito à Saúde', type: 'video' },
-                { date: '2025-08-25', subject: 'Administração Pública', lesson: '2', topic: 'Direitos e Deveres Individuais e Coletivos', type: 'pdf' },
-                { date: '2025-08-26', subject: 'Língua Portuguesa', lesson: '2', topic: 'Concordância Verbal II', type: 'video' },
-                { date: '2025-08-26', subject: 'Língua Portuguesa', lesson: '3', topic: 'Concordância Verbal III', type: 'video' },
-                { date: '2025-08-26', subject: 'Conhecimentos Específicos', lesson: '6', topic: 'Lei nº 13.146/15 - Direito à Educação', type: 'video' },
-                { date: '2025-08-26', subject: 'Conhecimentos Específicos', lesson: '7', topic: 'Lei nº 13.146/15 - Direito à Moradia e Trabalho', type: 'video' },
-                { date: '2025-08-26', subject: 'Língua Portuguesa', lesson: '4', topic: 'Concordância Nominal', type: 'video' },
-                { date: '2025-08-26', subject: 'Administração Pública', lesson: '2', topic: 'Direitos e Deveres Individuais e Coletivos', type: 'pdf' },
-                { date: '2025-08-26', subject: 'Raciocínio Lógico-Matemático', lesson: '3', topic: 'Lógica de Argumentação', type: 'pdf' },
-                { date: '2025-08-27', subject: 'Língua Portuguesa', lesson: '1', topic: 'Significação Literal e Contextual', type: 'video' },
-                { date: '2025-08-27', subject: 'Língua Portuguesa', lesson: '2', topic: 'Campos Semânticos e Campos Lexicais', type: 'video' },
-                { date: '2025-08-27', subject: 'Língua Portuguesa', lesson: '1', topic: 'Figuras de Linguagem - Denotação, Conotação', type: 'video' },
-                { date: '2025-08-27', subject: 'Conhecimentos Específicos', lesson: '16', topic: 'Psicodinâmica do Trabalho', type: 'pdf' },
-                { date: '2025-08-27', subject: 'Raciocínio Lógico-Matemático', lesson: '3', topic: 'Lógica de Argumentação', type: 'pdf' },
-                { date: '2025-08-27', subject: 'Administração Pública', lesson: '3', topic: 'Direitos Sociais', type: 'pdf' },
-                { date: '2025-08-28', subject: 'Conhecimentos Específicos', lesson: '16', topic: 'Psicodinâmica do Trabalho', type: 'pdf' },
-                { date: '2025-08-28', subject: 'Conhecimentos Específicos', lesson: '8', topic: 'Lei nº 13.146/15 - Direito à Assistência e Previdência Social', type: 'video' },
-                { date: '2025-08-28', subject: 'Conhecimentos Específicos', lesson: '9', topic: 'Lei nº 13.146/15 - Acessibilidade', type: 'video' },
-                { date: '2025-08-28', subject: 'Conhecimentos Específicos', lesson: '10', topic: 'Lei nº 13.146/15 - Acesso à Informação e Comunicação', type: 'video' },
-                { date: '2025-08-28', subject: 'Conhecimentos Específicos', lesson: '11', topic: 'Lei nº 13.146/15 - Tecnologia Assistiva', type: 'video' },
-                { date: '2025-08-28', subject: 'Língua Portuguesa', lesson: '2', topic: 'Figuras de Linguagem II', type: 'video' },
-                { date: '2025-08-28', subject: 'Língua Portuguesa', lesson: '3', topic: 'Figuras de Linguagem III', type: 'video' },
-                { date: '2025-08-28', subject: 'Língua Portuguesa', lesson: '1', topic: 'Compreensão e Interpretação', type: 'video' },
-                { date: '2025-08-28', subject: 'Língua Portuguesa', lesson: '1', topic: 'Tipologia e Gêneros Textuais', type: 'video' },
-                { date: '2025-08-28', subject: 'Administração Pública', lesson: '3', topic: 'Direitos Sociais', type: 'pdf' },
-                { date: '2025-08-29', subject: 'Conhecimentos Específicos', lesson: '17', topic: 'Estatuto da Criança e do Adolescente - Parte Geral', type: 'pdf' },
-                { date: '2025-08-29', subject: 'Administração Pública', lesson: '3', topic: 'Direitos Sociais', type: 'pdf' },
-                { date: '2025-08-29', subject: 'Raciocínio Lógico-Matemático', lesson: '4', topic: 'Razão, Proporção, Regra de Três e Porcentagem', type: 'pdf' },
-                { date: '2025-09-01', subject: 'Raciocínio Lógico-Matemático', lesson: '4', topic: 'Razão, Proporção, Regra de Três e Porcentagem', type: 'pdf' },
-                { date: '2025-09-01', subject: 'Administração Pública', lesson: '4', topic: 'Nacionalidade', type: 'pdf' },
-                { date: '2025-09-02', subject: 'Administração Pública', lesson: '4', topic: 'Nacionalidade', type: 'pdf' },
-                { date: '2025-09-02', subject: 'Raciocínio Lógico-Matemático', lesson: '5', topic: 'Funções e Gráficos do 1º Grau', type: 'pdf' },
-                { date: '2025-09-03', subject: 'Raciocínio Lógico-Matemático', lesson: '5', topic: 'Funções e Gráficos do 1º Grau', type: 'pdf' },
-                { date: '2025-09-04', subject: 'Raciocínio Lógico-Matemático', lesson: '5', topic: 'Funções e Gráficos do 1º Grau', type: 'pdf' },
-                { date: '2025-09-04', subject: 'Administração Pública', lesson: '5', topic: 'Direitos Políticos e Partidos Políticos', type: 'pdf' },
-                { date: '2025-09-05', subject: 'Administração Pública', lesson: '5', topic: 'Direitos Políticos e Partidos Políticos', type: 'pdf' },
-                { date: '2025-09-05', subject: 'Raciocínio Lógico-Matemático', lesson: '6', topic: 'Funções e Gráficos do 2º Grau', type: 'pdf' },
-                { date: '2025-09-08', subject: 'Raciocínio Lógico-Matemático', lesson: '6', topic: 'Funções e Gráficos do 2º Grau', type: 'pdf' },
-                { date: '2025-09-08', subject: 'Administração Pública', lesson: '6', topic: 'Organização Político-Administrativa do Estado', type: 'pdf' },
-                { date: '2025-09-09', subject: 'Administração Pública', lesson: '6', topic: 'Organização Político-Administrativa do Estado', type: 'pdf' },
-                { date: '2025-09-10', subject: 'Administração Pública', lesson: '6', topic: 'Organização Político-Administrativa do Estado', type: 'pdf' },
-                { date: '2025-09-10', subject: 'Raciocínio Lógico-Matemático', lesson: '7', topic: 'Análise Combinatória', type: 'pdf' },
-                { date: '2025-09-11', subject: 'Raciocínio Lógico-Matemático', lesson: '7', topic: 'Análise Combinatória', type: 'pdf' },
-                { date: '2025-09-11', subject: 'Administração Pública', lesson: '7', topic: 'Repartição de Competências', type: 'pdf' },
-                { date: '2025-09-12', subject: 'Administração Pública', lesson: '7', topic: 'Repartição de Competências', type: 'pdf' },
-                { date: '2025-09-12', subject: 'Raciocínio Lógico-Matemático', lesson: '8', topic: 'Probabilidades', type: 'pdf' },
-                { date: '2025-09-15', subject: 'Raciocínio Lógico-Matemático', lesson: '8', topic: 'Probabilidades', type: 'pdf' },
-                { date: '2025-09-16', subject: 'Raciocínio Lógico-Matemático', lesson: '8', topic: 'Probabilidades', type: 'pdf' },
-                { date: '2025-09-16', subject: 'Administração Pública', lesson: '8', topic: 'Administração Pública', type: 'pdf' },
-                { date: '2025-09-17', subject: 'Administração Pública', lesson: '8', topic: 'Administração Pública', type: 'pdf' },
-                { date: '2025-09-17', subject: 'Raciocínio Lógico-Matemático', lesson: '9', topic: 'Progressões Aritméticas e Geométricas', type: 'pdf' },
-                { date: '2025-09-18', subject: 'Raciocínio Lógico-Matemático', lesson: '9', topic: 'Progressões Aritméticas e Geométricas', type: 'pdf' },
-                { date: '2025-09-18', subject: 'Administração Pública', lesson: '1', topic: 'Organização Administrativa', type: 'pdf' },
-                { date: '2025-09-19', subject: 'Administração Pública', lesson: '1', topic: 'Organização Administrativa', type: 'pdf' },
-                { date: '2025-09-22', subject: 'Administração Pública', lesson: '1', topic: 'Organização Administrativa', type: 'pdf' },
-                { date: '2025-09-22', subject: 'Raciocínio Lógico-Matemático', lesson: '10', topic: 'Números Inteiros', type: 'pdf' },
-                { date: '2025-09-23', subject: 'Raciocínio Lógico-Matemático', lesson: '10', topic: 'Números Inteiros', type: 'pdf' },
-                { date: '2025-09-23', subject: 'Administração Pública', lesson: '2', topic: 'Lei de Improbidade Administrativa', type: 'pdf' },
-                { date: '2025-09-24', subject: 'Administração Pública', lesson: '2', topic: 'Lei de Improbidade Administrativa', type: 'pdf' },
-                { date: '2025-09-24', subject: 'Raciocínio Lógico-Matemático', lesson: '11', topic: 'Números Racionais e Reais', type: 'pdf' },
-                { date: '2025-09-25', subject: 'Raciocínio Lógico-Matemático', lesson: '11', topic: 'Números Racionais e Reais', type: 'pdf' },
-                { date: '2025-09-25', subject: 'Administração Pública', lesson: '3', topic: 'Lei nº 14.133/2021 - Licitação', type: 'pdf' },
-                { date: '2025-09-26', subject: 'Administração Pública', lesson: '3', topic: 'Lei nº 14.133/2021 - Licitação', type: 'pdf' },
-                { date: '2025-09-29', subject: 'Administração Pública', lesson: '3', topic: 'Lei nº 14.133/2021 - Licitação', type: 'pdf' },
-                { date: '2025-09-30', subject: 'Administração Pública', lesson: '3', topic: 'Lei nº 14.133/2021 - Licitação', type: 'pdf' },
-                { date: '2025-09-30', subject: 'Raciocínio Lógico-Matemático', lesson: '12', topic: 'Geometria Plana: Áreas', type: 'pdf' },
-                { date: '2025-10-01', subject: 'Raciocínio Lógico-Matemático', lesson: '12', topic: 'Geometria Plana: Áreas', type: 'pdf' },
-                { date: '2025-10-01', subject: 'Administração Pública', lesson: '4', topic: 'Lei nº 12.527/2011 - Acesso à Informação', type: 'pdf' },
-                { date: '2025-10-02', subject: 'Administração Pública', lesson: '4', topic: 'Lei nº 12.527/2011 - Acesso à Informação', type: 'pdf' },
-                { date: '2025-10-02', subject: 'Raciocínio Lógico-Matemático', lesson: '13', topic: 'Geometria Plana: Segmentos', type: 'pdf' },
-                { date: '2025-10-03', subject: 'Raciocínio Lógico-Matemático', lesson: '13', topic: 'Geometria Plana: Segmentos', type: 'pdf' },
-                { date: '2025-10-06', subject: 'Raciocínio Lógico-Matemático', lesson: '13', topic: 'Geometria Plana: Segmentos', type: 'pdf' },
-                { date: '2025-10-06', subject: 'Administração Pública', lesson: '5', topic: 'Lei nº 13.709/2018 - LGPD - Parte I', type: 'pdf' },
-                { date: '2025-10-07', subject: 'Administração Pública', lesson: '5', topic: 'Lei nº 13.709/2018 - LGPD - Parte I', type: 'pdf' },
-                { date: '2025-10-07', subject: 'Raciocínio Lógico-Matemático', lesson: '14', topic: 'Trigonometria', type: 'pdf' },
-                { date: '2025-10-08', subject: 'Raciocínio Lógico-Matemático', lesson: '14', topic: 'Trigonometria', type: 'pdf' },
-                { date: '2025-10-08', subject: 'Administração Pública', lesson: '6', topic: 'Lei nº 13.709/2018 - LGPD - Parte II', type: 'pdf' },
-                { date: '2025-10-09', subject: 'Administração Pública', lesson: '6', topic: 'Lei nº 13.709/2018 - LGPD - Parte II', type: 'pdf' },
-                { date: '2025-10-09', subject: 'Raciocínio Lógico-Matemático', lesson: '15', topic: 'Números Complexos e Polinômios', type: 'pdf' },
-                { date: '2025-10-10', subject: 'Raciocínio Lógico-Matemático', lesson: '15', topic: 'Números Complexos e Polinômios', type: 'pdf' },
-                { date: '2025-10-10', subject: 'Administração Pública', lesson: '7', topic: 'Lei nº 13.709/2018 - LGPD - Parte III', type: 'pdf' },
-                { date: '2025-10-13', subject: 'Administração Pública', lesson: '7', topic: 'Lei nº 13.709/2018 - LGPD - Parte III', type: 'pdf' },
-                { date: '2025-10-13', subject: 'Raciocínio Lógico-Matemático', lesson: '16', topic: 'Geometria Espacial', type: 'pdf' },
-                { date: '2025-10-14', subject: 'Raciocínio Lógico-Matemático', lesson: '16', topic: 'Geometria Espacial', type: 'pdf' },
-                { date: '2025-10-14', subject: 'Raciocínio Lógico-Matemático', lesson: '17', topic: 'Geometria Analítica', type: 'pdf' },
-                { date: '2025-10-15', subject: 'Raciocínio Lógico-Matemático', lesson: '17', topic: 'Geometria Analítica', type: 'pdf' },
-                { date: '2025-10-16', subject: 'Raciocínio Lógico-Matemático', lesson: '18', topic: 'Matrizes, Determinantes e Sistemas Lineares', type: 'pdf' },
-            ];
-
-            allTasks.forEach(task => {
-                const id = generateUniqueId(task);
-                const dateStr = formatDateYMD(new Date(task.date + 'T00:00:00'));
-                if (!plan.tasks[dateStr]) plan.tasks[dateStr] = [];
-                
-                const taskExists = plan.tasks[dateStr].some(t => t.id === id);
-                if (!taskExists) {
-                    plan.tasks[dateStr].push({
-                        id: id,
-                        date: dateStr,
-                        subject: task.subject,
-                        lesson: task.lesson,
-                        topic: task.topic,
-                        type: 'study',
-                        completed: false,
-                    });
-                }
-            });
-            return plan;
-        }
-
-        const saveState = () => {
-    // Agora salvamos no Firestore em vez do localStorage
-    db.collection("progresso").doc("meuPlano").set(studyPlan)
-        .then(() => {
-            console.log("Progresso salvo com sucesso no Firebase!");
-        })
-        .catch((error) => {
-            console.error("Erro ao salvar progresso: ", error);
-        });
-};
-
-        const loadState = async () => {
-    const docRef = db.collection("progresso").doc("meuPlano");
-    try {
-        const doc = await docRef.get();
-        if (doc.exists) {
-            console.log("Progresso carregado do Firebase!");
-            studyPlan = doc.data();
-        } else {
-            // Documento não existe (primeiro acesso), inicializa o plano
-            console.log("Nenhum progresso encontrado, inicializando novo plano.");
-            studyPlan = initializeStudyPlan();
-        }
-    } catch (error) {
-        console.error("Erro ao carregar progresso: ", error);
-        // Em caso de erro, carrega o plano padrão para não quebrar a aplicação
-        studyPlan = initializeStudyPlan();
+    function formatDateYMD(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
-};
 
-        const renderCalendar = (date) => {
-            const calendarContainer = document.getElementById('calendar-container');
-            const month = date.getMonth();
-            const year = date.getFullYear();
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const today = new Date();
-            today.setHours(0,0,0,0);
+    function formatDateDMY(date) {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
 
-            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    function addDays(date, days) {
+        const result = new Date(date);
+        result.setDate(result.getDate() + days);
+        return result;
+    }
+
+    function subDays(date, days) {
+        const result = new Date(date);
+        result.setDate(result.getDate() - days);
+        return result;
+    }
+    
+    function isSameDay(date1, date2) {
+        return date1.getFullYear() === date2.getFullYear() &&
+               date1.getMonth() === date2.getMonth() &&
+               date1.getDate() === date2.getDate();
+    }
+
+    function isBefore(date1, date2) {
+        const d1 = new Date(date1.getFullYear(), date1.getMonth(), date1.getDate());
+        const d2 = new Date(date2.getFullYear(), date2.getMonth(), date2.getDate());
+        return d1.getTime() < d2.getTime();
+    }
+
+    function generateUniqueId(task) {
+         return `${task.subject.replace(/[^a-zA-Z0-9]/g, '')}-${task.lesson.replace(/[^a-zA-Z0-9]/g, '')}-${task.type}`;
+    }
+
+    function initializeStudyPlan() {
+        let plan = { tasks: {}, reviews: {} };
+        
+        const allTasks = [
+                // --- DIA 10 - DOMINGO ---
+            { date: '2025-08-10', subject: 'Conhecimentos Específicos do Cargo', lesson: '9', topic: 'Psicologia Social', type: 'pdf' },
+            { date: '2025-08-10', subject: 'Língua Portuguesa', lesson: '6', topic: 'A Sintaxe do Período Composto', type: 'pdf' },
+
+            // --- DIA 11 - SEGUNDA-FEIRA ---
+            { date: '2025-08-11', subject: 'Língua Portuguesa', lesson: '6', topic: 'A Sintaxe do Período Composto', type: 'pdf' },
+
+            // --- DIA 12 - TERÇA-FEIRA ---
+            { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '6', topic: 'A Sintaxe do Período Composto', type: 'pdf' },
+            { date: '2025-08-12', subject: 'Conhecimentos Específicos do Cargo', lesson: '44', topic: 'Decreto 7.508/11 - Questões - Parte 1', type: 'video' },
+            { date: '2025-08-12', subject: 'Conhecimentos Específicos do Cargo', lesson: '45', topic: 'Decreto 7.508/11 - Arts. 3 a 7', type: 'video' },
+            { date: '2025-08-12', subject: 'Conhecimentos Específicos do Cargo', lesson: '46', topic: 'Decreto 7.508/11 - Questões - Parte 2', type: 'video' },
+            { date: '2025-08-12', subject: 'Conhecimentos Específicos do Cargo', lesson: '47', topic: 'Decreto 7.508/11 - Arts. 8 a 14', type: 'video' },
+            { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '17', topic: 'Funções Sintáticas dos Pronomes Pessoais Oblíquos', type: 'video' },
+            { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '1', topic: 'Regência Verbal e Nominal', type: 'video' },
+            { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '2', topic: 'Regência Verbal e Nominal II', type: 'video' },
+            { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '3', topic: 'Regência Verbal e Nominal III', type: 'video' },
+
+            // --- DIA 13 - QUARTA-FEIRA ---
+            { date: '2025-08-13', subject: 'Língua Portuguesa', lesson: '3', topic: 'Regência Verbal e Nominal III', type: 'video' },
+            { date: '2025-08-13', subject: 'Conhecimentos Específicos do Cargo', lesson: '10', topic: 'Avaliação Psicológica – Parte I', type: 'pdf' },
+            { date: '2025-08-13', subject: 'Língua Portuguesa', lesson: '7', topic: 'Concordância, Regência, Colocação, Crase e Pontuação', type: 'pdf' },
             
-            let html = `<div class="p-4">
-                <div class="flex justify-between items-center mb-4">
-                    <button id="prev-month" class="control-button p-2 rounded-full">◀</button>
-                    <h2 class="text-xl font-bold text-center">${monthNames[month]} ${year}</h2>
-                    <button id="next-month" class="control-button p-2 rounded-full">▶</button>
-                </div>
-                <div class="calendar-grid grid grid-cols-7 text-center font-semibold text-sm text-gray-600 mb-2">
-                    <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
-                </div>
-                <div class="calendar-grid grid grid-cols-7 text-center text-sm">`;
+            // --- DIA 14 - QUINTA-FEIRA ---
+            { date: '2025-08-14', subject: 'Língua Portuguesa', lesson: '7', topic: 'Concordância, Regência, Colocação, Crase e Pontuação', type: 'pdf' },
+            { date: '2025-08-14', subject: 'Conhecimentos Específicos do Cargo', lesson: '48', topic: 'Decreto 7.508/11 - Questões', type: 'video' },
+            { date: '2025-08-14', subject: 'Conhecimentos Específicos do Cargo', lesson: '49', topic: 'Decreto 7.508/11 - Arts. 15 ao 25', type: 'video' },
 
-            for (let i = 0; i < firstDay.getDay(); i++) {
-                html += `<div></div>`;
-            }
+            // --- DIA 15 - SEXTA-FEIRA ---
+            { date: '2025-08-15', subject: 'Conhecimentos Específicos do Cargo', lesson: '49', topic: 'Decreto 7.508/11 - Arts. 15 ao 25', type: 'video' },
+            { date: '2025-08-15', subject: 'Conhecimentos Específicos do Cargo', lesson: '50', topic: 'Decreto 7.508/11 - Arts. 26 a 30', type: 'video' },
+            { date: '2025-08-15', subject: 'Conhecimentos Específicos do Cargo', lesson: '51', topic: 'Decreto 7.508/11 - Arts. 31 a 44', type: 'video' },
+            { date: '2025-08-15', subject: 'Língua Portuguesa', lesson: '1', topic: 'Emprego do Sinal Indicativo de Crase', type: 'video' },
+            { date: '2025-08-15', subject: 'Língua Portuguesa', lesson: '2', topic: 'Emprego do Sinal Indicativo de Crase II', type: 'video' },
+            { date: '2025-08-15', subject: 'Língua Portuguesa', lesson: '3', topic: 'Emprego do Sinal Indicativo de Crase III', type: 'video' },
+            { date: '2025-08-15', subject: 'Língua Portuguesa', lesson: '1', topic: 'Coordenação Vs Subordinação', type: 'video' },
 
-            for (let i = 1; i <= lastDay.getDate(); i++) {
-                const dayDate = new Date(year, month, i);
-                const dateStr = formatDateYMD(dayDate);
-                const hasTask = (studyPlan.tasks[dateStr] && studyPlan.tasks[dateStr].length > 0) || (studyPlan.reviews[dateStr] && studyPlan.reviews[dateStr].length > 0);
-                
-                let dayClasses = 'calendar-day cursor-pointer p-2 rounded-full aspect-square flex items-center justify-center';
-                if(isSameDay(dayDate, viewDate)) dayClasses += ' selected';
-                if(isSameDay(dayDate, today)) dayClasses += ' border-2 border-blue-500';
-                if(hasTask) dayClasses += ' has-task';
+            // --- DIA 16 - SÁBADO ---
+            { date: '2025-08-16', subject: 'Língua Portuguesa', lesson: '1', topic: 'Coordenação Vs Subordinação', type: 'video' },
+            { date: '2025-08-16', subject: 'Conhecimentos Específicos do Cargo', lesson: '11', topic: 'Avaliação Psicológica – Parte II', type: 'pdf' },
 
-                html += `<div class="${dayClasses}" data-date="${dateStr}">${i}</div>`;
-            }
+            // --- DIA 17 - DOMINGO ---
+            { date: '2025-08-17', subject: 'Conhecimentos Específicos do Cargo', lesson: '11', topic: 'Avaliação Psicológica – Parte II', type: 'pdf' },
+            { date: '2025-08-17', subject: 'Conhecimentos Específicos do Cargo', lesson: '52', topic: 'Decreto 7.508/11 - Questões', type: 'video' },
+            { date: '2025-08-17', subject: 'Conhecimentos Específicos do Cargo', lesson: '53', topic: 'Decreto 7.508/11 - Questões II', type: 'video' },
+            { date: '2025-08-17', subject: 'Conhecimentos Específicos do Cargo', lesson: '54', topic: 'Decreto 7.508/11 - Questões III', type: 'video' },
+            { date: '2025-08-17', subject: 'Conhecimentos Específicos do Cargo', lesson: '1', topic: 'Estatuto do Idoso - Lei nº 10.741/2003 I', type: 'video' },
+            { date: '2025-08-17', subject: 'Língua Portuguesa', lesson: '2', topic: 'Período Composto - Oração Subordinada Adjetiva', type: 'video' },
+            { date: '2025-08-17', subject: 'Língua Portuguesa', lesson: '3', topic: 'Período Composto - Oração Subordinada Adjetiva e Função Sintática do Pronome Relativo', type: 'video' },
+            { date: '2025-08-18', subject: 'Língua Portuguesa', lesson: '4', topic: 'Período Composto - Oração Subordinada Substantiva', type: 'video' },
+            { date: '2025-08-18', subject: 'Língua Portuguesa', lesson: '5', topic: 'Período Composto - Oração Subordinada Adverbial', type: 'video' },
+            { date: '2025-08-18', subject: 'Conhecimentos Específicos', lesson: '12', topic: 'Psicologia da Saúde e Intervenções', type: 'pdf' },
+            { date: '2025-08-18', subject: 'Raciocínio Lógico-Matemático', lesson: '1', topic: 'Operadores Lógicos Fundamentais', type: 'pdf' },
+            { date: '2025-08-19', subject: 'Conhecimentos Específicos', lesson: '2', topic: 'Estatuto do Idoso - Lei nº 10.741/2003 II', type: 'video' },
+            { date: '2025-08-19', subject: 'Conhecimentos Específicos', lesson: '3', topic: 'Estatuto do Idoso - Lei nº 10.741/2003 III', type: 'video' },
+            { date: '2025-08-19', subject: 'Conhecimentos Específicos', lesson: '4', topic: 'Estatuto do Idoso - Lei nº 10.741/2003 IV', type: 'video' },
+            { date: '2025-08-19', subject: 'Conhecimentos Específicos', lesson: '5', topic: 'Estatuto do Idoso - Lei nº 10.741/2003 V', type: 'video' },
+            { date: '2025-08-19', subject: 'Língua Portuguesa', lesson: '6', topic: 'Período Composto - Oração Subordinada Adverbial II', type: 'video' },
+            { date: '2025-08-19', subject: 'Língua Portuguesa', lesson: '7', topic: 'Período Composto - Orações Reduzidas', type: 'video' },
+            { date: '2025-08-19', subject: 'Língua Portuguesa', lesson: '8', topic: 'Período Composto - Orações Coordenadas', type: 'video' },
+            { date: '2025-08-19', subject: 'Raciocínio Lógico-Matemático', lesson: '1', topic: 'Operadores Lógicos Fundamentais', type: 'pdf' },
+            { date: '2025-08-19', subject: 'Administração Pública', lesson: '1', topic: 'Princípios Fundamentais', type: 'pdf' },
+            { date: '2025-08-20', subject: 'Língua Portuguesa', lesson: '9', topic: 'Período Composto - Orações Coordenadas II', type: 'video' },
+            { date: '2025-08-20', subject: 'Conhecimentos Específicos', lesson: '13', topic: 'Psicologia Organizacional - Parte I', type: 'pdf' },
+            { date: '2025-08-20', subject: 'Administração Pública', lesson: '1', topic: 'Princípios Fundamentais', type: 'pdf' },
+            { date: '2025-08-20', subject: 'Raciocínio Lógico-Matemático', lesson: '2', topic: 'Operador Condicional', type: 'pdf' },
+            { date: '2025-08-21', subject: 'Conhecimentos Específicos', lesson: '6', topic: 'Estatuto do Idoso - Lei nº 10.741/2003 VI', type: 'video' },
+            { date: '2025-08-21', subject: 'Conhecimentos Específicos', lesson: '7', topic: 'Estatuto do Idoso - Lei nº 10.741/2003 VII', type: 'video' },
+            { date: '2025-08-21', subject: 'Conhecimentos Específicos', lesson: '8', topic: 'Estatuto do Idoso - Resumo e Jurisprudência', type: 'video' },
+            { date: '2025-08-21', subject: 'Conhecimentos Específicos', lesson: '9', topic: 'Estatuto do Idoso - Exercícios', type: 'video' },
+            { date: '2025-08-21', subject: 'Língua Portuguesa', lesson: '10', topic: 'Funções do SE', type: 'video' },
+            { date: '2025-08-21', subject: 'Língua Portuguesa', lesson: '1', topic: 'Pontuação', type: 'video' },
+            { date: '2025-08-21', subject: 'Conhecimentos Específicos', lesson: '13', topic: 'Psicologia Organizacional - Parte I', type: 'pdf' },
+            { date: '2025-08-21', subject: 'Raciocínio Lógico-Matemático', lesson: '2', topic: 'Operador Condicional', type: 'pdf' },
+            { date: '2025-08-22', subject: 'Língua Portuguesa', lesson: '2', topic: 'Pontuação II', type: 'video' },
+            { date: '2025-08-22', subject: 'Língua Portuguesa', lesson: '3', topic: 'Pontuação III', type: 'video' },
+            { date: '2025-08-22', subject: 'Conhecimentos Específicos', lesson: '14', topic: 'Psicologia Organizacional - Parte II', type: 'pdf' },
+            { date: '2025-08-22', subject: 'Raciocínio Lógico-Matemático', lesson: '2', topic: 'Operador Condicional', type: 'pdf' },
+            { date: '2025-08-22', subject: 'Administração Pública', lesson: '2', topic: 'Direitos e Deveres Individuais e Coletivos', type: 'pdf' },
+            { date: '2025-08-23', subject: 'Conhecimentos Específicos', lesson: '14', topic: 'Psicologia Organizacional - Parte II', type: 'pdf' },
+            { date: '2025-08-23', subject: 'Conhecimentos Específicos', lesson: '10', topic: 'Estatuto do Idoso - Exercícios II', type: 'video' },
+            { date: '2025-08-23', subject: 'Conhecimentos Específicos', lesson: '1', topic: 'Lei nº 13.146/15 - Disposições Gerais', type: 'video' },
+            { date: '2025-08-23', subject: 'Conhecimentos Específicos', lesson: '2', topic: 'Lei nº 13.146/15 - Disposições Gerais II', type: 'video' },
+            { date: '2025-08-23', subject: 'Conhecimentos Específicos', lesson: '3', topic: 'Lei nº 13.146/15 - Igualdade e Não Discriminação', type: 'video' },
+            { date: '2025-08-23', subject: 'Língua Portuguesa', lesson: '4', topic: 'Pontuação IV', type: 'video' },
+            { date: '2025-08-23', subject: 'Língua Portuguesa', lesson: '1', topic: 'Concordância Verbal', type: 'video' },
+            { date: '2025-08-25', subject: 'Conhecimentos Específicos', lesson: '15', topic: 'Gestão de Pessoas nas Organizações Públicas e Privadas', type: 'pdf' },
+            { date: '2025-08-25', subject: 'Conhecimentos Específicos', lesson: '4', topic: 'Lei nº 13.146/15 - Direito à Vida, Habilitação e Reabilitação', type: 'video' },
+            { date: '2025-08-25', subject: 'Conhecimentos Específicos', lesson: '5', topic: 'Lei nº 13.146/15 - Direito à Saúde', type: 'video' },
+            { date: '2025-08-25', subject: 'Administração Pública', lesson: '2', topic: 'Direitos e Deveres Individuais e Coletivos', type: 'pdf' },
+            { date: '2025-08-26', subject: 'Língua Portuguesa', lesson: '2', topic: 'Concordância Verbal II', type: 'video' },
+            { date: '2025-08-26', subject: 'Língua Portuguesa', lesson: '3', topic: 'Concordância Verbal III', type: 'video' },
+            { date: '2025-08-26', subject: 'Conhecimentos Específicos', lesson: '6', topic: 'Lei nº 13.146/15 - Direito à Educação', type: 'video' },
+            { date: '2025-08-26', subject: 'Conhecimentos Específicos', lesson: '7', topic: 'Lei nº 13.146/15 - Direito à Moradia e Trabalho', type: 'video' },
+            { date: '2025-08-26', subject: 'Língua Portuguesa', lesson: '4', topic: 'Concordância Nominal', type: 'video' },
+            { date: '2025-08-26', subject: 'Administração Pública', lesson: '2', topic: 'Direitos e Deveres Individuais e Coletivos', type: 'pdf' },
+            { date: '2025-08-26', subject: 'Raciocínio Lógico-Matemático', lesson: '3', topic: 'Lógica de Argumentação', type: 'pdf' },
+            { date: '2025-08-27', subject: 'Língua Portuguesa', lesson: '1', topic: 'Significação Literal e Contextual', type: 'video' },
+            { date: '2025-08-27', subject: 'Língua Portuguesa', lesson: '2', topic: 'Campos Semânticos e Campos Lexicais', type: 'video' },
+            { date: '2025-08-27', subject: 'Língua Portuguesa', lesson: '1', topic: 'Figuras de Linguagem - Denotação, Conotação', type: 'video' },
+            { date: '2025-08-27', subject: 'Conhecimentos Específicos', lesson: '16', topic: 'Psicodinâmica do Trabalho', type: 'pdf' },
+            { date: '2025-08-27', subject: 'Raciocínio Lógico-Matemático', lesson: '3', topic: 'Lógica de Argumentação', type: 'pdf' },
+            { date: '2025-08-27', subject: 'Administração Pública', lesson: '3', topic: 'Direitos Sociais', type: 'pdf' },
+            { date: '2025-08-28', subject: 'Conhecimentos Específicos', lesson: '16', topic: 'Psicodinâmica do Trabalho', type: 'pdf' },
+            { date: '2025-08-28', subject: 'Conhecimentos Específicos', lesson: '8', topic: 'Lei nº 13.146/15 - Direito à Assistência e Previdência Social', type: 'video' },
+            { date: '2025-08-28', subject: 'Conhecimentos Específicos', lesson: '9', topic: 'Lei nº 13.146/15 - Acessibilidade', type: 'video' },
+            { date: '2025-08-28', subject: 'Conhecimentos Específicos', lesson: '10', topic: 'Lei nº 13.146/15 - Acesso à Informação e Comunicação', type: 'video' },
+            { date: '2025-08-28', subject: 'Conhecimentos Específicos', lesson: '11', topic: 'Lei nº 13.146/15 - Tecnologia Assistiva', type: 'video' },
+            { date: '2025-08-28', subject: 'Língua Portuguesa', lesson: '2', topic: 'Figuras de Linguagem II', type: 'video' },
+            { date: '2025-08-28', subject: 'Língua Portuguesa', lesson: '3', topic: 'Figuras de Linguagem III', type: 'video' },
+            { date: '2025-08-28', subject: 'Língua Portuguesa', lesson: '1', topic: 'Compreensão e Interpretação', type: 'video' },
+            { date: '2025-08-28', subject: 'Língua Portuguesa', lesson: '1', topic: 'Tipologia e Gêneros Textuais', type: 'video' },
+            { date: '2025-08-28', subject: 'Administração Pública', lesson: '3', topic: 'Direitos Sociais', type: 'pdf' },
+            { date: '2025-08-29', subject: 'Conhecimentos Específicos', lesson: '17', topic: 'Estatuto da Criança e do Adolescente - Parte Geral', type: 'pdf' },
+            { date: '2025-08-29', subject: 'Administração Pública', lesson: '3', topic: 'Direitos Sociais', type: 'pdf' },
+            { date: '2025-08-29', subject: 'Raciocínio Lógico-Matemático', lesson: '4', topic: 'Razão, Proporção, Regra de Três e Porcentagem', type: 'pdf' },
+            { date: '2025-09-01', subject: 'Raciocínio Lógico-Matemático', lesson: '4', topic: 'Razão, Proporção, Regra de Três e Porcentagem', type: 'pdf' },
+            { date: '2025-09-01', subject: 'Administração Pública', lesson: '4', topic: 'Nacionalidade', type: 'pdf' },
+            { date: '2025-09-02', subject: 'Administração Pública', lesson: '4', topic: 'Nacionalidade', type: 'pdf' },
+            { date: '2025-09-02', subject: 'Raciocínio Lógico-Matemático', lesson: '5', topic: 'Funções e Gráficos do 1º Grau', type: 'pdf' },
+            { date: '2025-09-03', subject: 'Raciocínio Lógico-Matemático', lesson: '5', topic: 'Funções e Gráficos do 1º Grau', type: 'pdf' },
+            { date: '2025-09-04', subject: 'Raciocínio Lógico-Matemático', lesson: '5', topic: 'Funções e Gráficos do 1º Grau', type: 'pdf' },
+            { date: '2025-09-04', subject: 'Administração Pública', lesson: '5', topic: 'Direitos Políticos e Partidos Políticos', type: 'pdf' },
+            { date: '2025-09-05', subject: 'Administração Pública', lesson: '5', topic: 'Direitos Políticos e Partidos Políticos', type: 'pdf' },
+            { date: '2025-09-05', subject: 'Raciocínio Lógico-Matemático', lesson: '6', topic: 'Funções e Gráficos do 2º Grau', type: 'pdf' },
+            { date: '2025-09-08', subject: 'Raciocínio Lógico-Matemático', lesson: '6', topic: 'Funções e Gráficos do 2º Grau', type: 'pdf' },
+            { date: '2025-09-08', subject: 'Administração Pública', lesson: '6', topic: 'Organização Político-Administrativa do Estado', type: 'pdf' },
+            { date: '2025-09-09', subject: 'Administração Pública', lesson: '6', topic: 'Organização Político-Administrativa do Estado', type: 'pdf' },
+            { date: '2025-09-10', subject: 'Administração Pública', lesson: '6', topic: 'Organização Político-Administrativa do Estado', type: 'pdf' },
+            { date: '2025-09-10', subject: 'Raciocínio Lógico-Matemático', lesson: '7', topic: 'Análise Combinatória', type: 'pdf' },
+            { date: '2025-09-11', subject: 'Raciocínio Lógico-Matemático', lesson: '7', topic: 'Análise Combinatória', type: 'pdf' },
+            { date: '2025-09-11', subject: 'Administração Pública', lesson: '7', topic: 'Repartição de Competências', type: 'pdf' },
+            { date: '2025-09-12', subject: 'Administração Pública', lesson: '7', topic: 'Repartição de Competências', type: 'pdf' },
+            { date: '2025-09-12', subject: 'Raciocínio Lógico-Matemático', lesson: '8', topic: 'Probabilidades', type: 'pdf' },
+            { date: '2025-09-15', subject: 'Raciocínio Lógico-Matemático', lesson: '8', topic: 'Probabilidades', type: 'pdf' },
+            { date: '2025-09-16', subject: 'Raciocínio Lógico-Matemático', lesson: '8', topic: 'Probabilidades', type: 'pdf' },
+            { date: '2025-09-16', subject: 'Administração Pública', lesson: '8', topic: 'Administração Pública', type: 'pdf' },
+            { date: '2025-09-17', subject: 'Administração Pública', lesson: '8', topic: 'Administração Pública', type: 'pdf' },
+            { date: '2025-09-17', subject: 'Raciocínio Lógico-Matemático', lesson: '9', topic: 'Progressões Aritméticas e Geométricas', type: 'pdf' },
+            { date: '2025-09-18', subject: 'Raciocínio Lógico-Matemático', lesson: '9', topic: 'Progressões Aritméticas e Geométricas', type: 'pdf' },
+            { date: '2025-09-18', subject: 'Administração Pública', lesson: '1', topic: 'Organização Administrativa', type: 'pdf' },
+            { date: '2025-09-19', subject: 'Administração Pública', lesson: '1', topic: 'Organização Administrativa', type: 'pdf' },
+            { date: '2025-09-22', subject: 'Administração Pública', lesson: '1', topic: 'Organização Administrativa', type: 'pdf' },
+            { date: '2025-09-22', subject: 'Raciocínio Lógico-Matemático', lesson: '10', topic: 'Números Inteiros', type: 'pdf' },
+            { date: '2025-09-23', subject: 'Raciocínio Lógico-Matemático', lesson: '10', topic: 'Números Inteiros', type: 'pdf' },
+            { date: '2025-09-23', subject: 'Administração Pública', lesson: '2', topic: 'Lei de Improbidade Administrativa', type: 'pdf' },
+            { date: '2025-09-24', subject: 'Administração Pública', lesson: '2', topic: 'Lei de Improbidade Administrativa', type: 'pdf' },
+            { date: '2025-09-24', subject: 'Raciocínio Lógico-Matemático', lesson: '11', topic: 'Números Racionais e Reais', type: 'pdf' },
+            { date: '2025-09-25', subject: 'Raciocínio Lógico-Matemático', lesson: '11', topic: 'Números Racionais e Reais', type: 'pdf' },
+            { date: '2025-09-25', subject: 'Administração Pública', lesson: '3', topic: 'Lei nº 14.133/2021 - Licitação', type: 'pdf' },
+            { date: '2025-09-26', subject: 'Administração Pública', lesson: '3', topic: 'Lei nº 14.133/2021 - Licitação', type: 'pdf' },
+            { date: '2025-09-29', subject: 'Administração Pública', lesson: '3', topic: 'Lei nº 14.133/2021 - Licitação', type: 'pdf' },
+            { date: '2025-09-30', subject: 'Administração Pública', lesson: '3', topic: 'Lei nº 14.133/2021 - Licitação', type: 'pdf' },
+            { date: '2025-09-30', subject: 'Raciocínio Lógico-Matemático', lesson: '12', topic: 'Geometria Plana: Áreas', type: 'pdf' },
+            { date: '2025-10-01', subject: 'Raciocínio Lógico-Matemático', lesson: '12', topic: 'Geometria Plana: Áreas', type: 'pdf' },
+            { date: '2025-10-01', subject: 'Administração Pública', lesson: '4', topic: 'Lei nº 12.527/2011 - Acesso à Informação', type: 'pdf' },
+            { date: '2025-10-02', subject: 'Administração Pública', lesson: '4', topic: 'Lei nº 12.527/2011 - Acesso à Informação', type: 'pdf' },
+            { date: '2025-10-02', subject: 'Raciocínio Lógico-Matemático', lesson: '13', topic: 'Geometria Plana: Segmentos', type: 'pdf' },
+            { date: '2025-10-03', subject: 'Raciocínio Lógico-Matemático', lesson: '13', topic: 'Geometria Plana: Segmentos', type: 'pdf' },
+            { date: '2025-10-06', subject: 'Raciocínio Lógico-Matemático', lesson: '13', topic: 'Geometria Plana: Segmentos', type: 'pdf' },
+            { date: '2025-10-06', subject: 'Administração Pública', lesson: '5', topic: 'Lei nº 13.709/2018 - LGPD - Parte I', type: 'pdf' },
+            { date: '2025-10-07', subject: 'Administração Pública', lesson: '5', topic: 'Lei nº 13.709/2018 - LGPD - Parte I', type: 'pdf' },
+            { date: '2025-10-07', subject: 'Raciocínio Lógico-Matemático', lesson: '14', topic: 'Trigonometria', type: 'pdf' },
+            { date: '2025-10-08', subject: 'Raciocínio Lógico-Matemático', lesson: '14', topic: 'Trigonometria', type: 'pdf' },
+            { date: '2025-10-08', subject: 'Administração Pública', lesson: '6', topic: 'Lei nº 13.709/2018 - LGPD - Parte II', type: 'pdf' },
+            { date: '2025-10-09', subject: 'Administração Pública', lesson: '6', topic: 'Lei nº 13.709/2018 - LGPD - Parte II', type: 'pdf' },
+            { date: '2025-10-09', subject: 'Raciocínio Lógico-Matemático', lesson: '15', topic: 'Números Complexos e Polinômios', type: 'pdf' },
+            { date: '2025-10-10', subject: 'Raciocínio Lógico-Matemático', lesson: '15', topic: 'Números Complexos e Polinômios', type: 'pdf' },
+            { date: '2025-10-10', subject: 'Administração Pública', lesson: '7', topic: 'Lei nº 13.709/2018 - LGPD - Parte III', type: 'pdf' },
+            { date: '2025-10-13', subject: 'Administração Pública', lesson: '7', topic: 'Lei nº 13.709/2018 - LGPD - Parte III', type: 'pdf' },
+            { date: '2025-10-13', subject: 'Raciocínio Lógico-Matemático', lesson: '16', topic: 'Geometria Espacial', type: 'pdf' },
+            { date: '2025-10-14', subject: 'Raciocínio Lógico-Matemático', lesson: '16', topic: 'Geometria Espacial', type: 'pdf' },
+            { date: '2025-10-14', subject: 'Raciocínio Lógico-Matemático', lesson: '17', topic: 'Geometria Analítica', type: 'pdf' },
+            { date: '2025-10-15', subject: 'Raciocínio Lógico-Matemático', lesson: '17', topic: 'Geometria Analítica', type: 'pdf' },
+            { date: '2025-10-16', subject: 'Raciocínio Lógico-Matemático', lesson: '18', topic: 'Matrizes, Determinantes e Sistemas Lineares', type: 'pdf' },
+        ];
 
-            html += `</div></div>`;
-            calendarContainer.innerHTML = html;
-        }
-
-        const renderPlan = (date) => {
-            renderCalendar(date);
-            const dateStr = formatDateYMD(date);
-            planContent.innerHTML = '';
+        allTasks.forEach(task => {
+            const id = generateUniqueId(task);
+            const dateStr = formatDateYMD(new Date(task.date + 'T00:00:00'));
+            if (!plan.tasks[dateStr]) plan.tasks[dateStr] = [];
             
-            const today = new Date();
-            today.setHours(0,0,0,0);
-
-            let tasksForDay = studyPlan.tasks[dateStr] || [];
-            let reviewsForDay = studyPlan.reviews[dateStr] || [];
-            
-            if (tasksForDay.length === 0 && reviewsForDay.length === 0) {
-                planContent.innerHTML = `<div class="text-center p-4 bg-gray-50 rounded-lg"><p class="text-gray-500">Nenhuma tarefa agendada para hoje.</p></div>`;
-                return;
-            }
-
-            if (tasksForDay.length > 0) {
-                planContent.innerHTML += `<h3 class="text-lg font-semibold text-gray-700 mt-4 border-b pb-2">📚 Aulas do Dia</h3>`;
-                tasksForDay.forEach(task => {
-                    const isOverdue = !task.completed && isBefore(new Date(task.date), today);
-                    planContent.appendChild(createTaskCard(task, isOverdue));
-                });
-            }
-
-            if (reviewsForDay.length > 0) {
-                planContent.innerHTML += `<h3 class="text-lg font-semibold text-gray-700 mt-6 border-b pb-2">🔁 Revisões Agendadas</h3>`;
-                reviewsForDay.forEach(review => {
-                    const isOverdue = !review.completed && isBefore(new Date(review.date), today);
-                    planContent.appendChild(createTaskCard(review, isOverdue));
-                });
-            }
-        };
-
-        function createTaskCard(task, isOverdue = false) {
-            const card = document.createElement('div');
-            let cardClasses = 'task-card p-4 rounded-lg shadow-sm';
-            if (task.type.startsWith('review')) cardClasses += ` ${task.type}`;
-            if (isOverdue) cardClasses += ' overdue';
-
-            card.className = cardClasses;
-            
-            let geminiButtonsHTML = '';
-             if (task.topic) {
-                geminiButtonsHTML = `
-                <div class="mt-3 pt-3 border-t border-gray-200 flex flex-wrap gap-2">
-                    <button class="gemini-button text-xs font-semibold py-1 px-3 rounded-full" data-action="explain" data-topic="${task.topic}">✨ Explicar Tópico</button>
-                    <button class="gemini-button text-xs font-semibold py-1 px-3 rounded-full" data-action="generate_questions" data-topic="${task.topic}">✨ Gerar Questões</button>
-                </div>
-                `;
-            }
-
-            let title = task.type === 'study' ? `${task.subject} - Aula ${task.lesson}` : `${task.reviewType}: ${task.subject} - Aula ${task.lesson}`;
-
-            card.innerHTML = `
-                <div class="flex items-start space-x-4">
-                    <div class="flex-shrink-0 pt-1">
-                        <input type="checkbox" id="${task.id}" data-id="${task.id}" data-date="${task.date}" data-type="${task.type}" class="task-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${task.completed ? 'checked' : ''}>
-                    </div>
-                    <div class="flex-1">
-                        <label for="${task.id}" class="cursor-pointer">
-                            <p class="font-semibold text-gray-700">${title}</p>
-                            <p class="text-gray-600 text-sm">${task.topic}</p>
-                        </label>
-                    </div>
-                </div>
-                ${geminiButtonsHTML}
-            `;
-            return card;
-        }
-
-        function scheduleReviews(completedTask) {
-            const completionDate = new Date(completedTask.date + 'T00:00:00');
-            const reviewDays = { 'review-r1': 1, 'review-r3': 7, 'review-r5': 30 };
-
-            for (const [reviewType, daysToAdd] of Object.entries(reviewDays)) {
-                const reviewDate = addDays(completionDate, daysToAdd);
-                const reviewDateStr = formatDateYMD(reviewDate);
-
-                if (!studyPlan.reviews[reviewDateStr]) {
-                    studyPlan.reviews[reviewDateStr] = [];
-                }
-                
-                const reviewId = `${completedTask.id}-${reviewType}`;
-                
-                if (studyPlan.reviews[reviewDateStr].some(r => r.id === reviewId)) continue;
-
-                studyPlan.reviews[reviewDateStr].push({
-                    id: reviewId,
-                    date: reviewDateStr,
-                    subject: completedTask.subject,
-                    lesson: completedTask.lesson,
-                    topic: completedTask.topic,
-                    type: reviewType,
-                    reviewType: reviewType.replace('review-', '').toUpperCase(),
+            const taskExists = plan.tasks[dateStr].some(t => t.id === id);
+            if (!taskExists) {
+                plan.tasks[dateStr].push({
+                    id: id,
+                    date: dateStr,
+                    subject: task.subject,
+                    lesson: task.lesson,
+                    topic: task.topic,
+                    type: 'study',
                     completed: false,
                 });
             }
-        }
+        });
+        return plan;
+    }
+
+    const saveState = () => {
+// Agora salvamos no Firestore em vez do localStorage
+db.collection("progresso").doc("meuPlano").set(studyPlan)
+    .then(() => {
+        console.log("Progresso salvo com sucesso no Firebase!");
+    })
+    .catch((error) => {
+        console.error("Erro ao salvar progresso: ", error);
+    });
+};
+
+    const loadState = async () => {
+const docRef = db.collection("progresso").doc("meuPlano");
+try {
+    const doc = await docRef.get();
+    if (doc.exists) {
+        console.log("Progresso carregado do Firebase!");
+        studyPlan = doc.data();
+    } else {
+        // Documento não existe (primeiro acesso), inicializa o plano
+        console.log("Nenhum progresso encontrado, inicializando novo plano.");
+        studyPlan = initializeStudyPlan();
+    }
+} catch (error) {
+    console.error("Erro ao carregar progresso: ", error);
+    // Em caso de erro, carrega o plano padrão para não quebrar a aplicação
+    studyPlan = initializeStudyPlan();
+}
+};
+
+    const renderCalendar = (date) => {
+        const calendarContainer = document.getElementById('calendar-container');
+        const month = date.getMonth();
+        const year = date.getFullYear();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         
-        const updateProgress = () => {
-            const allTasks = Object.values(studyPlan.tasks).flat().concat(Object.values(studyPlan.reviews).flat());
-            const completedTasks = allTasks.filter(task => task.completed).length;
-            const totalTasks = allTasks.length;
-            const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-            
-            progressText.textContent = `${percentage}%`;
-            
-            if (progressChart) {
-                progressChart.data.datasets[0].data = [percentage, 100 - percentage];
-                progressChart.update();
-            }
-        };
+        let html = `<div class="p-4">
+            <div class="flex justify-between items-center mb-4">
+                <button id="prev-month" class="control-button p-2 rounded-full">◀</button>
+                <h2 class="text-xl font-bold text-center">${monthNames[month]} ${year}</h2>
+                <button id="next-month" class="control-button p-2 rounded-full">▶</button>
+            </div>
+            <div class="calendar-grid grid grid-cols-7 text-center font-semibold text-sm text-gray-600 mb-2">
+                <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+            </div>
+            <div class="calendar-grid grid grid-cols-7 text-center text-sm">`;
 
-        const setupChart = () => {
-            const ctx = document.getElementById('progressChart').getContext('2d');
-            progressChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    datasets: [{
-                        data: [0, 100],
-                        backgroundColor: ['#D5A021', '#EAEAEA'],
-                        borderColor: ['#FFFFFF'],
-                        borderWidth: 4,
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '75%',
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: false }
-                    }
-                }
-            });
-        };
+        for (let i = 0; i < firstDay.getDay(); i++) {
+            html += `<div></div>`;
+        }
+
+        for (let i = 1; i <= lastDay.getDate(); i++) {
+            const dayDate = new Date(year, month, i);
+            const dateStr = formatDateYMD(dayDate);
+            const hasTask = (studyPlan.tasks[dateStr] && studyPlan.tasks[dateStr].length > 0) || (studyPlan.reviews[dateStr] && studyPlan.reviews[dateStr].length > 0);
+            
+            let dayClasses = 'calendar-day cursor-pointer p-2 rounded-full aspect-square flex items-center justify-center';
+            if(isSameDay(dayDate, viewDate)) dayClasses += ' selected';
+            if(isSameDay(dayDate, today)) dayClasses += ' border-2 border-blue-500';
+            if(hasTask) dayClasses += ' has-task';
+
+            html += `<div class="${dayClasses}" data-date="${dateStr}">${i}</div>`;
+        }
+
+        html += `</div></div>`;
+        calendarContainer.innerHTML = html;
+    }
+
+    const renderPlan = (date) => {
+        renderCalendar(date);
+        const dateStr = formatDateYMD(date);
+        planContent.innerHTML = '';
         
-        async function callGemini(prompt, maxRetries = 3) {
-            let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
-            const payload = { contents: chatHistory };
-            const apiKey = "";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        let tasksForDay = studyPlan.tasks[dateStr] || [];
+        let reviewsForDay = studyPlan.reviews[dateStr] || [];
+        
+        if (tasksForDay.length === 0 && reviewsForDay.length === 0) {
+            planContent.innerHTML = `<div class="text-center p-4 bg-gray-50 rounded-lg"><p class="text-gray-500">Nenhuma tarefa agendada para hoje.</p></div>`;
+            return;
+        }
+
+        if (tasksForDay.length > 0) {
+            planContent.innerHTML += `<h3 class="text-lg font-semibold text-gray-700 mt-4 border-b pb-2">📚 Aulas do Dia</h3>`;
+            tasksForDay.forEach(task => {
+                const isOverdue = !task.completed && isBefore(new Date(task.date), today);
+                planContent.appendChild(createTaskCard(task, isOverdue));
+            });
+        }
+
+        if (reviewsForDay.length > 0) {
+            planContent.innerHTML += `<h3 class="text-lg font-semibold text-gray-700 mt-6 border-b pb-2">🔁 Revisões Agendadas</h3>`;
+            reviewsForDay.forEach(review => {
+                const isOverdue = !review.completed && isBefore(new Date(review.date), today);
+                planContent.appendChild(createTaskCard(review, isOverdue));
+            });
+        }
+    };
+
+    function createTaskCard(task, isOverdue = false) {
+        const card = document.createElement('div');
+        let cardClasses = 'task-card p-4 rounded-lg shadow-sm';
+        if (task.type.startsWith('review')) cardClasses += ` ${task.type}`;
+        if (isOverdue) cardClasses += ' overdue';
+
+        card.className = cardClasses;
+        
+        let geminiButtonsHTML = '';
+         if (task.topic) {
+            geminiButtonsHTML = `
+            <div class="mt-3 pt-3 border-t border-gray-200 flex flex-wrap gap-2">
+                <button class="gemini-button text-xs font-semibold py-1 px-3 rounded-full" data-action="explain" data-topic="${task.topic}">✨ Explicar Tópico</button>
+                <button class="gemini-button text-xs font-semibold py-1 px-3 rounded-full" data-action="generate_questions" data-topic="${task.topic}">✨ Gerar Questões</button>
+            </div>
+            `;
+        }
+
+        let title = task.type === 'study' ? `${task.subject} - Aula ${task.lesson}` : `${task.reviewType}: ${task.subject} - Aula ${task.lesson}`;
+
+        card.innerHTML = `
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0 pt-1">
+                    <input type="checkbox" id="${task.id}" data-id="${task.id}" data-date="${task.date}" data-type="${task.type}" class="task-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${task.completed ? 'checked' : ''}>
+                </div>
+                <div class="flex-1">
+                    <label for="${task.id}" class="cursor-pointer">
+                        <p class="font-semibold text-gray-700">${title}</p>
+                        <p class="text-gray-600 text-sm">${task.topic}</p>
+                    </label>
+                </div>
+            </div>
+            ${geminiButtonsHTML}
+        `;
+        return card;
+    }
+
+    function scheduleReviews(completedTask) {
+        const completionDate = new Date(completedTask.date + 'T00:00:00');
+        const reviewDays = { 'review-r1': 1, 'review-r3': 7, 'review-r5': 30 };
+
+        for (const [reviewType, daysToAdd] of Object.entries(reviewDays)) {
+            const reviewDate = addDays(completionDate, daysToAdd);
+            const reviewDateStr = formatDateYMD(reviewDate);
+
+            if (!studyPlan.reviews[reviewDateStr]) {
+                studyPlan.reviews[reviewDateStr] = [];
+            }
             
-            for (let attempt = 0; attempt < maxRetries; attempt++) {
-                try {
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    const result = await response.json();
-                    if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts) {
-                        return result.candidates[0].content.parts[0].text;
-                    } else {
-                        throw new Error("Resposta da API inválida ou vazia.");
-                    }
-                } catch (error) {
-                    if (attempt === maxRetries - 1) return `Erro ao contatar o assistente de IA: ${error.message}. Por favor, tente novamente mais tarde.`;
-                    await new Promise(res => setTimeout(res, Math.pow(2, attempt) * 1000));
+            const reviewId = `${completedTask.id}-${reviewType}`;
+            
+            if (studyPlan.reviews[reviewDateStr].some(r => r.id === reviewId)) continue;
+
+            studyPlan.reviews[reviewDateStr].push({
+                id: reviewId,
+                date: reviewDateStr,
+                subject: completedTask.subject,
+                lesson: completedTask.lesson,
+                topic: completedTask.topic,
+                type: reviewType,
+                reviewType: reviewType.replace('review-', '').toUpperCase(),
+                completed: false,
+            });
+        }
+    }
+    
+    const updateProgress = () => {
+        const allTasks = Object.values(studyPlan.tasks).flat().concat(Object.values(studyPlan.reviews).flat());
+        const completedTasks = allTasks.filter(task => task.completed).length;
+        const totalTasks = allTasks.length;
+        const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+        
+        progressText.textContent = `${percentage}%`;
+        
+        if (progressChart) {
+            progressChart.data.datasets[0].data = [percentage, 100 - percentage];
+            progressChart.update();
+        }
+    };
+
+    const setupChart = () => {
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        progressChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [0, 100],
+                    backgroundColor: ['#D5A021', '#EAEAEA'],
+                    borderColor: ['#FFFFFF'],
+                    borderWidth: 4,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: false }
                 }
             }
-        }
-
-        const handleGeminiAction = async (action, topic) => {
-            geminiModal.classList.remove('hidden');
-            modalLoading.style.display = 'block';
-            modalContent.innerHTML = '';
-            
-            let prompt = '';
-            if (action === 'explain') {
-                modalTitle.textContent = `✨ Explicando: ${topic}`;
-                prompt = `Com base no edital para Psicólogo da Prefeitura de Uberlândia (banca Consulplan), explique o seguinte tópico de forma clara, objetiva e focada para concursos: "${topic}". Estruture a resposta com os pontos mais importantes.`;
-            } else if (action === 'generate_questions') {
-                modalTitle.textContent = `✨ Questões sobre: ${topic}`;
-                prompt = `Você é um especialista na banca Consulplan. Elabore 3 questões inéditas de múltipla escolha (A, B, C, D) sobre o tópico "${topic}", seguindo o estilo de cobrança da Consulplan para o concurso de Psicólogo da Prefeitura de Uberlândia. Ao final, apresente o gabarito comentado, explicando o porquê de cada alternativa correta e incorreta.`;
+        });
+    };
+    
+    async function callGemini(prompt, maxRetries = 3) {
+        let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+        
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const result = await response.json();
+                if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts) {
+                    return result.candidates[0].content.parts[0].text;
+                } else {
+                    throw new Error("Resposta da API inválida ou vazia.");
+                }
+            } catch (error) {
+                if (attempt === maxRetries - 1) return `Erro ao contatar o assistente de IA: ${error.message}. Por favor, tente novamente mais tarde.`;
+                await new Promise(res => setTimeout(res, Math.pow(2, attempt) * 1000));
             }
-            const responseText = await callGemini(prompt);
-            modalLoading.style.display = 'none';
-            modalContent.innerHTML = responseText;
-        };
-
-        function renderAllTasksTable(filter = '') {
-            const tableBody = document.getElementById('all-tasks-table-body');
-            const allTasks = Object.values(studyPlan.tasks).flat();
-            allTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            let html = '';
-            const filterText = filter.toLowerCase();
-
-            allTasks.filter(task => {
-                return task.subject.toLowerCase().includes(filterText) || task.topic.toLowerCase().includes(filterText);
-            }).forEach(task => {
-                html += `
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDateDMY(new Date(task.date + 'T00:00:00'))}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${task.subject}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${task.lesson}</td>
-                        <td class="px-6 py-4 text-sm text-gray-500">${task.topic}</td>
-                    </tr>
-                `;
-            });
-            tableBody.innerHTML = html;
         }
-        function renderOverdueTasks() {
-          // Esconde o calendário, já que estamos em uma visualização de lista
-          const calendarContainer = document.getElementById('calendar-container');
-          if(calendarContainer) calendarContainer.innerHTML = '';
-          
-          // Limpa a área de conteúdo principal
-          planContent.innerHTML = '';
+    }
 
-          // Pega a data de hoje sem as horas para comparação
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
+    const handleGeminiAction = async (action, topic) => {
+        geminiModal.classList.remove('hidden');
+        modalLoading.style.display = 'block';
+        modalContent.innerHTML = '';
+        
+        let prompt = '';
+        if (action === 'explain') {
+            modalTitle.textContent = `✨ Explicando: ${topic}`;
+            prompt = `Com base no edital para Psicólogo da Prefeitura de Uberlândia (banca Consulplan), explique o seguinte tópico de forma clara, objetiva e focada para concursos: "${topic}". Estruture a resposta com os pontos mais importantes.`;
+        } else if (action === 'generate_questions') {
+            modalTitle.textContent = `✨ Questões sobre: ${topic}`;
+            prompt = `Você é um especialista na banca Consulplan. Elabore 3 questões inéditas de múltipla escolha (A, B, C, D) sobre o tópico "${topic}", seguindo o estilo de cobrança da Consulplan para o concurso de Psicólogo da Prefeitura de Uberlândia. Ao final, apresente o gabarito comentado, explicando o porquê de cada alternativa correta e incorreta.`;
+        }
+        const responseText = await callGemini(prompt);
+        modalLoading.style.display = 'none';
+        modalContent.innerHTML = responseText;
+    };
 
-          // Junta todas as tarefas de estudo e revisão em uma única lista
-          const allTasksAndReviews = Object.values(studyPlan.tasks).flat().concat(Object.values(studyPlan.reviews).flat());
+    function renderAllTasksTable(filter = '') {
+        const tableBody = document.getElementById('all-tasks-table-body');
+        const allTasks = Object.values(studyPlan.tasks).flat();
+        allTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        let html = '';
+        const filterText = filter.toLowerCase();
 
-          // Filtra para encontrar apenas as tarefas atrasadas (não completas e com data anterior a hoje)
-          const overdueTasks = allTasksAndReviews.filter(task => {
-              const taskDate = new Date(task.date + 'T00:00:00');
-              return !task.completed && taskDate < today;
-          });
+        allTasks.filter(task => {
+            return task.subject.toLowerCase().includes(filterText) || task.topic.toLowerCase().includes(filterText);
+        }).forEach(task => {
+            html += `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDateDMY(new Date(task.date + 'T00:00:00'))}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${task.subject}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${task.lesson}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${task.topic}</td>
+                </tr>
+            `;
+        });
+        tableBody.innerHTML = html;
+    }
+    function renderOverdueTasks() {
+      // Esconde o calendário, já que estamos em uma visualização de lista
+      const calendarContainer = document.getElementById('calendar-container');
+      if(calendarContainer) calendarContainer.innerHTML = '';
+      
+      // Limpa a área de conteúdo principal
+      planContent.innerHTML = '';
 
-          // Ordena as tarefas da mais antiga para a mais nova
-          overdueTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
+      // Pega a data de hoje sem as horas para comparação
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-          // Cria um botão para voltar à visualização do calendário
-          const backButton = document.createElement('button');
-          backButton.innerHTML = '&#x2B05;&#xFE0F; Voltar ao Calendário';
-          backButton.className = 'control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm mb-4';
-          backButton.onclick = () => renderPlan(viewDate); // Re-renderiza a visão normal
-          planContent.appendChild(backButton);
-          
-          // Se não houver tarefas atrasadas, mostra uma mensagem de parabéns
-          if (overdueTasks.length === 0) {
-              planContent.innerHTML += `<div class="text-center p-4 bg-green-50 rounded-lg border border-green-200"><p class="text-green-700 font-semibold">Parabéns! Nenhuma tarefa atrasada.</p></div>`;
-              return;
-          }
-          
-          // Se houver tarefas, mostra o título e a lista
-          const title = document.createElement('h3');
-          title.className = "text-lg font-semibold text-gray-700 mt-4 border-b pb-2 mb-4";
-          title.textContent = `🚨 ${overdueTasks.length} Tarefa(s) Atrasada(s)`;
-          planContent.appendChild(title);
+      // Junta todas as tarefas de estudo e revisão em uma única lista
+      const allTasksAndReviews = Object.values(studyPlan.tasks).flat().concat(Object.values(studyPlan.reviews).flat());
 
-          // Cria e adiciona o card de cada tarefa atrasada na tela
-          overdueTasks.forEach(task => {
-              const taskCard = createTaskCard(task, true); // O 'true' força o estilo de atrasado
-              planContent.appendChild(taskCard);
-          });
+      // Filtra para encontrar apenas as tarefas atrasadas (não completas e com data anterior a hoje)
+      const overdueTasks = allTasksAndReviews.filter(task => {
+          const taskDate = new Date(task.date + 'T00:00:00');
+          return !task.completed && taskDate < today;
+      });
+
+      // Ordena as tarefas da mais antiga para a mais nova
+      overdueTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      // Cria um botão para voltar à visualização do calendário
+      const backButton = document.createElement('button');
+      backButton.innerHTML = '&#x2B05;&#xFE0F; Voltar ao Calendário';
+      backButton.className = 'control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm mb-4';
+      backButton.onclick = () => renderPlan(viewDate); // Re-renderiza a visão normal
+      planContent.appendChild(backButton);
+      
+      // Se não houver tarefas atrasadas, mostra uma mensagem de parabéns
+      if (overdueTasks.length === 0) {
+          planContent.innerHTML += `<div class="text-center p-4 bg-green-50 rounded-lg border border-green-200"><p class="text-green-700 font-semibold">Parabéns! Nenhuma tarefa atrasada.</p></div>`;
+          return;
       }
-        planContent.addEventListener('change', (e) => {
-            if (e.target.matches('.task-checkbox')) {
-                const { id, date, type } = e.target.dataset;
-                let taskList = type.startsWith('review') ? studyPlan.reviews[date] : studyPlan.tasks[date];
-                const task = taskList.find(t => t.id === id);
-                if (task) {
-                    task.completed = e.target.checked;
-                    if (task.type === 'study' && task.completed) {
-                        scheduleReviews(task);
-                    }
-                    updateProgress();
-                    saveState();
-                    renderPlan(viewDate);
+      
+      // Se houver tarefas, mostra o título e a lista
+      const title = document.createElement('h3');
+      title.className = "text-lg font-semibold text-gray-700 mt-4 border-b pb-2 mb-4";
+      title.textContent = `🚨 ${overdueTasks.length} Tarefa(s) Atrasada(s)`;
+      planContent.appendChild(title);
+
+      // Cria e adiciona o card de cada tarefa atrasada na tela
+      overdueTasks.forEach(task => {
+          const taskCard = createTaskCard(task, true); // O 'true' força o estilo de atrasado
+          planContent.appendChild(taskCard);
+      });
+  }
+    planContent.addEventListener('change', (e) => {
+        if (e.target.matches('.task-checkbox')) {
+            const { id, date, type } = e.target.dataset;
+            let taskList = type.startsWith('review') ? studyPlan.reviews[date] : studyPlan.tasks[date];
+            const task = taskList.find(t => t.id === id);
+            if (task) {
+                task.completed = e.target.checked;
+                if (task.type === 'study' && task.completed) {
+                    scheduleReviews(task);
                 }
-            }
-        });
-
-        planContent.addEventListener('click', (e) => {
-            if (e.target.closest('.gemini-button')) {
-                const button = e.target.closest('.gemini-button');
-                const action = button.dataset.action;
-                const topic = button.dataset.topic;
-                handleGeminiAction(action, topic);
-            }
-        });
-
-        document.getElementById('calendar-container').addEventListener('click', (e) => {
-            const dayElement = e.target.closest('.calendar-day');
-            if (dayElement) {
-                viewDate = new Date(dayElement.dataset.date + 'T00:00:00');
+                updateProgress();
+                saveState();
                 renderPlan(viewDate);
             }
-            if (e.target.id === 'prev-month') {
-                viewDate.setMonth(viewDate.getMonth() - 1);
-                renderPlan(viewDate);
-            }
-            if (e.target.id === 'next-month') {
-                viewDate.setMonth(viewDate.getMonth() + 1);
-                renderPlan(viewDate);
-            }
-        });
+        }
+    });
 
-        document.querySelectorAll('.close-modal').forEach(btn => {
-            btn.addEventListener('click', () => {
-                geminiModal.classList.add('hidden');
-                allTasksModal.classList.add('hidden');
-            });
-        });
+    planContent.addEventListener('click', (e) => {
+        if (e.target.closest('.gemini-button')) {
+            const button = e.target.closest('.gemini-button');
+            const action = button.dataset.action;
+            const topic = button.dataset.topic;
+            handleGeminiAction(action, topic);
+        }
+    });
 
-        const startCountdown = () => {
-            const countdownEl = document.getElementById('countdown');
-            const examDate = new Date('2025-10-26T08:00:00').getTime();
-            const update = () => {
-                const distance = examDate - new Date().getTime();
-                if (distance < 0) {
-                    countdownEl.innerHTML = "PROVA REALIZADA!";
-                    clearInterval(interval);
-                    return;
-                }
-                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                countdownEl.innerHTML = `${days}d ${hours}h`;
-            };
-            const interval = setInterval(update, 1000 * 60 * 60);
-            update();
+    document.getElementById('calendar-container').addEventListener('click', (e) => {
+        const dayElement = e.target.closest('.calendar-day');
+        if (dayElement) {
+            viewDate = new Date(dayElement.dataset.date + 'T00:00:00');
+            renderPlan(viewDate);
+        }
+        if (e.target.id === 'prev-month') {
+            viewDate.setMonth(viewDate.getMonth() - 1);
+            renderPlan(viewDate);
+        }
+        if (e.target.id === 'next-month') {
+            viewDate.setMonth(viewDate.getMonth() + 1);
+            renderPlan(viewDate);
+        }
+    });
+
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', () => {
+            geminiModal.classList.add('hidden');
+            allTasksModal.classList.add('hidden');
+        });
+    });
+
+    const startCountdown = () => {
+        const countdownEl = document.getElementById('countdown');
+        const examDate = new Date('2025-10-26T08:00:00').getTime();
+        const update = () => {
+            const distance = examDate - new Date().getTime();
+            if (distance < 0) {
+                countdownEl.innerHTML = "PROVA REALIZADA!";
+                clearInterval(interval);
+                return;
+            }
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            countdownEl.innerHTML = `${days}d ${hours}h`;
         };
+        const interval = setInterval(update, 1000 * 60 * 60);
+        update();
+    };
 
-        document.getElementById('export-backup-btn').addEventListener('click', () => {
-            const dataStr = JSON.stringify(studyPlan, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            const exportFileDefaultName = 'backup_plano_estudos.json';
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
+    document.getElementById('export-backup-btn').addEventListener('click', () => {
+        const dataStr = JSON.stringify(studyPlan, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        const exportFileDefaultName = 'backup_plano_estudos.json';
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+    });
+    
+    document.getElementById('export-csv-btn').addEventListener('click', () => {
+        let csvContent = "data:text/csv;charset=utf-8,date,subject,lesson,topic,type\n";
+        const allTasks = Object.values(studyPlan.tasks).flat();
+        allTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
+        allTasks.forEach(task => {
+            const row = [task.date, `"${task.subject}"`, `"${task.lesson}"`, `"${task.topic}"`, task.type].join(',');
+            csvContent += row + "\r\n";
         });
-        
-        document.getElementById('export-csv-btn').addEventListener('click', () => {
-            let csvContent = "data:text/csv;charset=utf-8,date,subject,lesson,topic,type\n";
-            const allTasks = Object.values(studyPlan.tasks).flat();
-            allTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
-            allTasks.forEach(task => {
-                const row = [task.date, `"${task.subject}"`, `"${task.lesson}"`, `"${task.topic}"`, task.type].join(',');
-                csvContent += row + "\r\n";
-            });
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "base_de_aulas.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        });
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "base_de_aulas.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
 
-        document.getElementById('import-backup-btn').addEventListener('click', () => {
-            document.getElementById('import-backup-file').click();
-        });
-        
-        document.getElementById('import-csv-btn').addEventListener('click', () => {
-            document.getElementById('import-csv-file').click();
-        });
-        
-        document.getElementById('view-all-tasks-btn').addEventListener('click', () => {
-            renderAllTasksTable();
-            allTasksModal.classList.remove('hidden');
-        });
+    document.getElementById('import-backup-btn').addEventListener('click', () => {
+        document.getElementById('import-backup-file').click();
+    });
+    
+    document.getElementById('import-csv-btn').addEventListener('click', () => {
+        document.getElementById('import-csv-file').click();
+    });
+    
+    document.getElementById('view-all-tasks-btn').addEventListener('click', () => {
+        renderAllTasksTable();
+        allTasksModal.classList.remove('hidden');
+    });
 
-        document.getElementById('all-tasks-search').addEventListener('input', (e) => {
-            renderAllTasksTable(e.target.value);
-        });
+    document.getElementById('all-tasks-search').addEventListener('input', (e) => {
+        renderAllTasksTable(e.target.value);
+    });
 
-        document.getElementById('import-backup-file').addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    if (importedData.tasks && importedData.reviews) {
-                        studyPlan = importedData;
-                        saveState();
-                        renderPlan(viewDate);
-                        updateProgress();
-                        alert('Backup importado com sucesso!');
-                    } else {
-                        alert('Arquivo de backup inválido.');
-                    }
-                } catch (err) {
-                    alert('Erro ao ler o arquivo de backup.');
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = '';
-        });
-
-        document.getElementById('import-csv-file').addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const csv = e.target.result;
-                    const lines = csv.split('\n').slice(1); 
-                    let newTasksCount = 0;
-                    lines.forEach(line => {
-                        if (line.trim() === '') return;
-                        const [date, subject, lesson, topic, type] = line.split(',');
-                        const task = { date: date.trim(), subject: subject.trim(), lesson: lesson.trim(), topic: topic.trim(), type: 'study' };
-                        const id = generateUniqueId(task);
-                        const dateStr = formatDateYMD(new Date(task.date + 'T00:00:00'));
-
-                        if (!studyPlan.tasks[dateStr]) {
-                            studyPlan.tasks[dateStr] = [];
-                        }
-                        
-                        if (!studyPlan.tasks[dateStr].some(t => t.id === id)) {
-                             studyPlan.tasks[dateStr].push({ ...task, id, completed: false });
-                             newTasksCount++;
-                        }
-                    });
+    document.getElementById('import-backup-file').addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                if (importedData.tasks && importedData.reviews) {
+                    studyPlan = importedData;
                     saveState();
                     renderPlan(viewDate);
                     updateProgress();
-                    alert(`${newTasksCount} novas aulas importadas com sucesso!`);
-
-                } catch (err) {
-                    alert('Erro ao processar o arquivo CSV. Verifique o formato.');
+                    alert('Backup importado com sucesso!');
+                } else {
+                    alert('Arquivo de backup inválido.');
                 }
-            };
-            reader.readAsText(file);
-            event.target.value = '';
-        });
+            } catch (err) {
+                alert('Erro ao ler o arquivo de backup.');
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    });
 
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            if (confirm('Tem certeza que deseja apagar todo o progresso? Esta ação não pode ser desfeita.')) {
-                localStorage.removeItem(STORAGE_KEY);
-                studyPlan = initializeStudyPlan();
+    document.getElementById('import-csv-file').addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const csv = e.target.result;
+                const lines = csv.split('\n').slice(1); 
+                let newTasksCount = 0;
+                lines.forEach(line => {
+                    if (line.trim() === '') return;
+                    const [date, subject, lesson, topic, type] = line.split(',');
+                    const task = { date: date.trim(), subject: subject.trim(), lesson: lesson.trim(), topic: topic.trim(), type: 'study' };
+                    const id = generateUniqueId(task);
+                    const dateStr = formatDateYMD(new Date(task.date + 'T00:00:00'));
+
+                    if (!studyPlan.tasks[dateStr]) {
+                        studyPlan.tasks[dateStr] = [];
+                    }
+                    
+                    if (!studyPlan.tasks[dateStr].some(t => t.id === id)) {
+                         studyPlan.tasks[dateStr].push({ ...task, id, completed: false });
+                         newTasksCount++;
+                    }
+                });
+                saveState();
                 renderPlan(viewDate);
                 updateProgress();
-                alert('Progresso resetado.');
-        document.getElementById('view-overdue-tasks-btn').addEventListener('click', renderOverdueTasks);
+                alert(`${newTasksCount} novas aulas importadas com sucesso!`);
+
+            } catch (err) {
+                alert('Erro ao processar o arquivo CSV. Verifique o formato.');
             }
-        });
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    });
 
-        document.addEventListener('DOMContentLoaded', async () => {
-    // Agora esperamos o loadState terminar antes de renderizar
-    await loadState(); 
+    document.getElementById('reset-btn').addEventListener('click', () => {
+        if (confirm('Tem certeza que deseja apagar todo o progresso? Esta ação não pode ser desfeita.')) {
+            localStorage.removeItem(STORAGE_KEY);
+            studyPlan = initializeStudyPlan();
+            renderPlan(viewDate);
+            updateProgress();
+            alert('Progresso resetado.');
+    document.getElementById('view-overdue-tasks-btn').addEventListener('click', renderOverdueTasks);
+        }
+    });
 
-    renderPlan(viewDate);
-    setupChart();
-    updateProgress();
-    startCountdown();
-    document.getElementById('currentDate').textContent = formatDateDMY(new Date());
+    document.addEventListener('DOMContentLoaded', async () => {
+// Agora esperamos o loadState terminar antes de renderizar
+await loadState(); 
+
+renderPlan(viewDate);
+setupChart();
+updateProgress();
+startCountdown();
+document.getElementById('currentDate').textContent = formatDateDMY(new Date());
 });
-    
 </script>
 </body>
 </html>
