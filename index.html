@@ -94,6 +94,11 @@
                              <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-red-500"></div><span>Tarefa Atrasada</span></div>
                         </div>
                     </div>
+                                        <div id="subject-progress-container" class="mt-8">
+                            <h3 class="text-xl font-bold mb-4 text-center">Progresso por Matéria</h3>
+                            <div id="subject-progress-bars" class="space-y-4">
+                                </div>
+                        </div>
                 </aside>
             </div>
         </main>
@@ -687,6 +692,38 @@
             }
         }
         
+        // FUNÇÃO NOVA PARA RENDERIZAR O PROGRESSO POR MATÉRIA
+        const renderSubjectProgress = () => {
+            const container = document.getElementById('subject-progress-bars');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const allTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks) : []).flat();
+            const subjects = [...new Set(allTasks.map(task => task.subject))]; // Pega todas as matérias únicas
+
+            subjects.sort().forEach(subject => {
+                const tasksForSubject = allTasks.filter(task => task.subject === subject);
+                const completedTasks = tasksForSubject.filter(task => task.completed).length;
+                const totalTasks = tasksForSubject.length;
+                const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+                const progressElement = document.createElement('div');
+                progressElement.innerHTML = `
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-sm font-semibold text-gray-700">${subject}</span>
+                            <span class="text-sm font-semibold text-gray-700">${percentage}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-[#D5A021] h-2.5 rounded-full" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(progressElement);
+            });
+        };
+
+        // VERSÃO ATUALIZADA - CHAMA A NOVA FUNÇÃO
         const updateProgress = () => {
             const allTasksAndReviews = (studyPlan.tasks ? Object.values(studyPlan.tasks) : []).flat().concat((studyPlan.reviews ? Object.values(studyPlan.reviews) : []).flat());
             const completedTasks = allTasksAndReviews.filter(task => task.completed).length;
@@ -696,18 +733,26 @@
             progressText.textContent = `${percentage}%`;
             
             if (progressChart) {
-                progressChart.data.datasets[0].data = [percentage, 100 - percentage];
+                progressChart.data.datasets[0].data = [completedTasks, totalTasks - completedTasks]; // Dados para o tooltip
                 progressChart.update();
             }
+
+            renderSubjectProgress(); // ATUALIZA AS BARRAS ESPECÍFICAS
         };
 
+        // VERSÃO ATUALIZADA - COM TOOLTIPS MELHORADOS
         const setupChart = () => {
             const ctx = document.getElementById('progressChart').getContext('2d');
+            const allTasksAndReviews = (studyPlan.tasks ? Object.values(studyPlan.tasks) : []).flat().concat((studyPlan.reviews ? Object.values(studyPlan.reviews) : []).flat());
+            const completed = allTasksAndReviews.filter(task => task.completed).length;
+            const total = allTasksAndReviews.length;
+
             progressChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
+                    labels: ['Concluído', 'Pendente'],
                     datasets: [{
-                        data: [0, 100],
+                        data: [completed, total - completed],
                         backgroundColor: ['#D5A021', '#EAEAEA'],
                         borderColor: ['#FFFFFF'],
                         borderWidth: 4,
@@ -720,12 +765,26 @@
                     cutout: '75%',
                     plugins: {
                         legend: { display: false },
-                        tooltip: { enabled: false }
+                        tooltip: { 
+                            enabled: true, // HABILITA O TOOLTIP
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        const percentage = Math.round((context.parsed / total) * 100);
+                                        label += `${context.raw} (${percentage}%)`;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
                     }
                 }
             });
         };
-        
 
         function renderAllTasksTable(filter = '') {
             const tableBody = document.getElementById('all-tasks-table-body');
@@ -972,10 +1031,10 @@
             renderPlan(viewDate);
             setupChart();
             updateProgress();
+            renderSubjectProgress();
             startCountdown();
             document.getElementById('currentDate').textContent = formatDateDMY(new Date());
         });
 </script>
 </body>
 </html>
-
