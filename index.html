@@ -128,7 +128,6 @@
                 </div>
             </div>
         </div>
-        <div id="dynamic-greeting" class="text-right text-gray-500 text-sm mt-2"></div>
     </header>
 
     <!-- Cards de Informação -->
@@ -183,45 +182,61 @@
 
 <!-- Modal Adicionar/Editar Aula (z-index 60) -->
 <div id="addTaskModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
-    <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl">
         <div class="flex justify-between items-center p-4 border-b">
             <h3 id="modal-title" class="text-xl font-bold">Incluir Nova Aula</h3>
             <button class="close-modal text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
         </div>
-        <form id="add-task-form" class="p-6 space-y-4">
+        <form id="add-task-form" class="p-6">
             <input type="hidden" id="task-id">
             <input type="hidden" id="original-task-date">
-            <div>
-                <label for="task-date" class="block text-sm font-medium text-gray-700">Data (DD/MM/AAAA)</label>
-                <input type="date" id="task-date" required class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Coluna Esquerda -->
+                <div class="space-y-4">
+                    <div>
+                        <label for="task-date" class="block text-sm font-medium text-gray-700">Data (DD/MM/AAAA)</label>
+                        <input type="date" id="task-date" required class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
+                    </div>
+                    <div>
+                        <label for="task-subject" class="block text-sm font-medium text-gray-700">Matéria</label>
+                        <select id="task-subject" required class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
+                            <!-- Options will be populated by JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label for="task-lesson" class="block text-sm font-medium text-gray-700">Nº da Aula</label>
+                        <input type="text" id="task-lesson" required class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
+                    </div>
+                    <div>
+                        <label for="task-topic" class="block text-sm font-medium text-gray-700">Tópico</label>
+                        <input type="text" id="task-topic" required class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
+                    </div>
+                    <div>
+                        <label for="task-type" class="block text-sm font-medium text-gray-700">Tipo</label>
+                        <select id="task-type" class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
+                            <option value="video">Videoaula</option>
+                            <option value="pdf">PDF</option>
+                            <option value="legis">Legislação</option>
+                        </select>
+                    </div>
+                     <div>
+                        <label for="task-notebook-link" class="block text-sm font-medium text-gray-700">Link do Caderno (NotebookLM)</label>
+                        <input type="url" id="task-notebook-link" placeholder="https://..." class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
+                    </div>
+                </div>
+                <!-- Coluna Direita -->
+                <div class="space-y-4">
+                    <div>
+                        <label for="task-notes" class="block text-sm font-medium text-gray-700">Anotações</label>
+                        <textarea id="task-notes" rows="12" class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3"></textarea>
+                    </div>
+                    <div id="completed-checkbox-container" class="hidden items-center pt-4">
+                        <input type="checkbox" id="task-completed-checkbox" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]">
+                        <label for="task-completed-checkbox" class="ml-2 block text-sm font-medium text-gray-700">Marcar como assistida</label>
+                    </div>
+                </div>
             </div>
-            <div>
-                <label for="task-subject" class="block text-sm font-medium text-gray-700">Matéria</label>
-                <select id="task-subject" required class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
-                    <!-- Options will be populated by JS -->
-                </select>
-            </div>
-            <div>
-                <label for="task-lesson" class="block text-sm font-medium text-gray-700">Nº da Aula</label>
-                <input type="text" id="task-lesson" required class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
-            </div>
-            <div>
-                <label for="task-topic" class="block text-sm font-medium text-gray-700">Tópico</label>
-                <input type="text" id="task-topic" required class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
-            </div>
-            <div>
-                <label for="task-type" class="block text-sm font-medium text-gray-700">Tipo</label>
-                <select id="task-type" class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
-                    <option value="video">Videoaula</option>
-                    <option value="pdf">PDF</option>
-                    <option value="legis">Legislação</option>
-                </select>
-            </div>
-             <div>
-                <label for="task-notebook-link" class="block text-sm font-medium text-gray-700">Link do Caderno (NotebookLM)</label>
-                <input type="url" id="task-notebook-link" placeholder="https://..." class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
-            </div>
-            <div class="flex justify-end pt-4">
+            <div class="flex justify-end pt-6 mt-6 border-t">
                 <button type="submit" class="bg-[#D5A021] hover:bg-amber-600 text-white font-bold py-2 px-4 rounded">Salvar Aula</button>
             </div>
         </form>
@@ -391,6 +406,7 @@
 
 <script>
     // =================== CONFIGURAÇÃO E VARIÁVEIS GLOBAIS ===================
+    // =================== CONFIGURAÇÃO E VARIÁVEIS GLOBAIS ===================
         const firebaseConfig = {
         apiKey: "AIzaSyA050ckDIuD1ujjyRee81r0Vv_jygoHs1Q",
         authDomain: "meu-painel-de-estudos-v2.firebaseapp.com",
@@ -443,7 +459,27 @@
     });
     
     // =================== FUNÇÕES AUXILIARES DE DATA E HEADER ===================
+    function updateDynamicHeader() {
+        const greetingEl = document.getElementById('dynamic-greeting');
+        if (greetingEl) {
+            const now = new Date();
+            const hour = now.getHours();
+            let greeting;
 
+            if (hour >= 5 && hour < 12) {
+                greeting = "Bom dia!";
+            } else if (hour >= 12 && hour < 18) {
+                greeting = "Boa tarde!";
+            } else {
+                greeting = "Boa noite!";
+            }
+
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const formattedDate = now.toLocaleDateString('pt-BR', dateOptions);
+
+            greetingEl.textContent = `${greeting} Hoje é ${formattedDate}.`;
+        }
+    }
 
     function formatDateYMD(date) {
         const d = new Date(date);
@@ -518,7 +554,6 @@
     // =================== LÓGICA PRINCIPAL DA APLICAÇÃO ===================
     function initializeStudyPlan() {
         let plan = { tasks: {}, reviews: {}, history: [], dailyGoals: {}, deletedTasks: {} };
-        
         let allTasks = [
             // Exemplo: { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '1', topic: '...', type: 'video', completed: true },
         
@@ -1133,14 +1168,13 @@
             { subject: 'Administração Pública', lesson: 'L8', topic: 'Estatuto dos Servidores - Responsabilidades', type: 'legis' },
             { subject: 'Administração Pública', lesson: 'L9', topic: 'Plano de Cargos e Carreiras (LC nº 671/2018) - Estrutura Geral', type: 'legis' },
             { subject: 'Administração Pública', lesson: 'L10', topic: 'Revisão Geral - Legislação Municipal', type: 'legis' },
-        ];
-        
+        ];        
         allTasks.forEach(task => {
             const id = generateUniqueId(task);
             const dateStr = formatDateYMD(new Date(task.date + 'T03:00:00Z'));
             if (!plan.tasks[dateStr]) plan.tasks[dateStr] = [];
             if (!plan.tasks[dateStr].some(t => t.id === id)) {
-                plan.tasks[dateStr].push({ id, ...task, date: dateStr, completed: task.completed || false, notebookLink: task.notebookLink || '' });
+                plan.tasks[dateStr].push({ id, ...task, date: dateStr, completed: task.completed || false, notebookLink: task.notebookLink || '', notes: task.notes || '' });
             }
         });
         return plan;
@@ -1317,7 +1351,7 @@
         const createSection = (title, tasks, colorClass) => {
             if (tasks.length > 0) {
                 let sectionHTML = `<h3 class="text-lg font-bold mt-4 border-b-2 ${colorClass} pb-2">${title}</h3>`;
-                tasks.forEach(task => { sectionHTML += createTaskCard(task, !task.completed && task.date < todayStr).outerHTML; });
+                tasks.forEach(task => { sectionHTML += createTaskCard(task, !task.completed && task.date < todayStr && !task.type.startsWith('review')).outerHTML; });
                 return sectionHTML;
             }
             return '';
@@ -1394,7 +1428,7 @@
                 }
                 currentDate.setDate(currentDate.getDate() + 1);
             }
-            const freeHours = freeDays * 3; // 3 blocos de estudo por dia
+            const freeHours = freeDays * 5; // 5 horas de estudo por dia
             const totalDays = Math.floor((examEve - lastScheduledDate) / (1000 * 60 * 60 * 24));
             content = `<p class="text-2xl font-bold">${freeHours} horas</p><p class="text-sm text-gray-600">(${totalDays} dias corridos) para remanejar aulas.</p>`;
         }
@@ -1504,8 +1538,8 @@
         document.getElementById('calendar-container').style.display = 'none';
         planContent.innerHTML = '';
         const todayStr = formatDateYMD(new Date());
-        const allTasksAndReviews = Object.values(studyPlan.tasks || {}).flat().concat(Object.values(studyPlan.reviews || {}).flat());
-        const overdueTasks = allTasksAndReviews.filter(task => !task.completed && task.date < todayStr);
+        const allTasks = Object.values(studyPlan.tasks || {}).flat();
+        const overdueTasks = allTasks.filter(task => !task.completed && task.date < todayStr);
         
         if (overdueTasks.length === 0) { planContent.innerHTML += `<div class="text-center p-4 bg-green-50 rounded-lg border border-green-200"><p class="text-green-700 font-semibold">Parabéns! Nenhuma tarefa atrasada.</p></div>`; return; }
 
@@ -1551,6 +1585,14 @@
             document.getElementById('task-topic').value = task.topic;
             document.getElementById('task-type').value = task.type;
             document.getElementById('task-notebook-link').value = task.notebookLink || '';
+            document.getElementById('task-notes').value = task.notes || '';
+            
+            const completedContainer = document.getElementById('completed-checkbox-container');
+            const completedCheckbox = document.getElementById('task-completed-checkbox');
+            completedContainer.classList.remove('hidden');
+            completedContainer.classList.add('flex');
+            completedCheckbox.checked = task.completed;
+
             openModal(addTaskModal);
         }
     }
@@ -1632,11 +1674,11 @@
             alert("Nenhuma aula para exportar.");
             return;
         }
-        const headers = ['date', 'subject', 'lesson', 'topic', 'type', 'completed', 'notebookLink'];
+        const headers = ['date', 'subject', 'lesson', 'topic', 'type', 'completed', 'notebookLink', 'notes'];
         const csvRows = [headers.join(',')];
         
         allTasks.forEach(task => {
-            const row = headers.map(header => `"${task[header] || ''}"`);
+            const row = headers.map(header => `"${(task[header] || '').replace(/"/g, '""')}"`);
             csvRows.push(row.join(','));
         });
 
@@ -1683,7 +1725,8 @@
                         topic: taskData.topic,
                         type: taskData.type,
                         completed: taskData.completed === 'true' || false,
-                        notebookLink: taskData.notebookLink || ''
+                        notebookLink: taskData.notebookLink || '',
+                        notes: taskData.notes || ''
                     };
                     if (!studyPlan.tasks[dateStr]) studyPlan.tasks[dateStr] = [];
                     studyPlan.tasks[dateStr].push(newTask);
@@ -1692,6 +1735,7 @@
             }
             if (newTasksCount > 0) {
                 saveState();
+                populateInitialHistory();
                 updateProgress();
                 renderAllTasksTable();
                 renderAllTasksStatistics();
@@ -1753,6 +1797,7 @@
              document.getElementById('modal-title').textContent = 'Incluir Nova Aula';
              document.getElementById('task-id').value = '';
              document.getElementById('original-task-date').value = '';
+             document.getElementById('completed-checkbox-container').classList.add('hidden');
              openModal(addTaskModal);
         });
 
@@ -1769,22 +1814,59 @@
         
         document.getElementById('add-task-form').addEventListener('submit', (e) => {
             e.preventDefault();
+            const id = document.getElementById('task-id').value;
+            const originalDate = document.getElementById('original-task-date').value;
             const date = document.getElementById('task-date').value;
             const subject = document.getElementById('task-subject').value;
             const lesson = document.getElementById('task-lesson').value;
             const topic = document.getElementById('task-topic').value;
             const type = document.getElementById('task-type').value;
             const notebookLink = document.getElementById('task-notebook-link').value;
-            const id = document.getElementById('task-id').value;
-            const originalDate = document.getElementById('original-task-date').value;
+            const notes = document.getElementById('task-notes').value;
+            const isCompleted = document.getElementById('task-completed-checkbox').checked;
+
+            let taskData;
 
             if (id && originalDate && studyPlan.tasks[originalDate]) {
-                studyPlan.tasks[originalDate] = studyPlan.tasks[originalDate].filter(t => t.id !== id);
-                if (studyPlan.tasks[originalDate].length === 0) delete studyPlan.tasks[originalDate];
+                const taskIndex = studyPlan.tasks[originalDate].findIndex(t => t.id === id);
+                if (taskIndex > -1) {
+                    taskData = studyPlan.tasks[originalDate][taskIndex];
+                    // Update existing task data
+                    taskData.date = date;
+                    taskData.subject = subject;
+                    taskData.lesson = lesson;
+                    taskData.topic = topic;
+                    taskData.type = type;
+                    taskData.notebookLink = notebookLink;
+                    taskData.notes = notes;
+                    
+                    // Handle completion status change
+                    if (taskData.completed !== isCompleted) {
+                        taskData.completed = isCompleted;
+                        if (isCompleted) {
+                            addToHistory(taskData);
+                            if (!taskData.type.startsWith('review')) scheduleReviews(taskData);
+                        } else {
+                            removeFromHistory(taskData.id);
+                            if (!taskData.type.startsWith('review')) unscheduleReviews(taskData);
+                        }
+                    }
+
+                    // Move task if date changed
+                    if (originalDate !== date) {
+                        studyPlan.tasks[originalDate].splice(taskIndex, 1);
+                        if (studyPlan.tasks[originalDate].length === 0) delete studyPlan.tasks[originalDate];
+                        if (!studyPlan.tasks[date]) studyPlan.tasks[date] = [];
+                        studyPlan.tasks[date].push(taskData);
+                    }
+                }
+            } else {
+                // Create new task
+                taskData = { id: generateUniqueId({ subject, lesson, type }), date, subject, lesson, topic, type, notebookLink, notes, completed: false };
+                if (!studyPlan.tasks[date]) studyPlan.tasks[date] = [];
+                studyPlan.tasks[date].push(taskData);
             }
-            const taskData = { id: id || generateUniqueId({ subject, lesson, type }), date, subject, lesson, topic, type, notebookLink, completed: false };
-            if (!studyPlan.tasks[date]) studyPlan.tasks[date] = [];
-            studyPlan.tasks[date].push(taskData);
+
             saveState();
             renderPlan(viewDate);
             updateProgress();
