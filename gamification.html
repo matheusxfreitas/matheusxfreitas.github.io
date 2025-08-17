@@ -228,7 +228,6 @@
             });
         }
         
-        // PASSO 3: Atualizando a "Enciclopédia" de Itens
         function getInitialGamificationState() {
             return {
                 player: { equipped: { helmet: null, armor: null, pants: null, boots: null, weapon: null, shield: null } },
@@ -292,7 +291,6 @@
                 if (itemId) {
                     const item = items.find(i => i.id === itemId);
                     if (item) {
-                        // PASSO 3 (cont.): Criando o div com as classes do Habitica
                         const itemDiv = document.createElement('div');
                         itemDiv.className = `shop_sprite ${item.cssClass}`;
                         slotElement.insertBefore(itemDiv, slotNameSpan);
@@ -336,6 +334,8 @@
                     const isEquipped = data.gamification.player.equipped[slot] === item.id;
                     const isUnlocked = isItemUnlocked(item, data);
                     
+                    // *** CORREÇÃO AQUI ***
+                    // O div do sprite é criado dinamicamente
                     sectionHTML += `
                         <div class="item-card card rounded-lg p-3 text-center ${isEquipped ? 'equipped' : ''} ${isUnlocked ? 'unlocked' : ''}">
                             <div class="h-24 w-full flex items-center justify-center">
