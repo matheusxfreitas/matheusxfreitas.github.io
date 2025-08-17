@@ -15,6 +15,7 @@
         .calendar-day { transition: all 0.2s ease; position: relative; }
         .calendar-day:hover { background-color: #f7f3ef; }
         .calendar-day.has-task::after { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background-color: #D5A021; position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); }
+        .calendar-day.overdue-task::before { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background-color: #ef4444; position: absolute; top: 6px; left: 50%; transform: translateX(-50%); }
         .calendar-day.selected { background-color: #D5A021; color: white; font-weight: bold; }
         .task-card { background-color: #FFFFFF; border-left: 4px solid #D6BFAA; transition: box-shadow 0.3s ease; position: relative; }
         .task-card.review-r1 { border-left-color: #6A9C89; }
@@ -37,10 +38,14 @@
         .action-btn { background-color: #f0f0f0; border-radius: 9999px; padding: 0.35rem; transition: background-color 0.2s ease; cursor: pointer; }
         .action-btn:hover { background-color: #e0e0e0; }
         .action-btn svg { width: 1rem; height: 1rem; color: #555; }
+        .tab-button { padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab-button.active { border-bottom-color: #D5A021; font-weight: 600; color: #D5A021; }
+        .settings-dropdown:hover .dropdown-menu { display: block; }
     </style>
 </head>
 <body class="text-gray-800">
 
+<!-- Mural de Senha -->
 <div id="password-wall" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 backdrop-blur-sm">
     <div class="w-full max-w-xs bg-white p-6 rounded-lg shadow-xl">
         <h2 class="text-xl font-bold text-center text-gray-800 mb-4">Acessar Painel</h2>
@@ -57,22 +62,36 @@
 <div class="container mx-auto p-4 md:p-8 max-w-7xl">
     <header class="mb-8">
         <div class="text-center">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Meu Painel de Estudos 2.0</h1>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Meu Painel de Estudos 4.5</h1>
             <p class="text-lg text-gray-600 mt-2">Missão: Aprovação Psicólogo(a) - Prefeitura de Uberlândia</p>
         </div>
-        <div class="mt-6 flex flex-wrap justify-center gap-2">
+        <div class="mt-6 flex flex-wrap justify-center items-center gap-2">
+            <!-- Botões de Ação Principais -->
+            <button id="home-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                Início
+            </button>
             <button id="view-overdue-tasks-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-red-600 border-red-300">Visualizar Aulas Atrasadas</button>
-            <button id="view-all-tasks-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Visualizar Aulas Cadastradas</button>
-            <button id="export-backup-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Exportar Backup (Progresso)</button>
-            <button id="import-backup-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Importar Backup (Progresso)</button>
-            <input type="file" id="import-backup-file" class="hidden" accept=".json">
-            <span class="basis-full"></span>
             <button id="add-task-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-green-600 border-green-300">Incluir Aula(s)</button>
-            <button id="edit-tasks-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-blue-600 border-blue-300">Editar Aulas</button>
-            <button id="reset-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-red-600">Resetar Progresso</button>
+            <button id="manage-tasks-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-blue-600 border-blue-300">Gerenciar Aulas</button>
+            
+            <!-- Menu de Ajustes -->
+            <div class="relative settings-dropdown">
+                <button class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    Ajustes
+                </button>
+                <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
+                    <a href="#" id="export-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Exportar Backup</a>
+                    <a href="#" id="import-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Importar Backup</a>
+                    <a href="#" id="reset-btn" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Resetar Progresso</a>
+                    <input type="file" id="import-backup-file" class="hidden" accept=".json">
+                </div>
+            </div>
         </div>
     </header>
 
+    <!-- Cards de Informação -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-center items-center">
             <h3 class="font-semibold text-gray-500 mb-2">Contagem Regressiva</h3>
@@ -92,12 +111,15 @@
         </div>
     </div>
 
+    <!-- Conteúdo Principal -->
     <main class="bg-white p-4 sm:p-6 rounded-lg shadow-md border border-gray-200">
         <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Coluna Esquerda: Calendário e Tarefas -->
             <div class="w-full lg:w-2/3">
                 <div id="calendar-container"></div>
                 <div id="plan-content" class="space-y-4 mt-6"></div>
             </div>
+            <!-- Coluna Direita: Gráficos e Legendas -->
             <aside class="w-full lg:w-1/3 lg:border-l lg:pl-8 border-gray-200">
                 <div class="sticky top-8">
                     <h2 class="text-2xl font-bold mb-4 text-center">Progresso Geral</h2>
@@ -115,101 +137,162 @@
                         <h3 class="text-xl font-bold mb-4 text-center">Progresso por Matéria</h3>
                         <div id="subject-progress-bars" class="space-y-4"></div>
                     </div>
+                    <!-- Novo Card: Seções Livres -->
+                    <div id="free-sections-container" class="mt-8"></div>
                 </div>
             </aside>
-        </div>
-    
-        <div id="addTaskModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg">
-                <div class="flex justify-between items-center p-4 border-b">
-                    <h3 id="modal-title" class="text-xl font-bold">Incluir Nova Aula</h3>
-                    <button class="close-modal text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-                </div>
-                <form id="add-task-form" class="p-6 space-y-4">
-                    <input type="hidden" id="task-id">
-                    <input type="hidden" id="original-task-date">
-                    <div>
-                        <label for="task-date" class="block text-sm font-medium text-gray-700">Data</label>
-                        <input type="date" id="task-date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
-                    </div>
-                    <div>
-                        <label for="task-subject" class="block text-sm font-medium text-gray-700">Matéria</label>
-                        <input type="text" id="task-subject" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
-                    </div>
-                    <div>
-                        <label for="task-lesson" class="block text-sm font-medium text-gray-700">Nº da Aula</label>
-                        <input type="text" id="task-lesson" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
-                    </div>
-                    <div>
-                        <label for="task-topic" class="block text-sm font-medium text-gray-700">Tópico</label>
-                        <input type="text" id="task-topic" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
-                    </div>
-                    <div>
-                        <label for="task-type" class="block text-sm font-medium text-gray-700">Tipo</label>
-                        <select id="task-type" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
-                            <option value="video">Videoaula</option>
-                            <option value="pdf">PDF</option>
-                            <option value="legis">Legislação</option>
-                        </select>
-                    </div>
-                    <div class="flex justify-end pt-4">
-                        <button type="submit" class="bg-[#D5A021] hover:bg-amber-600 text-white font-bold py-2 px-4 rounded">Salvar Aula</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div id="editTasksModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-                <div class="flex justify-between items-center p-4 border-b">
-                    <h3 class="text-xl font-bold">Editar Aulas Cadastradas</h3>
-                    <button class="close-modal text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-                </div>
-                <div class="p-4">
-                    <input type="text" id="edit-tasks-search" class="w-full p-2 border rounded-md" placeholder="Buscar por matéria ou tópico para editar...">
-                </div>
-                <div id="edit-tasks-list" class="p-4 overflow-y-auto space-y-2"></div>
-            </div>
         </div>
     </main>
 </div>
 
+<!-- Modal Adicionar/Editar Aula (z-index 60) -->
+<div id="addTaskModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h3 id="modal-title" class="text-xl font-bold">Incluir Nova Aula</h3>
+            <button class="close-modal text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+        </div>
+        <form id="add-task-form" class="p-6 space-y-4">
+            <input type="hidden" id="task-id">
+            <input type="hidden" id="original-task-date">
+            <div>
+                <label for="task-date" class="block text-sm font-medium text-gray-700">Data (DD/MM/AAAA)</label>
+                <input type="date" id="task-date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+            </div>
+            <div>
+                <label for="task-subject" class="block text-sm font-medium text-gray-700">Matéria</label>
+                <select id="task-subject" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                    <!-- Options will be populated by JS -->
+                </select>
+            </div>
+            <div>
+                <label for="task-lesson" class="block text-sm font-medium text-gray-700">Nº da Aula</label>
+                <input type="text" id="task-lesson" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+            </div>
+            <div>
+                <label for="task-topic" class="block text-sm font-medium text-gray-700">Tópico</label>
+                <input type="text" id="task-topic" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+            </div>
+            <div>
+                <label for="task-type" class="block text-sm font-medium text-gray-700">Tipo</label>
+                <select id="task-type" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                    <option value="video">Videoaula</option>
+                    <option value="pdf">PDF</option>
+                    <option value="legis">Legislação</option>
+                </select>
+            </div>
+            <div class="flex justify-end pt-4">
+                <button type="submit" class="bg-[#D5A021] hover:bg-amber-600 text-white font-bold py-2 px-4 rounded">Salvar Aula</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Visualizar Todas as Aulas (z-index 50) -->
 <div id="allTasksModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col">
         <div class="flex justify-between items-center p-4 border-b">
-            <h3 class="text-xl font-bold">Todas as Aulas Cadastradas</h3>
+            <h3 class="text-xl font-bold">Gerenciar Aulas</h3>
             <button class="close-modal text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
         </div>
-        <div class="p-4 border-b">
-            <div id="all-tasks-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-center"></div>
-            <div class="flex flex-wrap gap-2 items-center">
-                <input type="text" id="all-tasks-search" class="flex-grow p-2 border rounded-md" placeholder="Buscar por matéria ou tópico...">
-                <button id="import-csv-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Importar (CSV)</button>
-                <input type="file" id="import-csv-file" class="hidden" accept=".csv">
-                <button id="export-csv-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Exportar (CSV)</button>
-                <button id="delete-selected-btn" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Excluir Selecionadas</button>
+        
+        <!-- Abas (Tabs) -->
+        <div class="flex border-b">
+            <button id="tab-active" class="tab-button active">Aulas Ativas</button>
+            <button id="tab-trash" class="tab-button">Lixeira</button>
+        </div>
+        
+        <!-- Conteúdo das Abas -->
+        <div id="tab-content-active" class="tab-pane">
+            <div class="p-4 border-b">
+                <div id="all-tasks-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-center"></div>
+                <div class="flex flex-wrap gap-2 items-center">
+                    <input type="text" id="all-tasks-search" class="flex-grow p-2 border rounded-md" placeholder="Buscar por matéria ou tópico...">
+                    <button id="shift-all-forward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiar Não-Concluídas (+1 dia)</button>
+                    <button id="shift-all-backward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiantar Não-Concluídas (-1 dia)</button>
+                </div>
+                 <!-- Ações Contextuais para Seleção -->
+                <div id="selected-actions-container" class="hidden mt-4 flex flex-wrap gap-2 items-center p-2 bg-amber-50 border border-amber-200 rounded-md">
+                    <span id="selection-count" class="text-sm font-semibold text-gray-700"></span>
+                    <button id="shift-selected-forward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiar</button>
+                    <button id="shift-selected-backward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiantar</button>
+                    <button id="delete-selected-btn" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Excluir</button>
+                </div>
+                <!-- Filtros e Ordenação -->
+                <div class="mt-4 p-2 bg-gray-50 rounded-md border">
+                    <div class="flex flex-wrap gap-4 items-center">
+                        <div class="flex items-center gap-2">
+                            <label for="filter-subject" class="text-sm font-medium">Matéria:</label>
+                            <select id="filter-subject" class="p-1 border rounded-md text-sm">
+                                <option value="">Todas</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label for="sort-by" class="text-sm font-medium">Ordenar por:</label>
+                            <select id="sort-by" class="p-1 border rounded-md text-sm">
+                                <option value="date-asc">Data (Crescente)</option>
+                                <option value="date-desc">Data (Decrescente)</option>
+                                <option value="subject-asc">Matéria (A-Z)</option>
+                                <option value="subject-desc">Matéria (Z-A)</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="filter-not-completed" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]">
+                            <label for="filter-not-completed" class="text-sm font-medium">Não Concluídas</label>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="filter-overdue" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]">
+                            <label for="filter-overdue" class="text-sm font-medium">Atrasadas</label>
+                        </div>
+                    </div>
+                    <div id="results-count-container" class="mt-2 text-sm font-semibold text-gray-600"></div>
+                </div>
+            </div>
+            <div class="p-4 overflow-y-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left"><input type="checkbox" id="select-all-tasks-checkbox" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]"></th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aula</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tópico</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="all-tasks-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                </table>
             </div>
         </div>
-        <div class="p-4 overflow-y-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left">
-                            <input type="checkbox" id="select-all-tasks-checkbox" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]">
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aula</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tópico</th>
-                    </tr>
-                </thead>
-                <tbody id="all-tasks-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-            </table>
+
+        <div id="tab-content-trash" class="tab-pane hidden">
+            <div class="p-4 border-b">
+                <p class="text-sm text-gray-600">Aulas excluídas são mantidas aqui. Você pode restaurá-las ou excluí-las permanentemente.</p>
+                <div id="trash-actions-container" class="hidden mt-2 flex flex-wrap gap-2 items-center">
+                     <button id="restore-all-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-green-600 border-green-300">Restaurar Selecionadas</button>
+                     <button id="delete-all-perm-btn" class="bg-red-700 hover:bg-red-800 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Excluir Selecionadas</button>
+                </div>
+            </div>
+            <div class="p-4 overflow-y-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left"><input type="checkbox" id="select-all-trash-checkbox" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]"></th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tópico</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trash-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
-<div id="confirmationModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+<!-- Modal de Confirmação (z-index 70) -->
+<div id="confirmationModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[70]">
     <div class="bg-white rounded-lg shadow-2xl w-full max-w-sm p-6">
         <h3 class="text-lg font-semibold mb-4" id="confirmation-message">Tem certeza?</h3>
         <div class="flex justify-end space-x-4">
@@ -242,10 +325,8 @@
     let progressChart;
 
     const planContent = document.getElementById('plan-content');
-    const progressText = document.getElementById('progressText');
     const allTasksModal = document.getElementById('allTasksModal');
     const addTaskModal = document.getElementById('addTaskModal');
-    const editTasksModal = document.getElementById('editTasksModal');
     const confirmationModal = document.getElementById('confirmationModal');
 
     // =================== LÓGICA DO PASSWORD WALL ===================
@@ -272,19 +353,18 @@
         }
     });
 
-    // =================== FUNÇÕES AUXILIARES ===================
+    // =================== FUNÇÕES AUXILIARES DE DATA ===================
     function formatDateYMD(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     }
 
-    function formatDateDMY(date) {
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
+    function formatDateDMY(dateString) {
+        const date = new Date(dateString + 'T03:00:00Z');
+        return date.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
     }
 
     function addDays(date, days) {
@@ -299,14 +379,9 @@
                date1.getDate() === date2.getDate();
     }
 
-    function isBefore(date1, date2) {
-        const d1 = new Date(date1.getFullYear(), date1.getMonth(), date1.getDate());
-        const d2 = new Date(date2.getFullYear(), date2.getMonth(), date2.getDate());
-        return d1.getTime() < d2.getTime();
-    }
-
+    // =================== FUNÇÕES AUXILIARES GERAIS ===================
     function generateUniqueId(task) {
-         return `${task.subject.replace(/[^a-zA-Z0-9]/g, '')}-${task.lesson.replace(/[^a-zA-Z0-9]/g, '')}-${task.type}`;
+         return `${task.subject.replace(/[^a-zA-Z0-9]/g, '')}-${task.lesson.replace(/[^a-zA-Z0-9]/g, '')}-${task.type}-${new Date().getTime()}`;
     }
 
     function showConfirmation(message, onConfirm) {
@@ -958,19 +1033,15 @@
             { subject: 'Administração Pública', lesson: 'L10', topic: 'Revisão Geral - Legislação Municipal', type: 'legis' },
         ];
 
-        let currentDate = new Date('2025-08-18T00:00:00');
-        const endDate = new Date('2025-10-20T00:00:00');
+        let currentDate = new Date('2025-08-18T03:00:00Z');
+        const endDate = new Date('2025-10-20T03:00:00Z');
         let legislacaoIndex = 0;
 
         while (currentDate <= endDate && legislacaoIndex < legislacaoMunicipalTasks.length) {
             const dayOfWeek = currentDate.getDay();
-            // Adiciona apenas de Segunda (1) a Quinta (4)
             if (dayOfWeek >= 1 && dayOfWeek <= 4) {
                 const task = legislacaoMunicipalTasks[legislacaoIndex];
-                allTasks.push({
-                    ...task,
-                    date: formatDateYMD(currentDate),
-                });
+                allTasks.push({ ...task, date: formatDateYMD(currentDate) });
                 legislacaoIndex++;
             }
             currentDate.setDate(currentDate.getDate() + 1);
@@ -978,20 +1049,10 @@
 
         allTasks.forEach(task => {
             const id = generateUniqueId(task);
-            const dateStr = formatDateYMD(new Date(task.date + 'T00:00:00'));
+            const dateStr = formatDateYMD(new Date(task.date + 'T03:00:00Z'));
             if (!plan.tasks[dateStr]) plan.tasks[dateStr] = [];
-            
-            const taskExists = plan.tasks[dateStr].some(t => t.id === id);
-            if (!taskExists) {
-                plan.tasks[dateStr].push({
-                    id: id,
-                    date: dateStr,
-                    subject: task.subject,
-                    lesson: task.lesson,
-                    topic: task.topic,
-                    type: task.type || 'study',
-                    completed: task.completed || false, 
-                });
+            if (!plan.tasks[dateStr].some(t => t.id === id)) {
+                plan.tasks[dateStr].push({ id, ...task, date: dateStr, completed: task.completed || false });
             }
         });
         return plan;
@@ -1006,15 +1067,14 @@
         const docRef = db.collection("progresso").doc("meuPlano");
         try {
             const doc = await docRef.get();
-            if (doc.exists && doc.data().tasks) { // Adicionado verificação para 'tasks'
+            if (doc.exists && doc.data().tasks) { 
                 studyPlan = doc.data();
-                 if (!studyPlan.dailyGoals) { // Garante que a propriedade exista
-                    studyPlan.dailyGoals = {};
-                }
+                if (!studyPlan.dailyGoals) studyPlan.dailyGoals = {};
+                if (!studyPlan.deletedTasks) studyPlan.deletedTasks = {};
             } else {
                 console.log("Nenhum plano encontrado no Firestore, inicializando um novo.");
                 studyPlan = initializeStudyPlan();
-                saveState(); // Salva o plano recém-criado
+                saveState(); 
             }
         } catch (error) {
             console.error("Erro ao carregar progresso: ", error);
@@ -1028,143 +1088,84 @@
         if (task.type.startsWith('review')) cardClasses += ` ${task.type}`;
         if (task.type === 'legis') cardClasses += ' legis';
         if (isOverdue) cardClasses += ' overdue';
-
         card.className = cardClasses;
         
-        let title = '';
-        if (task.type.startsWith('review')) {
-            title = `${task.reviewType}: ${task.subject} - Aula ${task.lesson}`;
-        } else {
-            title = `${task.subject} - Aula ${task.lesson}`;
-        }
+        const title = task.type.startsWith('review') ? `${task.reviewType}: ${task.subject} - Aula ${task.lesson}` : `${task.subject} - Aula ${task.lesson}`;
 
-        let actionsMenu = '';
-        if (!task.type.startsWith('review')) {
-            actionsMenu = `
-                <div class="actions-menu">
-                    <button class="action-btn task-postpone-btn" data-id="${task.id}" data-date="${task.date}" title="Adiar em 1 dia">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="m14 14-4 4m0-4 4 4"></path></svg>
-                    </button>
-                    <button class="action-btn task-edit-btn" data-id="${task.id}" data-date="${task.date}" title="Editar Aula">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>
-                    </button>
-                    <button class="action-btn task-delete-btn" data-id="${task.id}" data-date="${task.date}" data-type="${task.type}" title="Excluir Aula">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    </button>
-                </div>
-            `;
-        }
-
+        const actionsMenu = !task.type.startsWith('review') ? `
+            <div class="actions-menu">
+                <button class="action-btn task-postpone-btn" data-id="${task.id}" data-date="${task.date}" title="Adiar em 1 dia"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="m14 14-4 4m0-4 4 4"></path></svg></button>
+                <button class="action-btn task-edit-btn" data-id="${task.id}" data-date="${task.date}" title="Editar Aula"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button>
+                <button class="action-btn task-delete-btn" data-id="${task.id}" data-date="${task.date}" data-type="${task.type}" title="Excluir Aula"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+            </div>` : '';
 
         card.innerHTML = `
             <div class="flex items-start space-x-4">
-                <div class="flex-shrink-0 pt-1">
-                    <input type="checkbox" id="${task.id}" data-id="${task.id}" data-date="${task.date}" data-type="${task.type}" class="task-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${task.completed ? 'checked' : ''}>
-                </div>
+                <div class="flex-shrink-0 pt-1"><input type="checkbox" id="${task.id}" data-id="${task.id}" data-date="${task.date}" data-type="${task.type}" class="task-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${task.completed ? 'checked' : ''}></div>
                 <div class="flex-1">
                     <label for="${task.id}" class="cursor-pointer">
                         <p class="font-semibold text-gray-700">${title}</p>
                         <p class="text-gray-600 text-sm">${task.topic}</p>
+                        ${isOverdue ? `<p class="text-xs text-red-600 font-semibold">Atrasada desde: ${formatDateDMY(task.date)}</p>` : ''}
                     </label>
                 </div>
             </div>
-            ${actionsMenu}
-        `;
+            ${actionsMenu}`;
         return card;
     }
 
+    // =================== LÓGICA DE REVISÕES ===================
     function scheduleReviews(completedTask) {
-        const completionDate = new Date(completedTask.date + 'T00:00:00');
+        const completionDate = new Date(completedTask.date + 'T03:00:00Z');
         const reviewDays = { 'review-r1': 1, 'review-r3': 7, 'review-r5': 30 };
 
         for (const [reviewType, daysToAdd] of Object.entries(reviewDays)) {
             const reviewDate = addDays(completionDate, daysToAdd);
             const reviewDateStr = formatDateYMD(reviewDate);
-
-            if (!studyPlan.reviews) {
-                studyPlan.reviews = {};
-            }
-            if (!studyPlan.reviews[reviewDateStr]) {
-                studyPlan.reviews[reviewDateStr] = [];
-            }
-            
+            if (!studyPlan.reviews) studyPlan.reviews = {};
+            if (!studyPlan.reviews[reviewDateStr]) studyPlan.reviews[reviewDateStr] = [];
             const reviewId = `${completedTask.id}-${reviewType}`;
-            
             if (studyPlan.reviews[reviewDateStr].some(r => r.id === reviewId)) continue;
-
-            studyPlan.reviews[reviewDateStr].push({
-                id: reviewId,
-                date: reviewDateStr,
-                subject: completedTask.subject,
-                lesson: completedTask.lesson,
-                topic: completedTask.topic,
-                type: reviewType,
-                reviewType: reviewType.replace('review-', '').toUpperCase(),
-                completed: false,
-            });
+            studyPlan.reviews[reviewDateStr].push({ id: reviewId, date: reviewDateStr, subject: completedTask.subject, lesson: completedTask.lesson, topic: completedTask.topic, type: reviewType, reviewType: reviewType.replace('review-', '').toUpperCase(), completed: false });
         }
     }
     
     function unscheduleReviews(deselectedTask) {
-        const completionDate = new Date(deselectedTask.date + 'T00:00:00');
+        const completionDate = new Date(deselectedTask.date + 'T03:00:00Z');
         const reviewDays = { 'review-r1': 1, 'review-r3': 7, 'review-r5': 30 };
-
         for (const [reviewType, daysToAdd] of Object.entries(reviewDays)) {
             const reviewDate = addDays(completionDate, daysToAdd);
             const reviewDateStr = formatDateYMD(reviewDate);
             const reviewId = `${deselectedTask.id}-${reviewType}`;
-
             if (studyPlan.reviews && studyPlan.reviews[reviewDateStr]) {
                 studyPlan.reviews[reviewDateStr] = studyPlan.reviews[reviewDateStr].filter(r => r.id !== reviewId);
-                if (studyPlan.reviews[reviewDateStr].length === 0) {
-                    delete studyPlan.reviews[reviewDateStr];
-                }
+                if (studyPlan.reviews[reviewDateStr].length === 0) delete studyPlan.reviews[reviewDateStr];
             }
         }
     }
     
+    // =================== RENDERIZAÇÃO DA UI ===================
     function renderCalendar(date) {
         const calendarContainer = document.getElementById('calendar-container');
         const month = date.getMonth();
         const year = date.getFullYear();
-
         const firstDay = new Date(year, month, 1);
         const lastDay = new Date(year, month + 1, 0);
         const daysInMonth = lastDay.getDate();
         const startDayOfWeek = firstDay.getDay();
-
         const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-        let html = `
-            <div class="flex justify-between items-center mb-4">
-                <button id="prev-month" class="control-button p-2 rounded-full">&#x276E;</button>
-                <h2 class="text-xl font-bold">${monthNames[month]} ${year}</h2>
-                <button id="next-month" class="control-button p-2 rounded-full">&#x276F;</button>
-            </div>
-            <div class="grid grid-cols-7 gap-1 text-center font-semibold text-gray-600 mb-2">
-        `;
-        dayNames.forEach(day => {
-            html += `<div>${day}</div>`;
-        });
+        let html = `<div class="flex justify-between items-center mb-4"><button id="prev-month" class="control-button p-2 rounded-full">&#x276E;</button><h2 class="text-xl font-bold">${monthNames[month]} ${year}</h2><button id="next-month" class="control-button p-2 rounded-full">&#x276F;</button></div><div class="grid grid-cols-7 gap-1 text-center font-semibold text-gray-600 mb-2">`;
+        dayNames.forEach(day => { html += `<div>${day}</div>`; });
         html += `</div><div class="calendar-grid gap-1">`;
-
-        for (let i = 0; i < startDayOfWeek; i++) {
-            html += `<div></div>`;
-        }
-
+        for (let i = 0; i < startDayOfWeek; i++) { html += `<div></div>`; }
         for (let day = 1; day <= daysInMonth; day++) {
             const currentDate = new Date(year, month, day);
             const dateStr = formatDateYMD(currentDate);
             let classes = 'calendar-day cursor-pointer p-2 rounded-lg flex justify-center items-center h-12';
-            
-            if (studyPlan.tasks[dateStr]?.length > 0 || studyPlan.reviews[dateStr]?.length > 0) {
-                classes += ' has-task';
-            }
-            if (isSameDay(currentDate, viewDate)) {
-                classes += ' selected';
-            }
-            
+            if (studyPlan.tasks[dateStr]?.length > 0 || studyPlan.reviews[dateStr]?.length > 0) classes += ' has-task';
+            if (isSameDay(currentDate, viewDate)) classes += ' selected';
             html += `<div class="${classes}" data-date="${dateStr}">${day}</div>`;
         }
         html += `</div>`;
@@ -1175,230 +1176,205 @@
         renderCalendar(date);
         const dateStr = formatDateYMD(date);
         planContent.innerHTML = '';
-        
-        const today = new Date();
-        today.setHours(0,0,0,0);
-
+        const todayStr = formatDateYMD(new Date());
         const tasksForDay = studyPlan.tasks[dateStr] || [];
         const reviewsForDay = studyPlan.reviews[dateStr] || [];
-
-        const bloco1 = tasksForDay.filter(t => t.type === 'video');
-        const bloco2 = tasksForDay.filter(t => t.type === 'pdf');
-        const bloco3Legis = tasksForDay.filter(t => t.type === 'legis');
 
         if (tasksForDay.length === 0 && reviewsForDay.length === 0) {
             planContent.innerHTML = `<div class="text-center p-4 bg-gray-50 rounded-lg"><p class="text-gray-500">Nenhuma tarefa agendada para hoje. Dia de descanso!</p></div>`;
             return;
         }
 
-        if(bloco1.length > 0) {
-            planContent.innerHTML += `<h3 class="text-lg font-bold text-gray-800 mt-4 border-b-2 border-amber-500 pb-2">☕ Bloco 1: Conteúdo Principal (Vídeo)</h3>`;
-            bloco1.forEach(task => planContent.appendChild(createTaskCard(task, !task.completed && isBefore(new Date(task.date), today))));
-        }
+        const createSection = (title, tasks, colorClass) => {
+            if (tasks.length > 0) {
+                let sectionHTML = `<h3 class="text-lg font-bold text-gray-800 mt-4 border-b-2 ${colorClass} pb-2">${title}</h3>`;
+                tasks.forEach(task => { sectionHTML += createTaskCard(task, !task.completed && task.date < todayStr).outerHTML; });
+                return sectionHTML;
+            }
+            return '';
+        };
 
-        if(bloco2.length > 0) {
-            planContent.innerHTML += `<h3 class="text-lg font-bold text-gray-800 mt-6 border-b-2 border-sky-500 pb-2">📖 Bloco 2: Leitura e Lógica (PDF)</h3>`;
-            bloco2.forEach(task => planContent.appendChild(createTaskCard(task, !task.completed && isBefore(new Date(task.date), today))));
-        }
+        planContent.innerHTML += createSection('☕ Bloco 1: Conteúdo Principal (Vídeo)', tasksForDay.filter(t => t.type === 'video'), 'border-amber-500');
+        planContent.innerHTML += createSection('📖 Bloco 2: Leitura e Lógica (PDF)', tasksForDay.filter(t => t.type === 'pdf'), 'border-sky-500');
         
-        let bloco3Content = '';
-        if (bloco3Legis.length > 0) {
-            bloco3Legis.forEach(task => {
-                bloco3Content += createTaskCard(task, !task.completed && isBefore(new Date(task.date), today)).outerHTML;
-            });
-        }
-        
+        let bloco3Content = createSection('', tasksForDay.filter(t => t.type === 'legis'), '');
         const dailyGoal = studyPlan.dailyGoals[dateStr] || { exercisesCompleted: false };
-        bloco3Content += `
-            <div class="task-card p-4 rounded-lg shadow-sm border-l-4 border-gray-400">
-                <div class="flex items-start space-x-4">
-                    <div class="flex-shrink-0 pt-1">
-                        <input type="checkbox" id="exercises-checkbox-${dateStr}" data-date="${dateStr}" class="daily-goal-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${dailyGoal.exercisesCompleted ? 'checked' : ''}>
-                    </div>
-                    <div class="flex-1">
-                         <label for="exercises-checkbox-${dateStr}" class="cursor-pointer">
-                            <p class="font-semibold text-gray-700">🎯 Meta de Exercícios do Dia</p>
-                            <p class="text-gray-600 text-sm">Focar em 2 matérias conforme o plano de rotação semanal.</p>
-                        </label>
-                    </div>
-                </div>
-            </div>`;
+        bloco3Content += `<div class="task-card p-4 rounded-lg shadow-sm border-l-4 border-gray-400"><div class="flex items-start space-x-4"><div class="flex-shrink-0 pt-1"><input type="checkbox" id="exercises-checkbox-${dateStr}" data-date="${dateStr}" class="daily-goal-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${dailyGoal.exercisesCompleted ? 'checked' : ''}></div><div class="flex-1"><label for="exercises-checkbox-${dateStr}" class="cursor-pointer"><p class="font-semibold text-gray-700">🎯 Meta de Exercícios do Dia</p><p class="text-gray-600 text-sm">Focar em 2 matérias conforme o plano de rotação semanal.</p></label></div></div></div>`;
         planContent.innerHTML += `<h3 class="text-lg font-bold text-gray-800 mt-6 border-b-2 border-emerald-500 pb-2">🎯 Bloco 3: Estudo Ativo e Fixação</h3>` + bloco3Content;
 
         if (reviewsForDay.length > 0) {
-            planContent.innerHTML += `<h3 class="text-lg font-bold text-gray-800 mt-6 border-b-2 border-red-400 pb-2">🔁 Revisões Agendadas</h3>`;
-            reviewsForDay.forEach(review => planContent.appendChild(createTaskCard(review, !review.completed && isBefore(new Date(review.date), today))));
+            planContent.innerHTML += createSection('🔁 Revisões Agendadas', reviewsForDay, 'border-red-400');
         }
     };
     
+    // =================== LÓGICA DE PROGRESSO E GRÁFICOS ===================
     const updateProgress = () => {
-        const allStudyTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks).flat() : []);
+        const allStudyTasks = Object.values(studyPlan.tasks || {}).flat();
         const completedStudyTasks = allStudyTasks.filter(task => task.completed).length;
         const totalStudyTasks = allStudyTasks.length;
         const percentage = totalStudyTasks > 0 ? Math.round((completedStudyTasks / totalStudyTasks) * 100) : 0;
-        
-        progressText.textContent = `${percentage}%`;
+        document.getElementById('progressText').textContent = `${percentage}%`;
         
         if (progressChart) {
-            const allTasksAndReviews = allStudyTasks.concat((studyPlan.reviews ? Object.values(studyPlan.reviews) : []).flat());
+            const allTasksAndReviews = allStudyTasks.concat(Object.values(studyPlan.reviews || {}).flat());
             const totalCompleted = allTasksAndReviews.filter(t => t.completed).length;
             const totalItems = allTasksAndReviews.length;
             progressChart.data.datasets[0].data = [totalCompleted, totalItems - totalCompleted];
-            
-            progressChart.options.plugins.tooltip.callbacks.label = function(context) {
-                let label = context.label || '';
-                if (label) label += ': ';
-                if (context.parsed !== null) {
-                    const percentage = totalItems > 0 ? Math.round((context.raw / totalItems) * 100) : 0;
-                    label += `${context.raw} (${percentage}%)`;
-                }
-                return label;
-            };
             progressChart.update();
         }
-
         renderSubjectProgress();
+        renderFreeSectionsStat();
     };
 
     const renderSubjectProgress = () => {
         const container = document.getElementById('subject-progress-bars');
         if (!container) return;
-        container.innerHTML = '';
-
-        const allStudyTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks).flat() : []);
-        if (allStudyTasks.length === 0) return;
-
+        const allStudyTasks = Object.values(studyPlan.tasks || {}).flat();
+        if (allStudyTasks.length === 0) { container.innerHTML = ''; return; }
         const subjects = [...new Set(allStudyTasks.map(task => task.subject))];
-
-        subjects.sort().forEach(subject => {
+        container.innerHTML = subjects.sort().map(subject => {
             const tasksForSubject = allStudyTasks.filter(task => task.subject === subject);
             const completedTasks = tasksForSubject.filter(task => task.completed).length;
             const totalTasks = tasksForSubject.length;
             const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-            const progressElement = document.createElement('div');
-            progressElement.innerHTML = `
-                <div>
-                    <div class="flex justify-between mb-1">
-                        <span class="text-sm font-semibold text-gray-700">${subject}</span>
-                        <span class="text-sm font-semibold text-gray-700">${completedTasks}/${totalTasks} (${percentage}%)</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                        <div class="bg-[#D5A021] h-2.5 rounded-full" style="width: ${percentage}%"></div>
-                    </div>
-                </div>
-            `;
-            container.appendChild(progressElement);
-        });
+            return `<div><div class="flex justify-between mb-1"><span class="text-sm font-semibold text-gray-700">${subject}</span><span class="text-sm font-semibold text-gray-700">${completedTasks}/${totalTasks} (${percentage}%)</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-[#D5A021] h-2.5 rounded-full" style="width: ${percentage}%"></div></div></div>`;
+        }).join('');
     };
+
+    function renderFreeSectionsStat() {
+        const container = document.getElementById('free-sections-container');
+        if (!container) return;
+        const allTaskDates = Object.keys(studyPlan.tasks || {});
+        if (allTaskDates.length === 0) { container.innerHTML = ''; return; }
+
+        const lastScheduledDateStr = allTaskDates.reduce((max, current) => current > max ? current : max);
+        const lastScheduledDate = new Date(lastScheduledDateStr + 'T03:00:00Z');
+        const examEve = new Date('2025-10-25T03:00:00Z');
+
+        let content = '';
+        if (lastScheduledDate >= examEve) {
+            content = `<p class="text-2xl font-bold text-gray-700">0 dias</p><p class="text-sm text-gray-600">Seu cronograma está preenchido até a véspera da prova.</p>`;
+        } else {
+            let freeDays = 0;
+            let currentDate = new Date(lastScheduledDate);
+            currentDate.setDate(currentDate.getDate() + 1);
+            while(currentDate <= examEve) {
+                const dayOfWeek = currentDate.getDay();
+                if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Conta dias úteis (Seg-Sex)
+                    freeDays++;
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            const freeHours = freeDays * 3; // 3 blocos de estudo por dia
+            const totalDays = Math.floor((examEve - lastScheduledDate) / (1000 * 60 * 60 * 24));
+            content = `<p class="text-2xl font-bold text-gray-700">${freeHours} horas</p><p class="text-sm text-gray-600">(${totalDays} dias corridos) para remanejar aulas.</p>`;
+        }
+        
+        container.innerHTML = `<div class="p-4 rounded-lg bg-gray-100 border border-gray-200 text-center"><h3 class="font-bold text-lg mb-2">"Gordura" no Cronograma</h3>${content}</div>`;
+    }
 
     const setupChart = () => {
         const ctx = document.getElementById('progressChart').getContext('2d');
         progressChart = new Chart(ctx, {
             type: 'doughnut',
-            data: {
-                labels: ['Concluído', 'Pendente'],
-                datasets: [{ data: [0, 1], backgroundColor: ['#D5A021', '#EAEAEA'], borderColor: ['#FFFFFF'], borderWidth: 4, hoverOffset: 4 }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false, cutout: '75%',
-                plugins: { legend: { display: false }, tooltip: { enabled: true, callbacks: { label: function(context) { return context.label; } } } }
-            }
+            data: { labels: ['Concluído', 'Pendente'], datasets: [{ data: [0, 1], backgroundColor: ['#D5A021', '#EAEAEA'], borderColor: ['#FFFFFF'], borderWidth: 4, hoverOffset: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: true } } }
         });
     };
 
-    function renderAllTasksTable(filter = '') {
+    // =================== LÓGICA DOS MODAIS ===================
+    function renderAllTasksTable() {
         const tableBody = document.getElementById('all-tasks-table-body');
-        const allTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks).flat() : []);
-        allTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
+        const resultsContainer = document.getElementById('results-count-container');
+        const totalTasksCount = Object.values(studyPlan.tasks || {}).flat().length;
+        let allTasks = Object.values(studyPlan.tasks || {}).flat();
         
-        let html = '';
-        const filterText = filter.toLowerCase();
+        // Aplicar Filtros
+        const subjectFilter = document.getElementById('filter-subject').value;
+        if (subjectFilter) allTasks = allTasks.filter(task => task.subject === subjectFilter);
+        
+        const notCompletedFilter = document.getElementById('filter-not-completed').checked;
+        if (notCompletedFilter) allTasks = allTasks.filter(task => !task.completed);
+        
+        const overdueFilter = document.getElementById('filter-overdue').checked;
+        if (overdueFilter) {
+            const todayStr = formatDateYMD(new Date());
+            allTasks = allTasks.filter(task => !task.completed && task.date < todayStr);
+        }
 
-        allTasks.filter(task => task.subject.toLowerCase().includes(filterText) || task.topic.toLowerCase().includes(filterText))
-        .forEach(task => {
-            html += `
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <input type="checkbox" class="task-select-checkbox h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" data-id="${task.id}" data-date="${task.date}">
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDateDMY(new Date(task.date + 'T00:00:00'))}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${task.subject}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${task.lesson}</td>
-                    <td class="px-6 py-4 text-sm text-gray-500">${task.topic}</td>
-                </tr>
-            `;
+        const searchText = document.getElementById('all-tasks-search').value.toLowerCase();
+        if (searchText) allTasks = allTasks.filter(task => task.subject.toLowerCase().includes(searchText) || task.topic.toLowerCase().includes(searchText));
+        
+        resultsContainer.textContent = `Mostrando ${allTasks.length} de ${totalTasksCount} aulas.`;
+
+        const sortBy = document.getElementById('sort-by').value;
+        allTasks.sort((a, b) => {
+            switch (sortBy) {
+                case 'date-desc': return new Date(b.date) - new Date(a.date);
+                case 'subject-asc': return a.subject.localeCompare(b.subject);
+                case 'subject-desc': return b.subject.localeCompare(a.subject);
+                default: return new Date(a.date) - new Date(b.date);
+            }
         });
-        tableBody.innerHTML = html;
-        document.getElementById('select-all-tasks-checkbox').checked = false;
+        tableBody.innerHTML = allTasks.map(task => `<tr><td class="px-6 py-4"><input type="checkbox" class="task-select-checkbox h-4 w-4" data-id="${task.id}" data-date="${task.date}"></td><td class="px-6 py-4">${formatDateDMY(task.date)}</td><td class="px-6 py-4">${task.subject}</td><td class="px-6 py-4">${task.lesson}</td><td class="px-6 py-4">${task.topic}</td><td class="px-6 py-4 flex items-center gap-2"><button class="action-btn task-edit-btn-table" data-id="${task.id}" data-date="${task.date}" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button><button class="action-btn task-delete-btn-table" data-id="${task.id}" data-date="${task.date}" title="Excluir"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td></tr>`).join('');
+    }
+
+    function renderTrashTable() {
+        const tableBody = document.getElementById('trash-table-body');
+        const deletedTasks = Object.values(studyPlan.deletedTasks || {});
+        if (deletedTasks.length === 0) { tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">A lixeira está vazia.</td></tr>'; return; }
+        tableBody.innerHTML = deletedTasks.sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt)).map(task => `<tr><td class="px-6 py-4"><input type="checkbox" class="trash-select-checkbox h-4 w-4" data-id="${task.id}"></td><td class="px-6 py-4">${formatDateDMY(task.date)}</td><td class="px-6 py-4">${task.subject}</td><td class="px-6 py-4">${task.topic}</td><td class="px-6 py-4 space-x-2"><button class="restore-btn text-green-600" data-id="${task.id}">Restaurar</button><button class="perm-delete-btn text-red-600" data-id="${task.id}">Excluir</button></td></tr>`).join('');
     }
 
     function renderAllTasksStatistics() {
         const statsContainer = document.getElementById('all-tasks-stats');
-        const allTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks).flat() : []);
+        const allTasks = Object.values(studyPlan.tasks || {}).flat();
         const totalTasks = allTasks.length;
-        
-        const subjectCounts = allTasks.reduce((acc, task) => {
-            acc[task.subject] = (acc[task.subject] || 0) + 1;
-            return acc;
-        }, {});
-
+        const subjectCounts = allTasks.reduce((acc, task) => { acc[task.subject] = (acc[task.subject] || 0) + 1; return acc; }, {});
         let statsHtml = `<div class="p-2 bg-gray-100 rounded-lg"><p class="font-bold text-lg">${totalTasks}</p><p class="text-sm text-gray-600">Total de Aulas</p></div>`;
-        Object.entries(subjectCounts).sort().forEach(([subject, count]) => {
-            statsHtml += `<div class="p-2 bg-gray-100 rounded-lg"><p class="font-bold text-lg">${count}</p><p class="text-sm text-gray-600">${subject}</p></div>`;
-        });
+        Object.entries(subjectCounts).sort().forEach(([subject, count]) => { statsHtml += `<div class="p-2 bg-gray-100 rounded-lg"><p class="font-bold text-lg">${count}</p><p class="text-sm text-gray-600">${subject}</p></div>`; });
         statsContainer.innerHTML = statsHtml;
     }
 
     function renderOverdueTasks() {
-        const calendarContainer = document.getElementById('calendar-container');
-        if(calendarContainer) calendarContainer.innerHTML = '';
-        
+        document.getElementById('calendar-container').style.display = 'none';
         planContent.innerHTML = '';
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const allTasksAndReviews = (studyPlan.tasks ? Object.values(studyPlan.tasks).flat() : []).concat((studyPlan.reviews ? Object.values(studyPlan.reviews) : []).flat());
-
-        const overdueTasks = allTasksAndReviews.filter(task => {
-            const taskDate = new Date(task.date + 'T00:00:00');
-            return !task.completed && taskDate < today;
-        });
-
-        overdueTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
-
+        const todayStr = formatDateYMD(new Date());
+        const allTasksAndReviews = Object.values(studyPlan.tasks || {}).flat().concat(Object.values(studyPlan.reviews || {}).flat());
+        const overdueTasks = allTasksAndReviews.filter(task => !task.completed && task.date < todayStr);
+        
         const backButton = document.createElement('button');
         backButton.innerHTML = '&#x2B05;&#xFE0F; Voltar ao Calendário';
         backButton.className = 'control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm mb-4';
-        backButton.onclick = () => renderPlan(viewDate);
+        backButton.onclick = () => {
+            document.getElementById('calendar-container').style.display = 'block';
+            renderPlan(viewDate);
+        };
         planContent.appendChild(backButton);
         
-        if (overdueTasks.length === 0) {
-            planContent.innerHTML += `<div class="text-center p-4 bg-green-50 rounded-lg border border-green-200"><p class="text-green-700 font-semibold">Parabéns! Nenhuma tarefa atrasada.</p></div>`;
-            return;
-        }
-        
-        const title = document.createElement('h3');
-        title.className = "text-lg font-semibold text-gray-700 mt-4 border-b pb-2 mb-4";
-        title.textContent = `🚨 ${overdueTasks.length} Tarefa(s) Atrasada(s)`;
-        planContent.appendChild(title);
+        if (overdueTasks.length === 0) { planContent.innerHTML += `<div class="text-center p-4 bg-green-50 rounded-lg border border-green-200"><p class="text-green-700 font-semibold">Parabéns! Nenhuma tarefa atrasada.</p></div>`; return; }
 
-        overdueTasks.forEach(task => {
-            const taskCard = createTaskCard(task, true);
-            planContent.appendChild(taskCard);
+        const totalTasks = Object.values(studyPlan.tasks || {}).flat().length;
+        const overduePercentage = totalTasks > 0 ? ((overdueTasks.length / totalTasks) * 100).toFixed(1) : 0;
+        const overdueHours = (overdueTasks.length * 45 / 60).toFixed(1);
+        planContent.innerHTML += `<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"><div class="bg-red-50 p-4 rounded-lg text-center"><p class="text-2xl font-bold text-red-700">${overdueTasks.length}</p><p class="text-sm font-semibold text-red-600">Total de Aulas Atrasadas</p></div><div class="bg-yellow-50 p-4 rounded-lg text-center"><p class="text-2xl font-bold text-yellow-700">${overduePercentage}%</p><p class="text-sm font-semibold text-yellow-600">do Total de Aulas</p></div><div class="bg-blue-50 p-4 rounded-lg text-center md:col-span-2"><p class="text-2xl font-bold text-blue-700">${overdueHours} horas</p><p class="text-sm font-semibold text-blue-600">de Estudo Acumulado (aprox.)</p></div></div>`;
+        
+        const groupedByDate = overdueTasks.reduce((acc, task) => { (acc[task.date] = acc[task.date] || []).push(task); return acc; }, {});
+        Object.keys(groupedByDate).sort().forEach(dateStr => {
+            const dateTitle = document.createElement('h3');
+            dateTitle.className = "text-lg font-bold text-gray-800 mt-6 border-b-2 border-red-400 pb-2";
+            dateTitle.textContent = `Atrasadas de: ${formatDateDMY(dateStr)}`;
+            planContent.appendChild(dateTitle);
+            groupedByDate[dateStr].forEach(task => planContent.appendChild(createTaskCard(task, true)));
         });
     }
     
     const startCountdown = () => {
         const countdownEl = document.getElementById('countdown');
-        const examDate = new Date('2025-10-26T08:00:00').getTime();
+        const examDate = new Date('2025-10-26T11:00:00Z').getTime();
         const update = () => {
             const distance = examDate - new Date().getTime();
-            if (distance < 0) {
-                countdownEl.innerHTML = "PROVA REALIZADA!";
-                clearInterval(interval);
-                return;
-            }
+            if (distance < 0) { countdownEl.innerHTML = "PROVA REALIZADA!"; clearInterval(interval); return; }
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             countdownEl.innerHTML = `${days}d ${hours}h`;
@@ -1407,48 +1383,90 @@
         update();
     };
 
-    const openEditModal = () => {
-        const listContainer = document.getElementById('edit-tasks-list');
-        const searchInput = document.getElementById('edit-tasks-search');
-        listContainer.innerHTML = 'Carregando aulas...';
+    function openEditModalFromList(taskId, taskDate) {
+        const task = studyPlan.tasks[taskDate]?.find(t => t.id === taskId);
+        if (task) {
+            populateSubjectSelect(document.getElementById('task-subject'));
+            document.getElementById('modal-title').textContent = 'Editar Aula';
+            document.getElementById('task-id').value = task.id;
+            document.getElementById('original-task-date').value = task.date;
+            document.getElementById('task-date').value = task.date;
+            document.getElementById('task-subject').value = task.subject;
+            document.getElementById('task-lesson').value = task.lesson;
+            document.getElementById('task-topic').value = task.topic;
+            document.getElementById('task-type').value = task.type;
+            addTaskModal.classList.remove('hidden');
+        }
+    }
 
-        const allTasks = Object.values(studyPlan.tasks).flat().sort((a,b) => new Date(a.date) - new Date(b.date));
+    function populateSubjectSelect(selectElement) {
+        const allTasks = Object.values(studyPlan.tasks || {}).flat();
+        const subjects = [...new Set(allTasks.map(task => task.subject))].sort();
+        selectElement.innerHTML = subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+    }
+
+    function shiftAllTasks(days) {
+        const newTasks = {};
+        const allTasks = Object.values(studyPlan.tasks).flat();
         
-        const renderList = (tasksToRender) => {
-            listContainer.innerHTML = '';
-            if (tasksToRender.length === 0) {
-                listContainer.innerHTML = '<p class="text-center text-gray-500">Nenhuma aula encontrada.</p>';
-                return;
+        allTasks.forEach(task => {
+            if (!task.completed) {
+                const currentDate = new Date(task.date + 'T03:00:00Z');
+                const newDate = addDays(currentDate, days);
+                const newDateStr = formatDateYMD(newDate);
+                task.date = newDateStr;
             }
-            tasksToRender.forEach(task => {
-                const taskEl = document.createElement('div');
-                taskEl.className = 'p-3 border rounded-md flex justify-between items-center';
-                taskEl.innerHTML = `
-                    <div>
-                        <p class="font-semibold">${task.subject} - Aula ${task.lesson}</p>
-                        <p class="text-sm text-gray-600">${task.topic} (${formatDateDMY(new Date(task.date + 'T00:00:00'))})</p>
-                    </div>
-                    <div class="space-x-2">
-                        <button class="edit-btn text-blue-500 hover:underline" data-id="${task.id}" data-date="${task.date}">Editar</button>
-                        <button class="delete-btn text-red-500 hover:underline" data-id="${task.id}" data-date="${task.date}">Excluir</button>
-                    </div>
-                `;
-                listContainer.appendChild(taskEl);
-            });
-        };
+            const dateStr = task.date;
+            if (!newTasks[dateStr]) newTasks[dateStr] = [];
+            newTasks[dateStr].push(task);
+        });
+        studyPlan.tasks = newTasks;
+        saveState();
+        renderAllTasksTable();
+        updateProgress();
+        renderPlan(viewDate);
+    }
 
-        renderList(allTasks);
+    function shiftSelectedTasks(days) {
+        const selected = Array.from(document.querySelectorAll('#all-tasks-table-body .task-select-checkbox:checked')).map(cb => ({ id: cb.dataset.id, date: cb.dataset.date }));
+        if (selected.length === 0) return;
 
-        searchInput.oninput = (e) => {
-            const filter = e.target.value.toLowerCase();
-            const filtered = allTasks.filter(task =>
-                task.subject.toLowerCase().includes(filter) ||
-                task.topic.toLowerCase().includes(filter)
-            );
-            renderList(filtered);
-        };
+        selected.forEach(item => {
+            const taskIndex = studyPlan.tasks[item.date]?.findIndex(t => t.id === item.id);
+            if (taskIndex > -1) {
+                const [task] = studyPlan.tasks[item.date].splice(taskIndex, 1);
+                if (studyPlan.tasks[item.date].length === 0) delete studyPlan.tasks[item.date];
 
-        editTasksModal.classList.remove('hidden');
+                const newDate = addDays(new Date(task.date + 'T03:00:00Z'), days);
+                const newDateStr = formatDateYMD(newDate);
+                task.date = newDateStr;
+                if (!studyPlan.tasks[newDateStr]) studyPlan.tasks[newDateStr] = [];
+                studyPlan.tasks[newDateStr].push(task);
+            }
+        });
+        saveState();
+        renderAllTasksTable();
+        updateProgress();
+        renderPlan(viewDate);
+        updateSelectedActionsVisibility();
+    }
+
+    function updateSelectedActionsVisibility() {
+        const selectedCount = document.querySelectorAll('#all-tasks-table-body .task-select-checkbox:checked').length;
+        const container = document.getElementById('selected-actions-container');
+        const countSpan = document.getElementById('selection-count');
+
+        if (selectedCount > 1) {
+            countSpan.textContent = `${selectedCount} aulas selecionadas:`;
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+        }
+    }
+
+    function updateTrashActionsVisibility() {
+        const anySelected = document.querySelectorAll('#trash-table-body .trash-select-checkbox:checked').length > 0;
+        document.getElementById('trash-actions-container').classList.toggle('hidden', !anySelected);
     }
 
     // =================== EVENT LISTENERS (PONTO DE IGNIÇÃO) ===================
@@ -1458,17 +1476,29 @@
         renderPlan(viewDate);
         updateProgress();
         startCountdown();
-        document.getElementById('currentDate').textContent = formatDateDMY(new Date());
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('pt-BR');
         
+        document.getElementById('home-btn').addEventListener('click', () => location.reload());
+
         document.getElementById('add-task-btn').addEventListener('click', () => {
             document.getElementById('add-task-form').reset();
+            populateSubjectSelect(document.getElementById('task-subject'));
             document.getElementById('modal-title').textContent = 'Incluir Nova Aula';
             document.getElementById('task-id').value = '';
             document.getElementById('original-task-date').value = '';
             addTaskModal.classList.remove('hidden');
         });
-        
-        document.getElementById('edit-tasks-btn').addEventListener('click', openEditModal);
+
+        document.getElementById('manage-tasks-btn').addEventListener('click', () => {
+            const allTasks = Object.values(studyPlan.tasks || {}).flat();
+            const subjects = [...new Set(allTasks.map(task => task.subject))].sort();
+            const filterSelect = document.getElementById('filter-subject');
+            filterSelect.innerHTML = '<option value="">Todas</option>' + subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+            renderAllTasksTable();
+            renderAllTasksStatistics();
+            updateSelectedActionsVisibility();
+            allTasksModal.classList.remove('hidden');
+        });
         
         document.getElementById('add-task-form').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -1480,40 +1510,69 @@
             const id = document.getElementById('task-id').value;
             const originalDate = document.getElementById('original-task-date').value;
 
-            if (id) {
-                if (studyPlan.tasks[originalDate]) {
-                    studyPlan.tasks[originalDate] = studyPlan.tasks[originalDate].filter(t => t.id !== id);
-                    if (studyPlan.tasks[originalDate].length === 0) delete studyPlan.tasks[originalDate];
-                }
+            if (id && originalDate && studyPlan.tasks[originalDate]) {
+                studyPlan.tasks[originalDate] = studyPlan.tasks[originalDate].filter(t => t.id !== id);
+                if (studyPlan.tasks[originalDate].length === 0) delete studyPlan.tasks[originalDate];
             }
-            
-            const taskData = {
-                id: id || generateUniqueId({ subject, lesson, type }),
-                date: date, subject, lesson, topic, type,
-                completed: false
-            };
-
+            const taskData = { id: id || generateUniqueId({ subject, lesson, type }), date, subject, lesson, topic, type, completed: false };
             if (!studyPlan.tasks[date]) studyPlan.tasks[date] = [];
             studyPlan.tasks[date].push(taskData);
-
             saveState();
             renderPlan(viewDate);
             updateProgress();
             addTaskModal.classList.add('hidden');
-            editTasksModal.classList.add('hidden');
+        });
+
+        planContent.addEventListener('click', (e) => {
+            const editBtn = e.target.closest('.task-edit-btn');
+            const deleteBtn = e.target.closest('.task-delete-btn');
+            const postponeBtn = e.target.closest('.task-postpone-btn');
+            if (editBtn) openEditModalFromList(editBtn.dataset.id, editBtn.dataset.date);
+            if (deleteBtn) {
+                const { id, date } = deleteBtn.dataset;
+                showConfirmation('Mover esta aula para a lixeira?', () => {
+                    if (studyPlan.tasks[date]) {
+                        const taskIndex = studyPlan.tasks[date].findIndex(t => t.id === id);
+                        if (taskIndex > -1) {
+                            const [taskToDelete] = studyPlan.tasks[date].splice(taskIndex, 1);
+                            if (studyPlan.tasks[date].length === 0) delete studyPlan.tasks[date];
+                            if (!studyPlan.deletedTasks) studyPlan.deletedTasks = {};
+                            taskToDelete.deletedAt = new Date().toISOString();
+                            studyPlan.deletedTasks[taskToDelete.id] = taskToDelete;
+                            saveState();
+                            renderPlan(viewDate);
+                            updateProgress();
+                        }
+                    }
+                });
+            }
+            if (postponeBtn) {
+                const { id, date } = postponeBtn.dataset;
+                const taskIndex = studyPlan.tasks[date]?.findIndex(t => t.id === id);
+                if (taskIndex > -1) {
+                    const task = studyPlan.tasks[date][taskIndex];
+                    const nextDay = addDays(new Date(date + 'T03:00:00Z'), 1);
+                    const nextDayStr = formatDateYMD(nextDay);
+                    task.date = nextDayStr;
+                    if (!studyPlan.tasks[nextDayStr]) studyPlan.tasks[nextDayStr] = [];
+                    studyPlan.tasks[nextDayStr].push(task);
+                    studyPlan.tasks[date].splice(taskIndex, 1);
+                    if (studyPlan.tasks[date].length === 0) delete studyPlan.tasks[date];
+                    saveState();
+                    renderPlan(viewDate);
+                }
+            }
         });
 
         planContent.addEventListener('change', (e) => {
             if (e.target.matches('.task-checkbox')) {
                 const { id, date, type } = e.target.dataset;
                 let taskList = type.startsWith('review') ? studyPlan.reviews[date] : studyPlan.tasks[date];
-                const task = taskList ? taskList.find(t => t.id === id) : undefined;
-
+                const task = taskList?.find(t => t.id === id);
                 if (task) {
                     task.completed = e.target.checked;
                     if (!type.startsWith('review')) {
-                        if (task.completed) scheduleReviews(task);
-                        else unscheduleReviews(task);
+                        if (task.completed) scheduleReviews(task); else unscheduleReviews(task);
                     }
                     updateProgress();
                     saveState();
@@ -1522,176 +1581,32 @@
             }
             if (e.target.matches('.daily-goal-checkbox')) {
                 const { date } = e.target.dataset;
-                if (!studyPlan.dailyGoals[date]) {
-                    studyPlan.dailyGoals[date] = {};
-                }
+                if (!studyPlan.dailyGoals[date]) studyPlan.dailyGoals[date] = {};
                 studyPlan.dailyGoals[date].exercisesCompleted = e.target.checked;
                 saveState();
             }
         });
 
-        planContent.addEventListener('click', (e) => {
-            const editBtn = e.target.closest('.task-edit-btn');
-            const deleteBtn = e.target.closest('.task-delete-btn');
-            const postponeBtn = e.target.closest('.task-postpone-btn');
-
-            if (editBtn) {
-                const { id, date } = editBtn.dataset;
-                const task = studyPlan.tasks[date]?.find(t => t.id === id);
-                if (task) {
-                    document.getElementById('modal-title').textContent = 'Editar Aula';
-                    document.getElementById('task-id').value = task.id;
-                    document.getElementById('original-task-date').value = task.date;
-                    document.getElementById('task-date').value = task.date;
-                    document.getElementById('task-subject').value = task.subject;
-                    document.getElementById('task-lesson').value = task.lesson;
-                    document.getElementById('task-topic').value = task.topic;
-                    document.getElementById('task-type').value = task.type;
-                    addTaskModal.classList.remove('hidden');
-                }
-            }
-
-            if (deleteBtn) {
-                const { id, date } = deleteBtn.dataset;
-                showConfirmation('Tem certeza que deseja excluir esta aula e suas revisões?', () => {
-                    if (studyPlan.tasks[date]) {
-                        const taskToDelete = studyPlan.tasks[date].find(t => t.id === id);
-                        if (taskToDelete) {
-                            unscheduleReviews(taskToDelete);
-                            studyPlan.tasks[date] = studyPlan.tasks[date].filter(t => t.id !== id);
-                            if (studyPlan.tasks[date].length === 0) delete studyPlan.tasks[date];
-                            saveState();
-                            renderPlan(viewDate);
-                            updateProgress();
-                        }
-                    }
-                });
-            }
-
-            if (postponeBtn) {
-                const { id, date } = postponeBtn.dataset;
-                const taskList = studyPlan.tasks[date];
-                const taskIndex = taskList?.findIndex(t => t.id === id);
-
-                if (taskIndex > -1) {
-                    const task = taskList[taskIndex];
-                    const nextDay = addDays(new Date(date + 'T00:00:00'), 1);
-                    const nextDayStr = formatDateYMD(nextDay);
-                    
-                    task.date = nextDayStr;
-                    if (!studyPlan.tasks[nextDayStr]) {
-                        studyPlan.tasks[nextDayStr] = [];
-                    }
-                    studyPlan.tasks[nextDayStr].push(task);
-                    
-                    studyPlan.tasks[date].splice(taskIndex, 1);
-                    if (studyPlan.tasks[date].length === 0) {
-                        delete studyPlan.tasks[date];
-                    }
-                    
-                    saveState();
-                    renderPlan(viewDate);
-                }
-            }
-        });
-
-       document.getElementById('calendar-container').addEventListener('click', (e) => {
+        document.getElementById('calendar-container').addEventListener('click', (e) => {
             const dayElement = e.target.closest('.calendar-day');
-            if (dayElement) {
-                viewDate = new Date(dayElement.dataset.date + 'T00:00:00');
-                renderPlan(viewDate);
-            }
-            if (e.target.id === 'prev-month') {
-                viewDate.setMonth(viewDate.getMonth() - 1);
-                renderPlan(viewDate);
-            }
-            if (e.target.id === 'next-month') {
-                viewDate.setMonth(viewDate.getMonth() + 1);
-                renderPlan(viewDate);
-            }
+            if (dayElement) { viewDate = new Date(dayElement.dataset.date + 'T03:00:00Z'); renderPlan(viewDate); }
+            if (e.target.id === 'prev-month') { viewDate.setMonth(viewDate.getMonth() - 1); renderPlan(viewDate); }
+            if (e.target.id === 'next-month') { viewDate.setMonth(viewDate.getMonth() + 1); renderPlan(viewDate); }
         });
 
-        document.querySelectorAll('.close-modal').forEach(btn => {
-            btn.addEventListener('click', (e) => e.target.closest('.modal').classList.add('hidden'));
-        });
-
-        document.getElementById('edit-tasks-list').addEventListener('click', (e) => {
-            const target = e.target;
-            const { id, date } = target.dataset;
-            
-            if (target.classList.contains('edit-btn')) {
-                const task = studyPlan.tasks[date].find(t => t.id === id);
-                if (task) {
-                    document.getElementById('modal-title').textContent = 'Editar Aula';
-                    document.getElementById('task-id').value = task.id;
-                    document.getElementById('original-task-date').value = task.date;
-                    document.getElementById('task-date').value = task.date;
-                    document.getElementById('task-subject').value = task.subject;
-                    document.getElementById('task-lesson').value = task.lesson;
-                    document.getElementById('task-topic').value = task.topic;
-                    document.getElementById('task-type').value = task.type;
-                    addTaskModal.classList.remove('hidden');
-                }
-            }
-
-            if (target.classList.contains('delete-btn')) {
-                showConfirmation('Tem certeza que deseja excluir esta aula e suas revisões?', () => {
-                    if (studyPlan.tasks[date]) {
-                        const taskToDelete = studyPlan.tasks[date].find(t => t.id === id);
-                        if (taskToDelete) {
-                            unscheduleReviews(taskToDelete);
-                            studyPlan.tasks[date] = studyPlan.tasks[date].filter(t => t.id !== id);
-                            if (studyPlan.tasks[date].length === 0) delete studyPlan.tasks[date];
-                            saveState();
-                            renderPlan(viewDate);
-                            updateProgress();
-                            openEditModal();
-                        }
-                    }
-                });
-            }
-        });
-
-        document.getElementById('export-backup-btn').addEventListener('click', () => {
+        document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', (e) => e.target.closest('.modal').classList.add('hidden')));
+        document.getElementById('export-backup-btn').addEventListener('click', (e) => {
+            e.preventDefault();
             const dataStr = JSON.stringify(studyPlan, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            const exportFileDefaultName = 'backup_plano_estudos.json';
             const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.setAttribute('href', 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr));
+            linkElement.setAttribute('download', 'backup_plano_estudos.json');
             linkElement.click();
         });
-        
-        document.getElementById('export-csv-btn').addEventListener('click', () => {
-            let csvContent = "data:text/csv;charset=utf-8,date,subject,lesson,topic,type\n";
-            const allTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks).flat() : []);
-            allTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
-            allTasks.forEach(task => {
-                const row = [task.date, `"${task.subject}"`, `"${task.lesson}"`, `"${task.topic}"`, task.type].join(',');
-                csvContent += row + "\r\n";
-            });
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "base_de_aulas.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+        document.getElementById('import-backup-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('import-backup-file').click()
         });
-
-        document.getElementById('import-backup-btn').addEventListener('click', () => document.getElementById('import-backup-file').click());
-        document.getElementById('import-csv-btn').addEventListener('click', () => document.getElementById('import-csv-file').click());
-        
-        document.getElementById('view-all-tasks-btn').addEventListener('click', () => {
-            renderAllTasksTable();
-            renderAllTasksStatistics();
-            allTasksModal.classList.remove('hidden');
-        });
-        
-        document.getElementById('view-overdue-tasks-btn').addEventListener('click', renderOverdueTasks);
-
-        document.getElementById('all-tasks-search').addEventListener('input', (e) => renderAllTasksTable(e.target.value));
-
         document.getElementById('import-backup-file').addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (!file) return;
@@ -1699,24 +1614,16 @@
             reader.onload = (e) => {
                 try {
                     const importedData = JSON.parse(e.target.result);
-                    if (importedData.tasks && importedData.reviews) {
-                        studyPlan = importedData;
-                        saveState();
-                        renderPlan(viewDate);
-                        updateProgress();
-                    } else {
-                        showConfirmation('Arquivo de backup inválido.', ()=>{});
-                    }
-                } catch (err) {
-                    showConfirmation('Erro ao ler o arquivo de backup.', ()=>{});
-                }
+                    if (importedData.tasks) { studyPlan = importedData; saveState(); renderPlan(viewDate); updateProgress(); } 
+                    else { showConfirmation('Arquivo de backup inválido.', ()=>{}); }
+                } catch (err) { showConfirmation('Erro ao ler o arquivo.', ()=>{}); }
             };
             reader.readAsText(file);
             event.target.value = '';
         });
-
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            showConfirmation('Tem certeza que deseja apagar todo o progresso? Esta ação não pode ser desfeita.', () => {
+        document.getElementById('reset-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            showConfirmation('Tem certeza que deseja apagar todo o progresso?', () => {
                 studyPlan = initializeStudyPlan();
                 saveState();
                 renderPlan(viewDate);
@@ -1724,37 +1631,145 @@
             });
         });
 
+        document.getElementById('view-overdue-tasks-btn').addEventListener('click', renderOverdueTasks);
+        
+        ['all-tasks-search', 'filter-subject', 'sort-by', 'filter-not-completed', 'filter-overdue'].forEach(id => {
+            document.getElementById(id).addEventListener('input', renderAllTasksTable);
+        });
+        
+        document.getElementById('all-tasks-table-body').addEventListener('click', (e) => {
+            const editBtn = e.target.closest('.task-edit-btn-table');
+            const deleteBtn = e.target.closest('.task-delete-btn-table');
+            if (editBtn) openEditModalFromList(editBtn.dataset.id, editBtn.dataset.date);
+            if (deleteBtn) {
+                const { id, date } = deleteBtn.dataset;
+                showConfirmation('Mover esta aula para a lixeira?', () => {
+                     if (studyPlan.tasks[date]) {
+                        const taskIndex = studyPlan.tasks[date].findIndex(t => t.id === id);
+                        if (taskIndex > -1) {
+                            const [taskToDelete] = studyPlan.tasks[date].splice(taskIndex, 1);
+                            if (studyPlan.tasks[date].length === 0) delete studyPlan.tasks[date];
+                            if (!studyPlan.deletedTasks) studyPlan.deletedTasks = {};
+                            taskToDelete.deletedAt = new Date().toISOString();
+                            studyPlan.deletedTasks[taskToDelete.id] = taskToDelete;
+                            saveState();
+                            renderAllTasksTable();
+                            updateProgress();
+                        }
+                    }
+                });
+            }
+            if (e.target.classList.contains('task-select-checkbox')) {
+                updateSelectedActionsVisibility();
+            }
+        });
+
         document.getElementById('select-all-tasks-checkbox').addEventListener('change', (e) => {
-            document.querySelectorAll('#all-tasks-table-body .task-select-checkbox').forEach(checkbox => {
-                checkbox.checked = e.target.checked;
-            });
+            document.querySelectorAll('#all-tasks-table-body .task-select-checkbox').forEach(checkbox => checkbox.checked = e.target.checked);
+            updateSelectedActionsVisibility();
         });
 
         document.getElementById('delete-selected-btn').addEventListener('click', () => {
-            const selected = [];
-            document.querySelectorAll('#all-tasks-table-body .task-select-checkbox:checked').forEach(checkbox => {
-                selected.push({ id: checkbox.dataset.id, date: checkbox.dataset.date });
-            });
-
-            if (selected.length === 0) {
-                showConfirmation("Nenhuma aula selecionada.", () => {});
-                return;
-            }
-
-            showConfirmation(`Tem certeza que deseja excluir as ${selected.length} aulas selecionadas e suas revisões?`, () => {
+            const selected = Array.from(document.querySelectorAll('#all-tasks-table-body .task-select-checkbox:checked')).map(cb => ({ id: cb.dataset.id, date: cb.dataset.date }));
+            if (selected.length === 0) return;
+            showConfirmation(`Mover as ${selected.length} aulas para a lixeira?`, () => {
                 selected.forEach(item => {
-                    const taskToDelete = studyPlan.tasks[item.date]?.find(t => t.id === item.id);
-                    if (taskToDelete) {
-                        unscheduleReviews(taskToDelete);
-                        studyPlan.tasks[item.date] = studyPlan.tasks[item.date].filter(t => t.id !== item.id);
+                    const taskIndex = studyPlan.tasks[item.date]?.findIndex(t => t.id === item.id);
+                    if (taskIndex > -1) {
+                        const [taskToDelete] = studyPlan.tasks[item.date].splice(taskIndex, 1);
                         if (studyPlan.tasks[item.date].length === 0) delete studyPlan.tasks[item.date];
+                        if (!studyPlan.deletedTasks) studyPlan.deletedTasks = {};
+                        taskToDelete.deletedAt = new Date().toISOString();
+                        studyPlan.deletedTasks[taskToDelete.id] = taskToDelete;
                     }
                 });
                 saveState();
-                renderPlan(viewDate);
-                updateProgress();
-                renderAllTasksTable(); // Refresh the modal list
+                renderAllTasksTable();
                 renderAllTasksStatistics();
+                updateProgress();
+                updateSelectedActionsVisibility();
+            });
+        });
+
+        document.getElementById('shift-selected-forward-btn').addEventListener('click', () => shiftSelectedTasks(1));
+        document.getElementById('shift-selected-backward-btn').addEventListener('click', () => shiftSelectedTasks(-1));
+        document.getElementById('shift-all-forward-btn').addEventListener('click', () => showConfirmation('Adiar todas as aulas não concluídas em 1 dia?', () => shiftAllTasks(1)));
+        document.getElementById('shift-all-backward-btn').addEventListener('click', () => showConfirmation('Adiantar todas as aulas não concluídas em 1 dia?', () => shiftAllTasks(-1)));
+
+        // Lógica das Abas e Lixeira
+        document.getElementById('tab-active').addEventListener('click', () => {
+            document.getElementById('tab-active').classList.add('active');
+            document.getElementById('tab-trash').classList.remove('active');
+            document.getElementById('tab-content-active').classList.remove('hidden');
+            document.getElementById('tab-content-trash').classList.add('hidden');
+        });
+        document.getElementById('tab-trash').addEventListener('click', () => {
+            document.getElementById('tab-trash').classList.add('active');
+            document.getElementById('tab-active').classList.remove('active');
+            document.getElementById('tab-content-trash').classList.remove('hidden');
+            document.getElementById('tab-content-active').classList.add('hidden');
+            renderTrashTable();
+        });
+        document.getElementById('trash-table-body').addEventListener('click', (e) => {
+            const { id } = e.target.dataset;
+            if (e.target.classList.contains('restore-btn')) {
+                const taskToRestore = studyPlan.deletedTasks[id];
+                if (taskToRestore) {
+                    const date = taskToRestore.date;
+                    if (!studyPlan.tasks[date]) studyPlan.tasks[date] = [];
+                    studyPlan.tasks[date].push(taskToRestore);
+                    delete studyPlan.deletedTasks[id];
+                    saveState();
+                    renderTrashTable();
+                    updateProgress();
+                }
+            }
+            if (e.target.classList.contains('perm-delete-btn')) {
+                showConfirmation('Excluir permanentemente?', () => {
+                    if (studyPlan.deletedTasks[id]) {
+                        delete studyPlan.deletedTasks[id];
+                        saveState();
+                        renderTrashTable();
+                    }
+                });
+            }
+            if(e.target.classList.contains('trash-select-checkbox')) {
+                updateTrashActionsVisibility();
+            }
+        });
+        document.getElementById('select-all-trash-checkbox').addEventListener('change', (e) => {
+            document.querySelectorAll('#trash-table-body .trash-select-checkbox').forEach(checkbox => checkbox.checked = e.target.checked);
+            updateTrashActionsVisibility();
+        });
+        document.getElementById('restore-all-btn').addEventListener('click', () => {
+            const selectedIds = Array.from(document.querySelectorAll('#trash-table-body .trash-select-checkbox:checked')).map(cb => cb.dataset.id);
+            if(selectedIds.length === 0) return;
+            showConfirmation(`Restaurar ${selectedIds.length} aulas da lixeira?`, () => {
+                selectedIds.forEach(id => {
+                    const taskToRestore = studyPlan.deletedTasks[id];
+                    if (taskToRestore) {
+                        const date = taskToRestore.date;
+                        if (!studyPlan.tasks[date]) studyPlan.tasks[date] = [];
+                        studyPlan.tasks[date].push(taskToRestore);
+                        delete studyPlan.deletedTasks[id];
+                    }
+                });
+                saveState();
+                renderTrashTable();
+                updateProgress();
+                updateTrashActionsVisibility();
+            });
+        });
+        document.getElementById('delete-all-perm-btn').addEventListener('click', () => {
+            const selectedIds = Array.from(document.querySelectorAll('#trash-table-body .trash-select-checkbox:checked')).map(cb => cb.dataset.id);
+            if(selectedIds.length === 0) return;
+            showConfirmation(`Excluir permanentemente ${selectedIds.length} aulas?`, () => {
+                selectedIds.forEach(id => {
+                    delete studyPlan.deletedTasks[id];
+                });
+                saveState();
+                renderTrashTable();
+                updateTrashActionsVisibility();
             });
         });
     });
