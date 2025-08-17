@@ -1393,134 +1393,6 @@ function scheduleReviews(completedTask) {
             update();
         };
 
-        document.getElementById('export-backup-btn').addEventListener('click', () => {
-            const dataStr = JSON.stringify(studyPlan, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            const exportFileDefaultName = 'backup_plano_estudos.json';
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
-        });
-        
-        document.getElementById('export-csv-btn').addEventListener('click', () => {
-            let csvContent = "data:text/csv;charset=utf-8,date,subject,lesson,topic,type\n";
-            const allTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks) : []).flat();
-            allTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
-            allTasks.forEach(task => {
-                const row = [task.date, `"${task.subject}"`, `"${task.lesson}"`, `"${task.topic}"`, task.type].join(',');
-                csvContent += row + "\r\n";
-            });
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "base_de_aulas.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        });
-
-        document.getElementById('import-backup-btn').addEventListener('click', () => {
-            document.getElementById('import-backup-file').click();
-        });
-        
-        document.getElementById('import-csv-btn').addEventListener('click', () => {
-            document.getElementById('import-csv-file').click();
-        });
-        
-        document.getElementById('view-all-tasks-btn').addEventListener('click', () => {
-            renderAllTasksTable();
-            allTasksModal.classList.remove('hidden');
-        });
-        
-        document.getElementById('view-overdue-tasks-btn').addEventListener('click', renderOverdueTasks);
-
-        document.getElementById('all-tasks-search').addEventListener('input', (e) => {
-            renderAllTasksTable(e.target.value);
-        });
-
-        document.getElementById('import-backup-file').addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    if (importedData.tasks && importedData.reviews) {
-                        studyPlan = importedData;
-                        saveState();
-                        renderPlan(viewDate);
-                        updateProgress();
-                        alert('Backup importado com sucesso!');
-                    } else {
-                        alert('Arquivo de backup inválido.');
-                    }
-                } catch (err) {
-                    alert('Erro ao ler o arquivo de backup.');
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = '';
-        });
-
-        document.getElementById('import-csv-file').addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const csv = e.target.result;
-                    const lines = csv.split('\n').slice(1); 
-                    let newTasksCount = 0;
-                    lines.forEach(line => {
-                        if (line.trim() === '') return;
-                        const [date, subject, lesson, topic, type] = line.split(',');
-                        const task = { date: date.trim(), subject: subject.trim(), lesson: lesson.trim(), topic: topic.trim(), type: 'study' };
-                        const id = generateUniqueId(task);
-                        const dateStr = formatDateYMD(new Date(task.date + 'T00:00:00'));
-
-                        if (!studyPlan.tasks[dateStr]) {
-                            studyPlan.tasks[dateStr] = [];
-                        }
-                        
-                        if (!studyPlan.tasks[dateStr].some(t => t.id === id)) {
-                             studyPlan.tasks[dateStr].push({ ...task, id, completed: false });
-                             newTasksCount++;
-                        }
-                    });
-                    saveState();
-                    renderPlan(viewDate);
-                    updateProgress();
-                    alert(`${newTasksCount} novas aulas importadas com sucesso!`);
-
-                } catch (err) {
-                    alert('Erro ao processar o arquivo CSV. Verifique o formato.');
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = '';
-        });
-
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            if (confirm('Tem certeza que deseja apagar todo o progresso? Esta ação não pode ser desfeita.')) {
-                localStorage.removeItem(STORAGE_KEY);
-                studyPlan = initializeStudyPlan();
-                saveState();
-                renderPlan(viewDate);
-                updateProgress();
-                alert('Progresso resetado.');
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            await loadState(); 
-            setupChart();
-            renderPlan(viewDate);
-            updateProgress();
-            startCountdown();
-            document.getElementById('currentDate').textContent = formatDateDMY(new Date());
-        });
-
 // =================== NOVAS FUNÇÕES: INCLUIR E EDITAR AULAS ===================
 
         // Abre o modal de Adicionar Aula
@@ -1663,6 +1535,125 @@ function scheduleReviews(completedTask) {
 
         // =====================================================================
 
+        document.getElementById('export-backup-btn').addEventListener('click', () => {
+            const dataStr = JSON.stringify(studyPlan, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = 'backup_plano_estudos.json';
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        });
+        
+        document.getElementById('export-csv-btn').addEventListener('click', () => {
+            let csvContent = "data:text/csv;charset=utf-8,date,subject,lesson,topic,type\n";
+            const allTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks) : []).flat();
+            allTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
+            allTasks.forEach(task => {
+                const row = [task.date, `"${task.subject}"`, `"${task.lesson}"`, `"${task.topic}"`, task.type].join(',');
+                csvContent += row + "\r\n";
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "base_de_aulas.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        document.getElementById('import-backup-btn').addEventListener('click', () => {
+            document.getElementById('import-backup-file').click();
+        });
+        
+        document.getElementById('import-csv-btn').addEventListener('click', () => {
+            document.getElementById('import-csv-file').click();
+        });
+        
+        document.getElementById('view-all-tasks-btn').addEventListener('click', () => {
+            renderAllTasksTable();
+            allTasksModal.classList.remove('hidden');
+        });
+        
+        document.getElementById('view-overdue-tasks-btn').addEventListener('click', renderOverdueTasks);
+
+        document.getElementById('all-tasks-search').addEventListener('input', (e) => {
+            renderAllTasksTable(e.target.value);
+        });
+
+        document.getElementById('import-backup-file').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (importedData.tasks && importedData.reviews) {
+                        studyPlan = importedData;
+                        saveState();
+                        renderPlan(viewDate);
+                        updateProgress();
+                        alert('Backup importado com sucesso!');
+                    } else {
+                        alert('Arquivo de backup inválido.');
+                    }
+                } catch (err) {
+                    alert('Erro ao ler o arquivo de backup.');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        });
+
+        document.getElementById('import-csv-file').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const csv = e.target.result;
+                    const lines = csv.split('\n').slice(1); 
+                    let newTasksCount = 0;
+                    lines.forEach(line => {
+                        if (line.trim() === '') return;
+                        const [date, subject, lesson, topic, type] = line.split(',');
+                        const task = { date: date.trim(), subject: subject.trim(), lesson: lesson.trim(), topic: topic.trim(), type: 'study' };
+                        const id = generateUniqueId(task);
+                        const dateStr = formatDateYMD(new Date(task.date + 'T00:00:00'));
+
+                        if (!studyPlan.tasks[dateStr]) {
+                            studyPlan.tasks[dateStr] = [];
+                        }
+                        
+                        if (!studyPlan.tasks[dateStr].some(t => t.id === id)) {
+                             studyPlan.tasks[dateStr].push({ ...task, id, completed: false });
+                             newTasksCount++;
+                        }
+                    });
+                    saveState();
+                    renderPlan(viewDate);
+                    updateProgress();
+                    alert(`${newTasksCount} novas aulas importadas com sucesso!`);
+
+                } catch (err) {
+                    alert('Erro ao processar o arquivo CSV. Verifique o formato.');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        });
+
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            if (confirm('Tem certeza que deseja apagar todo o progresso? Esta ação não pode ser desfeita.')) {
+                localStorage.removeItem(STORAGE_KEY);
+                studyPlan = initializeStudyPlan();
+                saveState();
+                renderPlan(viewDate);
+                updateProgress();
+                alert('Progresso resetado.');
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', async () => {
             await loadState(); 
             setupChart();
@@ -1671,7 +1662,14 @@ function scheduleReviews(completedTask) {
             renderSubjectProgress();
             startCountdown();
             document.getElementById('currentDate').textContent = formatDateDMY(new Date());
-        });      
+
+            // Adiciona os listeners dos novos botões aqui dentro, após o app carregar
+            document.getElementById('add-task-btn').addEventListener('click', () => {
+                document.getElementById('add-task-form').reset();
+                addTaskModal.classList.remove('hidden');
+            });
+            document.getElementById('edit-tasks-btn').addEventListener('click', openEditModal);
+        });
 
 </script>
 </body>
