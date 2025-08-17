@@ -28,7 +28,7 @@
         .task-checkbox:checked + label { text-decoration: line-through; color: #9A9A9A; }
         .chart-container { position: relative; width: 100%; max-width: 250px; margin-left: auto; margin-right: auto; height: 250px; }
         .modal.hidden { display: none; }
-        .modal-content { white-space: pre-wrap; }
+        body.modal-open { overflow: hidden; }
         .control-button { background-color: #fff; border: 1px solid #ddd; transition: all 0.2s ease; }
         .control-button:hover { background-color: #f9f9f9; border-color: #ccc; }
         .blurred { filter: blur(8px); transition: filter 0.3s ease-in-out; }
@@ -62,7 +62,7 @@
 <div class="container mx-auto p-4 md:p-8 max-w-7xl">
     <header class="mb-8">
         <div class="text-center">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Meu Painel de Estudos 4.5</h1>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Meu Painel de Estudos 4.6</h1>
             <p class="text-lg text-gray-600 mt-2">Missão: Aprovação Psicólogo(a) - Prefeitura de Uberlândia</p>
         </div>
         <div class="mt-6 flex flex-wrap justify-center items-center gap-2">
@@ -393,12 +393,12 @@
 
         const okListener = () => {
             onConfirm();
-            confirmationModal.classList.add('hidden');
+            closeModal(confirmationModal);
             cleanup();
         };
 
         const cancelListener = () => {
-            confirmationModal.classList.add('hidden');
+            closeModal(confirmationModal);
             cleanup();
         };
 
@@ -410,15 +410,29 @@
         okBtn.addEventListener('click', okListener);
         cancelBtn.addEventListener('click', cancelListener);
 
-        confirmationModal.classList.remove('hidden');
+        openModal(confirmationModal);
     }
+
+    // =================== CONTROLE DE MODAIS E SCROLL ===================
+    function openModal(modalElement) {
+        modalElement.classList.remove('hidden');
+        document.body.classList.add('modal-open');
+    }
+
+    function closeModal(modalElement) {
+        modalElement.classList.add('hidden');
+        // Apenas remove a classe se nenhum outro modal estiver aberto
+        if (document.querySelectorAll('.modal:not(.hidden)').length === 0) {
+            document.body.classList.remove('modal-open');
+        }
+    }
+
 
     // =================== LÓGICA PRINCIPAL DA APLICAÇÃO ===================
    
     function initializeStudyPlan() {
         let plan = { tasks: {}, reviews: {}, dailyGoals: {} };
         
-        // O array de `allTasks` foi omitido por ser muito grande, mas o original do seu código será usado aqui.
         let allTasks = [
             // --- JUNHO 2025 ---
             { date: '2025-06-24', subject: 'Língua Portuguesa', lesson: '1', topic: 'Panorama das Classes Gramaticais', type: 'video', completed: true },
@@ -1173,6 +1187,7 @@
     }
 
     const renderPlan = (date) => {
+        document.getElementById('calendar-container').style.display = 'block';
         renderCalendar(date);
         const dateStr = formatDateYMD(date);
         planContent.innerHTML = '';
@@ -1395,7 +1410,7 @@
             document.getElementById('task-lesson').value = task.lesson;
             document.getElementById('task-topic').value = task.topic;
             document.getElementById('task-type').value = task.type;
-            addTaskModal.classList.remove('hidden');
+            openModal(addTaskModal);
         }
     }
 
@@ -1478,7 +1493,10 @@
         startCountdown();
         document.getElementById('currentDate').textContent = new Date().toLocaleDateString('pt-BR');
         
-        document.getElementById('home-btn').addEventListener('click', () => location.reload());
+        document.getElementById('home-btn').addEventListener('click', () => {
+             document.getElementById('calendar-container').style.display = 'block';
+             renderPlan(new Date());
+        });
 
         document.getElementById('add-task-btn').addEventListener('click', () => {
             document.getElementById('add-task-form').reset();
@@ -1486,7 +1504,7 @@
             document.getElementById('modal-title').textContent = 'Incluir Nova Aula';
             document.getElementById('task-id').value = '';
             document.getElementById('original-task-date').value = '';
-            addTaskModal.classList.remove('hidden');
+            openModal(addTaskModal);
         });
 
         document.getElementById('manage-tasks-btn').addEventListener('click', () => {
@@ -1497,7 +1515,7 @@
             renderAllTasksTable();
             renderAllTasksStatistics();
             updateSelectedActionsVisibility();
-            allTasksModal.classList.remove('hidden');
+            openModal(allTasksModal);
         });
         
         document.getElementById('add-task-form').addEventListener('submit', (e) => {
@@ -1520,7 +1538,7 @@
             saveState();
             renderPlan(viewDate);
             updateProgress();
-            addTaskModal.classList.add('hidden');
+            closeModal(addTaskModal);
         });
 
         planContent.addEventListener('click', (e) => {
@@ -1594,7 +1612,8 @@
             if (e.target.id === 'next-month') { viewDate.setMonth(viewDate.getMonth() + 1); renderPlan(viewDate); }
         });
 
-        document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', (e) => e.target.closest('.modal').classList.add('hidden')));
+        document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', (e) => closeModal(e.target.closest('.modal'))));
+        
         document.getElementById('export-backup-btn').addEventListener('click', (e) => {
             e.preventDefault();
             const dataStr = JSON.stringify(studyPlan, null, 2);
