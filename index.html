@@ -30,21 +30,23 @@
             --selected-day-text: white;
             --tab-active-border: #D5A021;
             --tab-active-text: #D5A021;
+            --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
         }
 
         html.dark {
-            --background-color: #121212;
-            --text-color: #e0e0e0;
-            --card-bg-color: #1e1e1e;
-            --border-color: #444;
+            --background-color: #1f2937;
+            --text-color: #d1d5db;
+            --card-bg-color: #374151;
+            --border-color: #4b5563;
             --header-text-color: #ffffff;
-            --muted-text-color: #a0a0a0;
-            --control-button-bg: #2a2a2a;
-            --control-button-border: #555;
+            --muted-text-color: #9ca3af;
+            --control-button-bg: #4b5563;
+            --control-button-border: #6b7280;
             --selected-day-bg: #D5A021;
-            --selected-day-text: #121212;
+            --selected-day-text: #1f2937;
             --tab-active-border: #D5A021;
             --tab-active-text: #D5A021;
+            --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
         }
 
         body { 
@@ -54,11 +56,11 @@
             transition: background-color 0.3s, color 0.3s;
         }
         
-        #app-container, #allTasksModal .bg-white, #addTaskModal .bg-white, #confirmationModal .bg-white, .bg-white, .bg-gray-50, .bg-gray-100 {
+        #app-container, .modal .bg-white, .bg-white {
             background-color: var(--card-bg-color);
             color: var(--text-color);
-            border-color: var(--border-color);
         }
+        main.bg-white { border-color: var(--border-color); box-shadow: var(--card-shadow); }
 
         h1, h2, h3, #modal-title {
              color: var(--header-text-color);
@@ -70,45 +72,46 @@
         .text-gray-600, .text-gray-500, .text-gray-700 {
             color: var(--muted-text-color);
         }
-        .dark .text-gray-700 { color: var(--text-color); }
-        .dark .text-gray-600 { color: var(--muted-text-color); }
+        html.dark .text-gray-800 { color: var(--header-text-color); }
 
         .control-button {
             background-color: var(--control-button-bg);
             border: 1px solid var(--control-button-border);
+            color: var(--text-color);
+            box-shadow: var(--card-shadow);
             transition: all 0.2s ease;
         }
         .control-button:hover {
             background-color: #f9f9f9;
             border-color: #ccc;
         }
-        .dark .control-button:hover {
-            background-color: #3a3a3a;
-            border-color: #777;
+        html.dark .control-button:hover {
+            background-color: #6b7280;
+            border-color: #9ca3af;
         }
         
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
         .calendar-day { transition: all 0.2s ease; position: relative; }
         .calendar-day:hover { background-color: #f7f3ef; }
-        .dark .calendar-day:hover { background-color: #2a2a2a; }
+        html.dark .calendar-day:hover { background-color: #4b5563; }
 
         .calendar-day.has-task::after { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background-color: #D5A021; position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); }
         .calendar-day.overdue-task::before { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background-color: #ef4444; position: absolute; top: 6px; left: 50%; transform: translateX(-50%); }
         
         .calendar-day.selected { background-color: var(--selected-day-bg); color: var(--selected-day-text); font-weight: bold; }
         
-        .task-card { background-color: var(--card-bg-color); border-left: 4px solid #D6BFAA; transition: box-shadow 0.3s ease; position: relative; }
+        .task-card { background-color: var(--card-bg-color); border-left: 4px solid #D6BFAA; transition: box-shadow 0.3s ease; position: relative; box-shadow: var(--card-shadow); border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);}
         .task-card.review-r1 { border-left-color: #6A9C89; }
         .task-card.review-r3 { border-left-color: #D5A021; }
         .task-card.review-r5 { border-left-color: #A25B5B; }
         .task-card.overdue { border-left-color: #ef4444; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
         .task-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .dark .task-card:hover { box-shadow: 0 4px 12px rgba(255,255,255,0.08); }
+        html.dark .task-card:hover { box-shadow: 0 4px 12px rgba(255,255,255,0.08); }
         .task-card.legis { border-left-color: #38bdf8; }
         
         .task-checkbox:checked + label { text-decoration: line-through; color: #9A9A9A; }
-        .dark .task-checkbox:checked + label { color: #777; }
+        html.dark .task-checkbox:checked + label { color: #777; }
 
         .chart-container { position: relative; width: 100%; max-width: 250px; margin-left: auto; margin-right: auto; height: 250px; }
         
@@ -122,13 +125,13 @@
         .task-card:hover .actions-menu { display: flex; }
         
         .action-btn { background-color: #f0f0f0; border-radius: 9999px; padding: 0.35rem; transition: background-color 0.2s ease; cursor: pointer; }
-        .dark .action-btn { background-color: #3a3a3a; }
+        html.dark .action-btn { background-color: #4b5563; }
         .action-btn:hover { background-color: #e0e0e0; }
-        .dark .action-btn:hover { background-color: #4a4a4a; }
+        html.dark .action-btn:hover { background-color: #6b7280; }
         .action-btn svg { width: 1rem; height: 1rem; color: #555; }
-        .dark .action-btn svg { color: #ccc; }
+        html.dark .action-btn svg { color: #ccc; }
 
-        .tab-button { padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab-button { padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; color: var(--muted-text-color); }
         .tab-button.active { border-bottom-color: var(--tab-active-border); font-weight: 600; color: var(--tab-active-text); }
         
         input, select {
@@ -138,6 +141,8 @@
         }
         
         .stat-card {
+            background-color: var(--control-button-bg);
+            color: var(--text-color);
             cursor: pointer;
             transition: all 0.2s ease-in-out;
             border: 2px solid transparent;
@@ -147,10 +152,14 @@
             transform: translateY(-4px);
             box-shadow: 0 4px 10px rgba(213, 160, 33, 0.3);
         }
-        .dark thead { background-color: #2a2a2a; }
-        .dark #all-tasks-table-body, .dark #trash-table-body, .dark #history-table-body { background-color: var(--card-bg-color); }
-        .dark .divide-y > :not([hidden]) ~ :not([hidden]) { border-color: var(--border-color); }
+        thead { background-color: #f9fafb; }
+        html.dark thead { background-color: #4b5563; }
+        #all-tasks-table-body, #trash-table-body, #history-table-body { background-color: var(--card-bg-color); }
+        .divide-y > :not([hidden]) ~ :not([hidden]) { border-color: var(--border-color); }
 
+        .bg-gray-50, .bg-gray-100 { background-color: #f9fafb; }
+        html.dark .bg-gray-50, html.dark .bg-gray-100 { background-color: #4b5563; }
+        html.dark .border { border-color: var(--border-color); }
     </style>
 </head>
 <body class="text-gray-800">
@@ -180,25 +189,25 @@
             </button>
         </div>
         <div class="mt-6 flex flex-wrap justify-center items-center gap-2">
-            <button id="home-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2">
+            <button id="home-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                 Início
             </button>
-            <button id="view-overdue-tasks-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-red-600 border-red-300">Visualizar Aulas Atrasadas</button>
-            <a href="./questoes.html" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2 text-green-600 border-green-300">
+            <button id="view-overdue-tasks-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg text-red-600 border-red-300">Visualizar Aulas Atrasadas</button>
+            <a href="./questoes.html" class="control-button text-sm font-semibold py-2 px-4 rounded-lg flex items-center gap-2 text-green-600 border-green-300">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 17l4 4 4-4"/><path d="M12 3v18"/><path d="M20 13v-3a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/></svg>
                 Painel de Questões
             </a>
-            <button id="manage-tasks-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-blue-600 border-blue-300">Gerenciar Aulas</button>
+            <button id="manage-tasks-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg text-blue-600 border-blue-300">Gerenciar Aulas</button>
             
             <div class="relative settings-dropdown">
-                <button id="settings-button" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2">
+                <button id="settings-button" class="control-button text-sm font-semibold py-2 px-4 rounded-lg flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                     Ajustes
                 </button>
                 <div id="settings-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
-                    <a href="#" id="export-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Exportar Backup</a>
-                    <a href="#" id="import-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Importar Backup</a>
+                    <a href="#" id="export-backup-btn" class="block px-4 py-2 text-sm hover:bg-gray-100">Exportar Backup</a>
+                    <a href="#" id="import-backup-btn" class="block px-4 py-2 text-sm hover:bg-gray-100">Importar Backup</a>
                     <a href="#" id="reset-btn" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Resetar Progresso</a>
                     <input type="file" id="import-backup-file" class="hidden" accept=".json">
                 </div>
@@ -313,21 +322,24 @@
             <div id="tab-content-active" class="tab-pane flex flex-col h-full overflow-hidden">
                 <div class="p-4 border-b flex-shrink-0">
                     <div id="all-tasks-stats" class="flex flex-wrap justify-center gap-4 mb-4 text-center"></div>
-                     <div class="flex flex-wrap gap-2 items-center mb-4">
-                        <button id="add-task-btn-modal" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-green-600 border-green-300">Incluir Aula(s)</button>
-                        <button id="import-csv-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Importar Aulas (CSV)</button>
-                        <button id="export-csv-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Exportar Aulas (CSV)</button>
+                    
+                    <div id="manage-actions-container" class="flex justify-center flex-wrap gap-2 mb-4">
+                        <button id="add-task-btn-modal" class="control-button text-sm font-semibold py-2 px-4 rounded-lg text-green-600 border-green-300">Incluir Aula(s)</button>
+                        <button id="import-csv-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg">Importar (CSV)</button>
+                        <button id="export-csv-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg">Exportar (CSV)</button>
+                        <button id="shift-all-forward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg">Adiar (+1 dia)</button>
+                        <button id="shift-all-backward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg">Adiantar (-1 dia)</button>
                     </div>
+
                     <div class="flex flex-wrap gap-2 items-center">
                         <input type="text" id="all-tasks-search" class="flex-grow p-2 border rounded-md" placeholder="Buscar por matéria ou tópico...">
-                        <button id="shift-all-forward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiar Não-Concluídas (+1 dia)</button>
-                        <button id="shift-all-backward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiantar Não-Concluídas (-1 dia)</button>
                     </div>
+                    
                     <div id="selected-actions-container" class="hidden mt-4 flex flex-wrap gap-2 items-center p-2 bg-amber-50 border border-amber-200 rounded-md">
                         <span id="selection-count" class="text-sm font-semibold"></span>
-                        <button id="shift-selected-forward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiar</button>
-                        <button id="shift-selected-backward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiantar</button>
-                        <button id="delete-selected-btn" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Excluir</button>
+                        <button id="shift-selected-forward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg">Adiar</button>
+                        <button id="shift-selected-backward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg">Adiantar</button>
+                        <button id="delete-selected-btn" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-2 px-4 rounded-lg">Excluir</button>
                     </div>
                     <div class="mt-4 p-2 bg-gray-50 rounded-md border">
                         <div class="flex flex-wrap gap-4 items-center">
@@ -358,8 +370,8 @@
                 </div>
                 <div class="overflow-y-auto flex-grow">
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50 sticky top-0">
-                            <tr class="bg-gray-50">
+                        <thead class="sticky top-0">
+                            <tr>
                                 <th class="px-6 py-3 text-left"><input type="checkbox" id="select-all-tasks-checkbox" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]"></th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria</th>
@@ -379,7 +391,7 @@
                 </div>
                 <div class="overflow-y-auto flex-grow">
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50 sticky top-0">
+                        <thead class="sticky top-0">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Conclusão</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria</th>
@@ -395,14 +407,14 @@
                 <div class="p-4 border-b flex-shrink-0">
                     <p class="text-sm">Aulas excluídas são mantidas aqui. Você pode restaurá-las ou excluí-las permanentemente.</p>
                     <div id="trash-actions-container" class="hidden mt-2 flex flex-wrap gap-2 items-center">
-                         <button id="restore-all-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-green-600 border-green-300">Restaurar Selecionadas</button>
-                         <button id="delete-all-perm-btn" class="bg-red-700 hover:bg-red-800 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Excluir Selecionadas</button>
+                         <button id="restore-all-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg text-green-600 border-green-300">Restaurar Selecionadas</button>
+                         <button id="delete-all-perm-btn" class="bg-red-700 hover:bg-red-800 text-white text-sm font-semibold py-2 px-4 rounded-lg">Excluir Selecionadas</button>
                     </div>
                 </div>
                 <div class="overflow-y-auto flex-grow">
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50 sticky top-0">
-                            <tr class="bg-gray-50">
+                        <thead class="sticky top-0">
+                            <tr>
                                 <th class="px-6 py-3 text-left"><input type="checkbox" id="select-all-trash-checkbox" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]"></th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria</th>
@@ -434,14 +446,14 @@
 
 <script>
     // =================== CONFIGURAÇÃO E VARIÁVEIS GLOBAIS ===================
-    const firebaseConfig = {
-        apiKey: "AIzaSyAVd3uPqsJdyi1a3VYZbncrLZeq7zF-vNE",
-        authDomain: "meu-painel-de-estudos-5d0ee.firebaseapp.com",
-        projectId: "meu-painel-de-estudos-5d0ee",
-        storageBucket: "meu-painel-de-estudos-5d0ee.appspot.com",
-        messagingSenderId: "700808378235",
-        appId: "1:700808378235:web:64bc3701361324c2c36fde"
-    };
+        const firebaseConfig = {
+        apiKey: "AIzaSyA050ckDIuD1ujjyRee81r0Vv_jygoHs1Q",
+        authDomain: "meu-painel-de-estudos-v2.firebaseapp.com",
+        projectId: "meu-painel-de-estudos-v2",
+        storageBucket: "meu-painel-de-estudos-v2.firebasestorage.app",
+        messagingSenderId: "889152606734",
+        appId: "1:889152606734:web:09457849b695f3f1d4625f"
+        };
 
     const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -490,32 +502,27 @@
     const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
     const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
 
-    if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    // Set initial theme based on localStorage or system preference
+    if (localStorage.getItem('color-theme') === 'dark') {
         document.documentElement.classList.add('dark');
         themeToggleLightIcon.classList.remove('hidden');
     } else {
+        // Light mode is default
+        document.documentElement.classList.remove('dark');
         themeToggleDarkIcon.classList.remove('hidden');
+        localStorage.setItem('color-theme', 'light');
     }
+
 
     themeToggleBtn.addEventListener('click', function() {
         themeToggleDarkIcon.classList.toggle('hidden');
         themeToggleLightIcon.classList.toggle('hidden');
-        if (localStorage.getItem('color-theme')) {
-            if (localStorage.getItem('color-theme') === 'light') {
-                document.documentElement.classList.add('dark');
-                localStorage.setItem('color-theme', 'dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-                localStorage.setItem('color-theme', 'light');
-            }
+        if (localStorage.getItem('color-theme') === 'light') {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('color-theme', 'dark');
         } else {
-            if (document.documentElement.classList.contains('dark')) {
-                document.documentElement.classList.remove('dark');
-                localStorage.setItem('color-theme', 'light');
-            } else {
-                document.documentElement.classList.add('dark');
-                localStorage.setItem('color-theme', 'dark');
-            }
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('color-theme', 'light');
         }
         // Re-render chart for dark mode
         if (progressChart) {
@@ -1269,7 +1276,7 @@
 
     function createTaskCard(task, isOverdue = false) {
         const card = document.createElement('div');
-        let cardClasses = 'task-card p-4 rounded-lg shadow-sm';
+        let cardClasses = 'task-card p-4 rounded-lg';
         if (task.type.startsWith('review')) cardClasses += ` ${task.type}`;
         if (task.type === 'legis') cardClasses += ' legis';
         if (isOverdue) cardClasses += ' overdue';
@@ -1385,7 +1392,7 @@
         
         let bloco3Content = createSection('', tasksForDay.filter(t => t.type === 'legis'), '');
         const dailyGoal = studyPlan.dailyGoals[dateStr] || { exercisesCompleted: false };
-        bloco3Content += `<div class="task-card p-4 rounded-lg shadow-sm border-l-4 border-gray-400"><div class="flex items-start space-x-4"><div class="flex-shrink-0 pt-1"><input type="checkbox" id="exercises-checkbox-${dateStr}" data-date="${dateStr}" class="daily-goal-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${dailyGoal.exercisesCompleted ? 'checked' : ''}></div><div class="flex-1"><label for="exercises-checkbox-${dateStr}" class="cursor-pointer"><p class="font-semibold">🎯 Meta de Exercícios do Dia</p><p class="text-sm">Focar em 2 matérias conforme o plano de rotação semanal.</p></label></div></div></div>`;
+        bloco3Content += `<div class="task-card p-4 rounded-lg border-l-4 border-gray-400"><div class="flex items-start space-x-4"><div class="flex-shrink-0 pt-1"><input type="checkbox" id="exercises-checkbox-${dateStr}" data-date="${dateStr}" class="daily-goal-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${dailyGoal.exercisesCompleted ? 'checked' : ''}></div><div class="flex-1"><label for="exercises-checkbox-${dateStr}" class="cursor-pointer"><p class="font-semibold">🎯 Meta de Exercícios do Dia</p><p class="text-sm">Focar em 2 matérias conforme o plano de rotação semanal.</p></label></div></div></div>`;
         planContent.innerHTML += `<h3 class="text-lg font-bold mt-6 border-b-2 border-emerald-500 pb-2">🎯 Bloco 3: Estudo Ativo e Fixação</h3>` + bloco3Content;
 
         if (reviewsForDay.length > 0) {
@@ -1464,7 +1471,7 @@
         const isDarkMode = document.documentElement.classList.contains('dark');
         progressChart = new Chart(ctx, {
             type: 'doughnut',
-            data: { labels: ['Concluído', 'Pendente'], datasets: [{ data: [0, 1], backgroundColor: ['#D5A021', isDarkMode ? '#444' : '#EAEAEA'], borderColor: [isDarkMode ? '#1e1e1e' : '#FFFFFF'], borderWidth: 2, hoverOffset: 4 }] },
+            data: { labels: ['Concluído', 'Pendente'], datasets: [{ data: [0, 1], backgroundColor: ['#D5A021', isDarkMode ? '#4b5563' : '#EAEAEA'], borderColor: [isDarkMode ? '#374151' : '#FFFFFF'], borderWidth: 2, hoverOffset: 4 }] },
             options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: true } } }
         });
     };
@@ -1532,7 +1539,7 @@
         let statsHtml = `<div class="p-2 bg-[#D5A021] text-white rounded-lg shadow stat-card" data-subject="all"><p class="font-bold text-lg">${totalTasks}</p><p class="text-sm">Total de Aulas</p></div>`;
         
         Object.entries(subjectCounts).sort().forEach(([subject, count]) => { 
-            statsHtml += `<div class="p-2 bg-gray-100 rounded-lg stat-card" data-subject="${subject}"><p class="font-bold text-lg">${count}</p><p class="text-sm">${subject}</p></div>`; 
+            statsHtml += `<div class="p-2 rounded-lg stat-card shadow"><p class="font-bold text-lg">${count}</p><p class="text-sm">${subject}</p></div>`; 
         });
         statsContainer.innerHTML = statsHtml;
     }
@@ -1543,16 +1550,6 @@
         const todayStr = formatDateYMD(new Date());
         const allTasksAndReviews = Object.values(studyPlan.tasks || {}).flat().concat(Object.values(studyPlan.reviews || {}).flat());
         const overdueTasks = allTasksAndReviews.filter(task => !task.completed && task.date < todayStr);
-        
-        const backButton = document.createElement('button');
-        backButton.innerHTML = '&#x2B05;&#xFE0E; Voltar ao Calendário';
-        backButton.className = 'control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm mb-4';
-        backButton.onclick = () => {
-            document.getElementById('calendar-container').style.display = 'block';
-            viewDate = new Date(); // Reset viewDate to today
-            renderPlan(viewDate);
-        };
-        planContent.appendChild(backButton);
         
         if (overdueTasks.length === 0) { planContent.innerHTML += `<div class="text-center p-4 bg-green-50 rounded-lg border border-green-200"><p class="text-green-700 font-semibold">Parabéns! Nenhuma tarefa atrasada.</p></div>`; return; }
 
