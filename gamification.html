@@ -10,9 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link id="favicon" rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23D5A021'/%3E%3Ctext x='50' y='50' font-size='50' fill='white' text-anchor='middle' dy='.3em' font-family='Inter, sans-serif' font-weight='bold'%3EPSI%3C/text%E3E%3C/svg%3E">
     <meta name="theme-color" content="#D5A021">
-    
-    <!-- PASSO 1: O "Cartão da Biblioteca" - Link para o CSS de sprites do Habitica -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/HabitRPG/habitica@develop/website/public/css/sprites.css">
 
     <style>
         :root {
@@ -80,33 +77,18 @@
             background-color: var(--accent-color);
             transition: width 0.5s ease-in-out;
         }
-        .blurred { filter: blur(8px); }
         .modal.hidden { display: none; }
 
-        /* PASSO 1 (cont.): Regra para ajustar o tamanho dos sprites */
-        .shop_sprite {
+        .item-sprite {
             width: 90px;
             height: 90px;
-            transform: scale(0.75); /* Reduz um pouco para caber melhor */
+            transform: scale(0.75);
             image-rendering: pixelated;
+            background-repeat: no-repeat;
         }
     </style>
 </head>
 <body class="antialiased">
-
-    <!-- Mural de Senha -->
-    <div id="password-wall" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 backdrop-blur-sm">
-        <div class="w-full max-w-xs card p-6 rounded-lg shadow-xl">
-            <h2 class="text-xl font-bold text-center mb-4">Acessar Jornada</h2>
-            <form id="password-form" class="space-y-4">
-                <input type="password" id="password-input" placeholder="Palavra-passe" class="shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline">
-                <button type="submit" class="w-full bg-[#D5A021] hover:bg-amber-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                    Liberar Acesso
-                </button>
-                <p id="password-error" class="text-red-500 text-xs text-center italic h-4"></p>
-            </form>
-        </div>
-    </div>
 
     <div id="app-container" class="min-h-screen flex flex-col items-center justify-center p-4 relative">
         <!-- Botão de Desenvolvedor -->
@@ -210,7 +192,7 @@
                 if (doc.exists) {
                     let data = doc.data();
                     
-                    if (!data.gamification || !data.gamification.config || !data.gamification.config.items[0].cssClass) {
+                    if (!data.gamification || !data.gamification.config || !data.gamification.config.items[0].sprite) {
                         console.log("Estrutura de gamificação desatualizada ou não encontrada. Criando/Atualizando...");
                         data.gamification = getInitialGamificationState();
                         docRef.set({ gamification: data.gamification }, { merge: true })
@@ -229,41 +211,49 @@
         }
         
         function getInitialGamificationState() {
+            const spriteSheets = {
+                head_warrior: 'https://cdn.jsdelivr.net/gh/HabitRPG/habitica-images@develop/public/sprites/spritesmith/gear-shop_head_warrior.png',
+                head_armoire: 'https://cdn.jsdelivr.net/gh/HabitRPG/habitica-images@develop/public/sprites/spritesmith/gear-shop_head_armoire.png',
+                weapon_warrior: 'https://cdn.jsdelivr.net/gh/HabitRPG/habitica-images@develop/public/sprites/spritesmith/gear-shop_weapon_warrior.png',
+                weapon_wizard: 'https://cdn.jsdelivr.net/gh/HabitRPG/habitica-images@develop/public/sprites/spritesmith/gear-shop_weapon_wizard.png',
+                armor_warrior: 'https://cdn.jsdelivr.net/gh/HabitRPG/habitica-images@develop/public/sprites/spritesmith/gear-shop_armor_warrior.png',
+                shield_warrior: 'https://cdn.jsdelivr.net/gh/HabitRPG/habitica-images@develop/public/sprites/spritesmith/gear-shop_shield_warrior.png',
+                shield_armoire: 'https://cdn.jsdelivr.net/gh/HabitRPG/habitica-images@develop/public/sprites/spritesmith/gear-shop_shield_armoire.png',
+                shoes_warrior: 'https://cdn.jsdelivr.net/gh/HabitRPG/habitica-images@develop/public/sprites/spritesmith/gear-shop_shoes_warrior.png',
+                shoes_armoire: 'https://cdn.jsdelivr.net/gh/HabitRPG/habitica-images@develop/public/sprites/spritesmith/gear-shop_shoes_armoire.png',
+            };
+
             return {
                 player: { equipped: { helmet: null, armor: null, pants: null, boots: null, weapon: null, shield: null } },
                 config: {
+                    spriteSheets: spriteSheets,
                     slotMapping: {
                         'Língua Portuguesa': 'helmet',
-                        'Conhecimentos Específicos': 'weapon', // Mapeia para arma e armadura
+                        'Conhecimentos Específicos': 'weapon',
                         'Administração Pública': 'shield',
                         'Raciocínio Lógico-Matemático': 'boots'
                     },
                     items: [
-                        // Elmos (Língua Portuguesa)
-                        { id: 'helm_1', name: 'Viseira do Alfabeto', subject: 'Língua Portuguesa', tier: 1, cssClass: 'shop_head_warrior_0' },
-                        { id: 'helm_2', name: 'Elmo da Gramática', subject: 'Língua Portuguesa', tier: 2, cssClass: 'shop_head_warrior_1' },
-                        { id: 'helm_3', name: 'Elmo da Sintaxe Apurada', subject: 'Língua Portuguesa', tier: 3, cssClass: 'shop_head_warrior_2' },
-                        { id: 'helm_4', name: 'Coroa da Oratória', subject: 'Língua Portuguesa', tier: 4, cssClass: 'shop_head_armoire_4' },
-                        // Armas (Conhecimentos Específicos)
-                        { id: 'wpn_1', name: 'Adaga do Behaviorismo', subject: 'Conhecimentos Específicos', tier: 1, cssClass: 'shop_weapon_warrior_0' },
-                        { id: 'wpn_2', name: 'Espada da Psicanálise', subject: 'Conhecimentos Específicos', tier: 2, cssClass: 'shop_weapon_warrior_1' },
-                        { id: 'wpn_3', name: 'Martelo da TCC', subject: 'Conhecimentos Específicos', tier: 3, cssClass: 'shop_weapon_warrior_2' },
-                        { id: 'wpn_4', name: 'Cajado Sistêmico', subject: 'Conhecimentos Específicos', tier: 4, cssClass: 'shop_weapon_wizard_4' },
-                        // Armaduras (Conhecimentos Específicos)
-                        { id: 'arm_1', name: 'Gibão do Psicodiagnóstico', subject: 'Conhecimentos Específicos', tier: 1, cssClass: 'shop_armor_warrior_0' },
-                        { id: 'arm_2', name: 'Peitoral do Atendimento Clínico', subject: 'Conhecimentos Específicos', tier: 2, cssClass: 'shop_armor_warrior_1' },
-                        { id: 'arm_3', name: 'Cota de Malha das Políticas Públicas', subject: 'Conhecimentos Específicos', tier: 3, cssClass: 'shop_armor_warrior_2' },
-                        { id: 'arm_4', name: 'Armadura de Placas do SUAS', subject: 'Conhecimentos Específicos', tier: 4, cssClass: 'shop_armor_warrior_4' },
-                        // Escudos (Administração Pública)
-                        { id: 'shd_1', name: 'Broquel da Lei Orgânica', subject: 'Administração Pública', tier: 1, cssClass: 'shop_shield_warrior_0' },
-                        { id: 'shd_2', name: 'Escudo do Servidor Público', subject: 'Administração Pública', tier: 2, cssClass: 'shop_shield_warrior_1' },
-                        { id: 'shd_3', name: 'Escudo de Torre da Constituição', subject: 'Administração Pública', tier: 3, cssClass: 'shop_shield_warrior_2' },
-                        { id: 'shd_4', name: 'Baluarte da Probidade', subject: 'Administração Pública', tier: 4, cssClass: 'shop_shield_armoire_4' },
-                        // Botas (Raciocínio Lógico-Matemático)
-                        { id: 'bts_1', name: 'Sandálias da Aritmética', subject: 'Raciocínio Lógico-Matemático', tier: 1, cssClass: 'shop_shoes_warrior_0' },
-                        { id: 'bts_2', name: 'Botas da Lógica Proposicional', subject: 'Raciocínio Lógico-Matemático', tier: 2, cssClass: 'shop_shoes_warrior_1' },
-                        { id: 'bts_3', name: 'Grevas da Análise Combinatória', subject: 'Raciocínio Lógico-Matemático', tier: 3, cssClass: 'shop_shoes_warrior_2' },
-                        { id: 'bts_4', name: 'Sabatons da Probabilidade', subject: 'Raciocínio Lógico-Matemático', tier: 4, cssClass: 'shop_shoes_armoire_4' }
+                        { id: 'helm_1', name: 'Viseira do Alfabeto', subject: 'Língua Portuguesa', tier: 1, sprite: { sheet: 'head_warrior', position: '0 0' } },
+                        { id: 'helm_2', name: 'Elmo da Gramática', subject: 'Língua Portuguesa', tier: 2, sprite: { sheet: 'head_warrior', position: '0 -90px' } },
+                        { id: 'helm_3', name: 'Elmo da Sintaxe Apurada', subject: 'Língua Portuguesa', tier: 3, sprite: { sheet: 'head_warrior', position: '0 -180px' } },
+                        { id: 'helm_4', name: 'Coroa da Oratória', subject: 'Língua Portuguesa', tier: 4, sprite: { sheet: 'head_armoire', position: '0 -360px' } },
+                        { id: 'wpn_1', name: 'Adaga do Behaviorismo', subject: 'Conhecimentos Específicos', tier: 1, sprite: { sheet: 'weapon_warrior', position: '0 0' } },
+                        { id: 'wpn_2', name: 'Espada da Psicanálise', subject: 'Conhecimentos Específicos', tier: 2, sprite: { sheet: 'weapon_warrior', position: '0 -90px' } },
+                        { id: 'wpn_3', name: 'Martelo da TCC', subject: 'Conhecimentos Específicos', tier: 3, sprite: { sheet: 'weapon_warrior', position: '0 -180px' } },
+                        { id: 'wpn_4', name: 'Cajado Sistêmico', subject: 'Conhecimentos Específicos', tier: 4, sprite: { sheet: 'weapon_wizard', position: '0 -360px' } },
+                        { id: 'arm_1', name: 'Gibão do Psicodiagnóstico', subject: 'Conhecimentos Específicos', tier: 1, sprite: { sheet: 'armor_warrior', position: '0 0' } },
+                        { id: 'arm_2', name: 'Peitoral do Atendimento Clínico', subject: 'Conhecimentos Específicos', tier: 2, sprite: { sheet: 'armor_warrior', position: '0 -90px' } },
+                        { id: 'arm_3', name: 'Cota de Malha das Políticas Públicas', subject: 'Conhecimentos Específicos', tier: 3, sprite: { sheet: 'armor_warrior', position: '0 -180px' } },
+                        { id: 'arm_4', name: 'Armadura de Placas do SUAS', subject: 'Conhecimentos Específicos', tier: 4, sprite: { sheet: 'armor_warrior', position: '0 -360px' } },
+                        { id: 'shd_1', name: 'Broquel da Lei Orgânica', subject: 'Administração Pública', tier: 1, sprite: { sheet: 'shield_warrior', position: '0 0' } },
+                        { id: 'shd_2', name: 'Escudo do Servidor Público', subject: 'Administração Pública', tier: 2, sprite: { sheet: 'shield_warrior', position: '0 -90px' } },
+                        { id: 'shd_3', name: 'Escudo de Torre da Constituição', subject: 'Administração Pública', tier: 3, sprite: { sheet: 'shield_warrior', position: '0 -180px' } },
+                        { id: 'shd_4', name: 'Baluarte da Probidade', subject: 'Administração Pública', tier: 4, sprite: { sheet: 'shield_armoire', position: '0 -360px' } },
+                        { id: 'bts_1', name: 'Sandálias da Aritmética', subject: 'Raciocínio Lógico-Matemático', tier: 1, sprite: { sheet: 'shoes_warrior', position: '0 0' } },
+                        { id: 'bts_2', name: 'Botas da Lógica Proposicional', subject: 'Raciocínio Lógico-Matemático', tier: 2, sprite: { sheet: 'shoes_warrior', position: '0 -90px' } },
+                        { id: 'bts_3', name: 'Grevas da Análise Combinatória', subject: 'Raciocínio Lógico-Matemático', tier: 3, sprite: { sheet: 'shoes_warrior', position: '0 -180px' } },
+                        { id: 'bts_4', name: 'Sabatons da Probabilidade', subject: 'Raciocínio Lógico-Matemático', tier: 4, sprite: { sheet: 'shoes_armoire', position: '0 -360px' } }
                     ]
                 }
             };
@@ -277,7 +267,7 @@
         function renderAvatar(data) {
             if (!data.gamification || !data.gamification.player) return;
             const { equipped } = data.gamification.player;
-            const { items } = data.gamification.config;
+            const { items, spriteSheets } = data.gamification.config;
 
             for (const slotName in equipped) {
                 const slotElement = document.getElementById(`slot-${slotName}`);
@@ -292,7 +282,9 @@
                     const item = items.find(i => i.id === itemId);
                     if (item) {
                         const itemDiv = document.createElement('div');
-                        itemDiv.className = `shop_sprite ${item.cssClass}`;
+                        itemDiv.className = 'item-sprite';
+                        itemDiv.style.backgroundImage = `url(${spriteSheets[item.sprite.sheet]})`;
+                        itemDiv.style.backgroundPosition = item.sprite.position;
                         slotElement.insertBefore(itemDiv, slotNameSpan);
                         slotElement.title = item.name;
                     }
@@ -304,7 +296,7 @@
 
         function renderInventory(data) {
             if (!data.gamification || !data.gamification.config) return;
-            const { items, slotMapping } = data.gamification.config;
+            const { items, slotMapping, spriteSheets } = data.gamification.config;
             const inventoryContainer = document.getElementById('inventory-container');
             inventoryContainer.innerHTML = '';
             
@@ -334,12 +326,12 @@
                     const isEquipped = data.gamification.player.equipped[slot] === item.id;
                     const isUnlocked = isItemUnlocked(item, data);
                     
-                    // *** CORREÇÃO AQUI ***
-                    // O div do sprite é criado dinamicamente
+                    const style = `background-image: url(${spriteSheets[item.sprite.sheet]}); background-position: ${item.sprite.position};`;
+
                     sectionHTML += `
                         <div class="item-card card rounded-lg p-3 text-center ${isEquipped ? 'equipped' : ''} ${isUnlocked ? 'unlocked' : ''}">
                             <div class="h-24 w-full flex items-center justify-center">
-                                <div class="shop_sprite ${item.cssClass}"></div>
+                                <div class="item-sprite" style="${style}"></div>
                             </div>
                             <p class="font-semibold mt-2 text-sm">${item.name}</p>
                             <p class="text-xs text-gray-500">Nível ${item.tier}</p>
@@ -405,30 +397,13 @@
 
         // =================== EXECUÇÃO PRINCIPAL E EVENT LISTENERS ===================
         document.addEventListener('DOMContentLoaded', () => {
-            const passwordWall = document.getElementById('password-wall');
-            const appContainer = document.getElementById('app-container');
-            const passwordForm = document.getElementById('password-form');
-            const passwordInput = document.getElementById('password-input');
-            const passwordError = document.getElementById('password-error');
             const devButton = document.getElementById('dev-button');
             const devModal = document.getElementById('dev-modal');
             const devCloseBtn = document.getElementById('dev-close-btn');
             const devSimulateBtn = document.getElementById('dev-simulate-btn');
             const devResetBtn = document.getElementById('dev-reset-btn');
 
-            passwordForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                if (passwordInput.value === 'passei2025') {
-                    sessionStorage.setItem('isAuthenticated', 'true');
-                    passwordWall.classList.add('hidden');
-                    appContainer.classList.remove('blurred');
-                    startApp();
-                } else {
-                    passwordError.textContent = 'Senha incorreta.';
-                    passwordInput.value = '';
-                    setTimeout(() => { passwordError.textContent = ''; }, 2000);
-                }
-            });
+            startApp(); // Inicia o app sem a senha
 
             devButton.addEventListener('click', openDevModal);
             devCloseBtn.addEventListener('click', () => devModal.classList.add('hidden'));
@@ -491,14 +466,6 @@
                 renderPage(simulatedPlan);
                 devModal.classList.add('hidden');
             });
-
-            if (sessionStorage.getItem('isAuthenticated') === 'true') {
-                passwordWall.classList.add('hidden');
-                appContainer.classList.remove('blurred');
-                startApp();
-            } else {
-                appContainer.classList.add('blurred');
-            }
         });
     </script>
 
