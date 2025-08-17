@@ -208,104 +208,93 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAVd3uPqsJdyi1a3VYZbncrLZeq7zF-vNE",
-            authDomain: "meu-painel-de-estudos-5d0ee.firebaseapp.com",
-            projectId: "meu-painel-de-estudos-5d0ee",
-            storageBucket: "meu-painel-de-estudos-5d0ee.appspot.com",
-            messagingSenderId: "700808378235",
-            appId: "1:700808378235:web:64bc3701361324c2c36fde"
-        };
+    // =================== CONFIGURAÇÃO E VARIÁVEIS GLOBAIS ===================
+    const firebaseConfig = {
+        apiKey: "AIzaSyAVd3uPqsJdyi1a3VYZbncrLZeq7zF-vNE",
+        authDomain: "meu-painel-de-estudos-5d0ee.firebaseapp.com",
+        projectId: "meu-painel-de-estudos-5d0ee",
+        storageBucket: "meu-painel-de-estudos-5d0ee.appspot.com",
+        messagingSenderId: "700808378235",
+        appId: "1:700808378235:web:64bc3701361324c2c36fde"
+    };
 
-        // Initialize Firebase (usando o formato correto 'firebase.initializeApp')
-        const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore(); // Nosso banco de dados!
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-        const STORAGE_KEY = 'studyPlanProgress_psicologoUdi_v5';
-        let viewDate = new Date();
-        viewDate.setHours(0, 0, 0, 0);
-        
-        let studyPlan = {};
+    let viewDate = new Date();
+    viewDate.setHours(0, 0, 0, 0);
+    let studyPlan = {};
+    let progressChart;
 
-        const planContent = document.getElementById('plan-content');
-        const progressText = document.getElementById('progressText');
-        const allTasksModal = document.getElementById('allTasksModal');
-        const addTaskModal = document.getElementById('addTaskModal');
-        const editTasksModal = document.getElementById('editTasksModal');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalContent = document.getElementById('modalContent');
-        const modalLoading = document.getElementById('modalLoading');
-        let progressChart;
-// =================== LÓGICA DO PASSWORD WALL ===================
-        const passwordWall = document.getElementById('password-wall');
-        const appContainer = document.querySelector('.container'); // Pega o container principal
-        const passwordForm = document.getElementById('password-form');
-        const passwordInput = document.getElementById('password-input');
-        const passwordError = document.getElementById('password-error');
+    const planContent = document.getElementById('plan-content');
+    const progressText = document.getElementById('progressText');
+    const allTasksModal = document.getElementById('allTasksModal');
+    const addTaskModal = document.getElementById('addTaskModal');
+    const editTasksModal = document.getElementById('editTasksModal');
 
-        // Aplica o efeito de blur assim que o script carrega
-        if (appContainer) {
-            appContainer.classList.add('blurred');
-        }
+    // =================== LÓGICA DO PASSWORD WALL ===================
+    const passwordWall = document.getElementById('password-wall');
+    const appContainer = document.querySelector('.container');
+    const passwordForm = document.getElementById('password-form');
+    const passwordInput = document.getElementById('password-input');
+    const passwordError = document.getElementById('password-error');
 
-        passwordForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            // A senha correta está aqui.
-            if (passwordInput.value === 'passei2025') {
-                passwordWall.classList.add('hidden');
-                if (appContainer) {
-                    appContainer.classList.remove('blurred');
-                }
-            } else {
-                passwordError.textContent = 'Senha incorreta.';
-                passwordInput.value = ''; // Limpa o campo
-                setTimeout(() => { passwordError.textContent = ''; }, 2000); // Limpa o erro após 2 segundos
+    if (appContainer) {
+        appContainer.classList.add('blurred');
+    }
+    passwordForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (passwordInput.value === 'passei2025') {
+            passwordWall.classList.add('hidden');
+            if (appContainer) {
+                appContainer.classList.remove('blurred');
             }
-        });
-        // =============================================================
-        function formatDateYMD(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
+        } else {
+            passwordError.textContent = 'Senha incorreta.';
+            passwordInput.value = '';
+            setTimeout(() => { passwordError.textContent = ''; }, 2000);
         }
+    });
 
-        function formatDateDMY(date) {
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = date.getFullYear();
-            return `${day}/${month}/${year}`;
-        }
+    // =================== FUNÇÕES AUXILIARES ===================
+    function formatDateYMD(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
 
-        function addDays(date, days) {
-            const result = new Date(date);
-            result.setDate(result.getDate() + days);
-            return result;
-        }
+    function formatDateDMY(date) {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
 
-        function subDays(date, days) {
-            const result = new Date(date);
-            result.setDate(result.getDate() - days);
-            return result;
-        }
-        
-        function isSameDay(date1, date2) {
-            return date1.getFullYear() === date2.getFullYear() &&
-                   date1.getMonth() === date2.getMonth() &&
-                   date1.getDate() === date2.getDate();
-        }
+    function addDays(date, days) {
+        const result = new Date(date);
+        result.setDate(result.getDate() + days);
+        return result;
+    }
 
-        function isBefore(date1, date2) {
-            const d1 = new Date(date1.getFullYear(), date1.getMonth(), date1.getDate());
-            const d2 = new Date(date2.getFullYear(), date2.getMonth(), date2.getDate());
-            return d1.getTime() < d2.getTime();
-        }
+    function isSameDay(date1, date2) {
+        return date1.getFullYear() === date2.getFullYear() &&
+               date1.getMonth() === date2.getMonth() &&
+               date1.getDate() === date2.getDate();
+    }
 
-        function generateUniqueId(task) {
-             return `${task.subject.replace(/[^a-zA-Z0-9]/g, '')}-${task.lesson.replace(/[^a-zA-Z0-9]/g, '')}-${task.type}`;
-        }
+    function isBefore(date1, date2) {
+        const d1 = new Date(date1.getFullYear(), date1.getMonth(), date1.getDate());
+        const d2 = new Date(date2.getFullYear(), date2.getMonth(), date2.getDate());
+        return d1.getTime() < d2.getTime();
+    }
 
+    function generateUniqueId(task) {
+         return `${task.subject.replace(/[^a-zA-Z0-9]/g, '')}-${task.lesson.replace(/[^a-zA-Z0-9]/g, '')}-${task.type}`;
+    }
+
+    // =================== LÓGICA PRINCIPAL DA APLICAÇÃO ===================
+   
         function initializeStudyPlan() {
             let plan = { tasks: {}, reviews: {} };
             
@@ -962,77 +951,110 @@
             return plan;
         }
 
-        const saveState = () => {
-            db.collection("progresso").doc("meuPlano").set(studyPlan)
-                .then(() => {
-                    console.log("Progresso salvo com sucesso no Firebase!");
-                })
-                .catch((error) => {
-                    console.error("Erro ao salvar progresso: ", error);
-                });
-        };
+    const saveState = () => {
+        db.collection("progresso").doc("meuPlano").set(studyPlan)
+            .catch((error) => console.error("Erro ao salvar progresso: ", error));
+    };
 
-        const loadState = async () => {
-            const docRef = db.collection("progresso").doc("meuPlano");
-            try {
-                const doc = await docRef.get();
-                if (doc.exists) {
-                    console.log("Progresso carregado do Firebase!");
-                    studyPlan = doc.data();
-                } else {
-                    console.log("Nenhum progresso encontrado, inicializando novo plano.");
-                    studyPlan = initializeStudyPlan();
-                }
-            } catch (error) {
-                console.error("Erro ao carregar progresso: ", error);
+    const loadState = async () => {
+        const docRef = db.collection("progresso").doc("meuPlano");
+        try {
+            const doc = await docRef.get();
+            if (doc.exists) {
+                studyPlan = doc.data();
+            } else {
                 studyPlan = initializeStudyPlan();
             }
-        };
+        } catch (error) {
+            console.error("Erro ao carregar progresso: ", error);
+            studyPlan = initializeStudyPlan();
+        }
+    };
 
-        const renderCalendar = (date) => {
-            const calendarContainer = document.getElementById('calendar-container');
-            const month = date.getMonth();
-            const year = date.getFullYear();
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const today = new Date();
-            today.setHours(0,0,0,0);
+    function createTaskCard(task, isOverdue = false) {
+            const card = document.createElement('div');
+            let cardClasses = 'task-card p-4 rounded-lg shadow-sm';
+            if (task.type.startsWith('review')) cardClasses += ` ${task.type}`;
+            if (task.type === 'legis') cardClasses += ' legis'; // Adiciona a classe para legislação
+            if (isOverdue) cardClasses += ' overdue';
 
-            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-            
-            let html = `<div class="p-4">
-                <div class="flex justify-between items-center mb-4">
-                    <button id="prev-month" class="control-button p-2 rounded-full">◀</button>
-                    <h2 class="text-xl font-bold text-center">${monthNames[month]} ${year}</h2>
-                    <button id="next-month" class="control-button p-2 rounded-full">▶</button>
-                </div>
-                <div class="calendar-grid grid grid-cols-7 text-center font-semibold text-sm text-gray-600 mb-2">
-                    <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
-                </div>
-                <div class="calendar-grid grid grid-cols-7 text-center text-sm">`;
+            card.className = cardClasses;
 
-            for (let i = 0; i < firstDay.getDay(); i++) {
-                html += `<div></div>`;
+            // LÓGICA DO TÍTULO CORRIGIDA
+            let title = '';
+            if (task.type.startsWith('review')) {
+                title = `${task.reviewType}: ${task.subject} - Aula ${task.lesson}`;
+            } else {
+                title = `${task.subject} - Aula ${task.lesson}`;
             }
 
-            for (let i = 1; i <= lastDay.getDate(); i++) {
-                const dayDate = new Date(year, month, i);
-                const dateStr = formatDateYMD(dayDate);
-                const hasTask = (studyPlan.tasks[dateStr] && studyPlan.tasks[dateStr].length > 0) || (studyPlan.reviews[dateStr] && studyPlan.reviews[dateStr].length > 0);
-                
-                let dayClasses = 'calendar-day cursor-pointer p-2 rounded-full aspect-square flex items-center justify-center';
-                if(isSameDay(dayDate, viewDate)) dayClasses += ' selected';
-                if(isSameDay(dayDate, today)) dayClasses += ' border-2 border-blue-500';
-                if(hasTask) dayClasses += ' has-task';
-
-                html += `<div class="${dayClasses}" data-date="${dateStr}">${i}</div>`;
-            }
-
-            html += `</div></div>`;
-            calendarContainer.innerHTML = html;
+            card.innerHTML = `
+                <div class="flex items-start space-x-4">
+                    <div class="flex-shrink-0 pt-1">
+                        <input type="checkbox" id="${task.id}" data-id="${task.id}" data-date="${task.date}" data-type="${task.type}" class="task-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${task.completed ? 'checked' : ''}>
+                    </div>
+                    <div class="flex-1">
+                        <label for="${task.id}" class="cursor-pointer">
+                            <p class="font-semibold text-gray-700">${title}</p>
+                            <p class="text-gray-600 text-sm">${task.topic}</p>
+                        </label>
+                    </div>
+                </div>
+            `;
+            return card;
         }
 
-        const renderPlan = (date) => {
+    function scheduleReviews(completedTask) {
+            const completionDate = new Date(completedTask.date + 'T00:00:00');
+            const reviewDays = { 'review-r1': 1, 'review-r3': 7, 'review-r5': 30 };
+
+            for (const [reviewType, daysToAdd] of Object.entries(reviewDays)) {
+                const reviewDate = addDays(completionDate, daysToAdd);
+                const reviewDateStr = formatDateYMD(reviewDate);
+
+                if (!studyPlan.reviews) {
+                    studyPlan.reviews = {};
+                }
+                if (!studyPlan.reviews[reviewDateStr]) {
+                    studyPlan.reviews[reviewDateStr] = [];
+                }
+                
+                const reviewId = `${completedTask.id}-${reviewType}`;
+                
+                if (studyPlan.reviews[reviewDateStr].some(r => r.id === reviewId)) continue;
+
+                studyPlan.reviews[reviewDateStr].push({
+                    id: reviewId,
+                    date: reviewDateStr,
+                    subject: completedTask.subject,
+                    lesson: completedTask.lesson,
+                    topic: completedTask.topic,
+                    type: reviewType,
+                    reviewType: reviewType.replace('review-', '').toUpperCase(),
+                    completed: false,
+                });
+            }
+        }
+    
+    function unscheduleReviews(deselectedTask) {
+            const completionDate = new Date(deselectedTask.date + 'T00:00:00');
+            const reviewDays = { 'review-r1': 1, 'review-r3': 7, 'review-r5': 30 };
+
+            for (const [reviewType, daysToAdd] of Object.entries(reviewDays)) {
+                const reviewDate = addDays(completionDate, daysToAdd);
+                const reviewDateStr = formatDateYMD(reviewDate);
+                const reviewId = `${deselectedTask.id}-${reviewType}`;
+
+                if (studyPlan.reviews && studyPlan.reviews[reviewDateStr]) {
+                    studyPlan.reviews[reviewDateStr] = studyPlan.reviews[reviewDateStr].filter(r => r.id !== reviewId);
+                    if (studyPlan.reviews[reviewDateStr].length === 0) {
+                        delete studyPlan.reviews[reviewDateStr];
+                    }
+                }
+            }
+        }
+    
+    const renderPlan = (date) => {
             renderCalendar(date);
             const dateStr = formatDateYMD(date);
             planContent.innerHTML = '';
@@ -1080,123 +1102,8 @@
                 reviewsForDay.forEach(review => planContent.appendChild(createTaskCard(review, !review.completed && isBefore(new Date(review.date), today))));
             }
         };
-
-        function createTaskCard(task, isOverdue = false) {
-            const card = document.createElement('div');
-            let cardClasses = 'task-card p-4 rounded-lg shadow-sm';
-            if (task.type.startsWith('review')) cardClasses += ` ${task.type}`;
-            if (task.type === 'legis') cardClasses += ' legis'; // Adiciona a classe para legislação
-            if (isOverdue) cardClasses += ' overdue';
-
-            card.className = cardClasses;
-
-            // LÓGICA DO TÍTULO CORRIGIDA
-            let title = '';
-            if (task.type.startsWith('review')) {
-                title = `${task.reviewType}: ${task.subject} - Aula ${task.lesson}`;
-            } else {
-                title = `${task.subject} - Aula ${task.lesson}`;
-            }
-
-            card.innerHTML = `
-                <div class="flex items-start space-x-4">
-                    <div class="flex-shrink-0 pt-1">
-                        <input type="checkbox" id="${task.id}" data-id="${task.id}" data-date="${task.date}" data-type="${task.type}" class="task-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${task.completed ? 'checked' : ''}>
-                    </div>
-                    <div class="flex-1">
-                        <label for="${task.id}" class="cursor-pointer">
-                            <p class="font-semibold text-gray-700">${title}</p>
-                            <p class="text-gray-600 text-sm">${task.topic}</p>
-                        </label>
-                    </div>
-                </div>
-            `;
-            return card;
-        }
-
-function scheduleReviews(completedTask) {
-            const completionDate = new Date(completedTask.date + 'T00:00:00');
-            const reviewDays = { 'review-r1': 1, 'review-r3': 7, 'review-r5': 30 };
-
-            for (const [reviewType, daysToAdd] of Object.entries(reviewDays)) {
-                const reviewDate = addDays(completionDate, daysToAdd);
-                const reviewDateStr = formatDateYMD(reviewDate);
-
-                if (!studyPlan.reviews) {
-                    studyPlan.reviews = {};
-                }
-                if (!studyPlan.reviews[reviewDateStr]) {
-                    studyPlan.reviews[reviewDateStr] = [];
-                }
-                
-                const reviewId = `${completedTask.id}-${reviewType}`;
-                
-                if (studyPlan.reviews[reviewDateStr].some(r => r.id === reviewId)) continue;
-
-                studyPlan.reviews[reviewDateStr].push({
-                    id: reviewId,
-                    date: reviewDateStr,
-                    subject: completedTask.subject,
-                    lesson: completedTask.lesson,
-                    topic: completedTask.topic,
-                    type: reviewType,
-                    reviewType: reviewType.replace('review-', '').toUpperCase(),
-                    completed: false,
-                });
-            }
-        }
-        
-        function unscheduleReviews(deselectedTask) {
-            const completionDate = new Date(deselectedTask.date + 'T00:00:00');
-            const reviewDays = { 'review-r1': 1, 'review-r3': 7, 'review-r5': 30 };
-
-            for (const [reviewType, daysToAdd] of Object.entries(reviewDays)) {
-                const reviewDate = addDays(completionDate, daysToAdd);
-                const reviewDateStr = formatDateYMD(reviewDate);
-                const reviewId = `${deselectedTask.id}-${reviewType}`;
-
-                if (studyPlan.reviews && studyPlan.reviews[reviewDateStr]) {
-                    studyPlan.reviews[reviewDateStr] = studyPlan.reviews[reviewDateStr].filter(r => r.id !== reviewId);
-                    if (studyPlan.reviews[reviewDateStr].length === 0) {
-                        delete studyPlan.reviews[reviewDateStr];
-                    }
-                }
-            }
-        }
-
-        const renderSubjectProgress = () => {
-            const container = document.getElementById('subject-progress-bars');
-            if (!container) return;
-            container.innerHTML = '';
-
-            const allStudyTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks).flat() : []).filter(task => task.type !== 'review' && task.type !== 'legis');
-            if (allStudyTasks.length === 0) return;
-
-            const subjects = [...new Set(allStudyTasks.map(task => task.subject))];
-
-            subjects.sort().forEach(subject => {
-                const tasksForSubject = allStudyTasks.filter(task => task.subject === subject);
-                const completedTasks = tasksForSubject.filter(task => task.completed).length;
-                const totalTasks = tasksForSubject.length;
-                const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-                const progressElement = document.createElement('div');
-                progressElement.innerHTML = `
-                    <div>
-                        <div class="flex justify-between mb-1">
-                            <span class="text-sm font-semibold text-gray-700">${subject}</span>
-                            <span class="text-sm font-semibold text-gray-700">${percentage}%</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2.5">
-                            <div class="bg-[#D5A021] h-2.5 rounded-full" style="width: ${percentage}%"></div>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(progressElement);
-            });
-        };
-
-        const updateProgress = () => {
+    
+    const updateProgress = () => {
             const allStudyTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks).flat() : []).filter(task => task.type !== 'review' && task.type !== 'legis');
             const completedStudyTasks = allStudyTasks.filter(task => task.completed).length;
             const totalStudyTasks = allStudyTasks.length;
@@ -1228,7 +1135,39 @@ function scheduleReviews(completedTask) {
             renderSubjectProgress();
         };
 
-        const setupChart = () => {
+    const renderSubjectProgress = () => {
+            const container = document.getElementById('subject-progress-bars');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const allStudyTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks).flat() : []).filter(task => task.type !== 'review' && task.type !== 'legis');
+            if (allStudyTasks.length === 0) return;
+
+            const subjects = [...new Set(allStudyTasks.map(task => task.subject))];
+
+            subjects.sort().forEach(subject => {
+                const tasksForSubject = allStudyTasks.filter(task => task.subject === subject);
+                const completedTasks = tasksForSubject.filter(task => task.completed).length;
+                const totalTasks = tasksForSubject.length;
+                const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+                const progressElement = document.createElement('div');
+                progressElement.innerHTML = `
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-sm font-semibold text-gray-700">${subject}</span>
+                            <span class="text-sm font-semibold text-gray-700">${percentage}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-[#D5A021] h-2.5 rounded-full" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(progressElement);
+            });
+        };
+
+    const setupChart = () => {
             const ctx = document.getElementById('progressChart').getContext('2d');
             progressChart = new Chart(ctx, {
                 type: 'doughnut',
@@ -1259,7 +1198,7 @@ function scheduleReviews(completedTask) {
             });
         };
 
-        function renderAllTasksTable(filter = '') {
+    function renderAllTasksTable(filter = '') {
             const tableBody = document.getElementById('all-tasks-table-body');
             const allTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks) : []).flat();
             allTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -1282,7 +1221,7 @@ function scheduleReviews(completedTask) {
             tableBody.innerHTML = html;
         }
 
-        function renderOverdueTasks() {
+    function renderOverdueTasks() {
             const calendarContainer = document.getElementById('calendar-container');
             if(calendarContainer) calendarContainer.innerHTML = '';
             
@@ -1320,62 +1259,8 @@ function scheduleReviews(completedTask) {
                 planContent.appendChild(taskCard);
             });
         }
-
-        planContent.addEventListener('change', (e) => {
-            if (e.target.matches('.task-checkbox')) {
-                const { id, date, type } = e.target.dataset;
-                let taskList;
-                if (type.startsWith('review')) {
-                    taskList = studyPlan.reviews[date];
-                } else {
-                    taskList = studyPlan.tasks[date];
-                }
-                
-                const task = taskList ? taskList.find(t => t.id === id) : undefined;
-
-                if (task) {
-                    task.completed = e.target.checked;
-                    
-                    if (task.type === 'study' || task.type === 'pdf' || task.type === 'video' || task.type === 'legis') {
-                        if (task.completed) {
-                            scheduleReviews(task);
-                        } else {
-                            unscheduleReviews(task);
-                        }
-                    }
-
-                    updateProgress();
-                    saveState();
-                    renderPlan(viewDate);
-                }
-            }
-        });
-
-        document.getElementById('calendar-container').addEventListener('click', (e) => {
-            const dayElement = e.target.closest('.calendar-day');
-            if (dayElement) {
-                viewDate = new Date(dayElement.dataset.date + 'T00:00:00');
-                renderPlan(viewDate);
-            }
-            if (e.target.id === 'prev-month') {
-                viewDate.setMonth(viewDate.getMonth() - 1);
-                renderPlan(viewDate);
-            }
-            if (e.target.id === 'next-month') {
-                viewDate.setMonth(viewDate.getMonth() + 1);
-                renderPlan(viewDate);
-            }
-        });
-
-        document.querySelectorAll('.close-modal').forEach(btn => {
-            btn.addEventListener('click', () => {
-                allTasksModal.classList.add('hidden');
-                addTaskModal.classList.add('hidden'); // Adicionado
-                editTasksModal.classList.add('hidden'); // Adicionado
-            });
-        });
-
-        const startCountdown = () => {
+    
+    const startCountdown = () => {
             const countdownEl = document.getElementById('countdown');
             const examDate = new Date('2025-10-26T08:00:00').getTime();
             const update = () => {
@@ -1393,51 +1278,7 @@ function scheduleReviews(completedTask) {
             update();
         };
 
-// =================== NOVAS FUNÇÕES: INCLUIR E EDITAR AULAS ===================
-
-        // Abre o modal de Adicionar Aula
-        document.getElementById('add-task-btn').addEventListener('click', () => {
-            document.getElementById('add-task-form').reset(); // Limpa o formulário
-            addTaskModal.classList.remove('hidden');
-        });
-
-        // Lógica para salvar a nova aula
-        document.getElementById('add-task-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const date = document.getElementById('task-date').value;
-            const subject = document.getElementById('task-subject').value;
-            const lesson = document.getElementById('task-lesson').value;
-            const topic = document.getElementById('task-topic').value;
-            const type = document.getElementById('task-type').value;
-
-            // Formata a data para corresponder ao nosso sistema
-            const dateStr = formatDateYMD(new Date(date + 'T00:00:00'));
-
-            const newTask = {
-                date: dateStr,
-                subject,
-                lesson,
-                topic,
-                type,
-                completed: false,
-                id: generateUniqueId({subject, lesson, type})
-            };
-
-            if (!studyPlan.tasks[dateStr]) {
-                studyPlan.tasks[dateStr] = [];
-            }
-            studyPlan.tasks[dateStr].push(newTask);
-
-            saveState();
-            renderPlan(viewDate);
-            updateProgress();
-            
-            addTaskModal.classList.add('hidden');
-            alert('Aula adicionada com sucesso!');
-        });
-
-
-        // Função para popular e mostrar o modal de Edição
+    // Função para popular e mostrar o modal de Edição
         const openEditModal = () => {
             const listContainer = document.getElementById('edit-tasks-list');
             const searchInput = document.getElementById('edit-tasks-search');
@@ -1469,73 +1310,134 @@ function scheduleReviews(completedTask) {
                 });
             };
 
-            searchInput.onkeyup = () => {
-                const query = searchInput.value.toLowerCase();
-                const filteredTasks = allTasks.filter(t => t.subject.toLowerCase().includes(query) || t.topic.toLowerCase().includes(query));
-                renderList(filteredTasks);
-            };
-            
-            listContainer.onclick = (e) => {
-                const { id, date } = e.target.dataset;
-
-                // Lógica de Exclusão
-                if (e.target.classList.contains('delete-btn')) {
-                    if (confirm('Tem certeza que deseja excluir esta aula? As revisões associadas também serão removidas.')) {
-                        const taskIndex = studyPlan.tasks[date].findIndex(t => t.id === id);
-                        if (taskIndex > -1) {
-                            const [deletedTask] = studyPlan.tasks[date].splice(taskIndex, 1);
-                            unscheduleReviews(deletedTask); // Remove as revisões
-                            saveState();
-                            updateProgress();
-                            renderPlan(viewDate);
-                            openEditModal(); // Atualiza a lista no modal
-                            alert('Aula excluída com sucesso!');
-                        }
-                    }
-                }
-
-                // Lógica de Edição (apenas data)
-                if (e.target.classList.contains('edit-btn')) {
-                    const newDateStr = prompt("Digite a nova data para esta aula (formato AAAA-MM-DD):", date);
-                    const newDate = new Date(newDateStr + 'T00:00:00');
-                    if (newDateStr && !isNaN(newDate)) {
-                        const taskIndex = studyPlan.tasks[date].findIndex(t => t.id === id);
-                        if (taskIndex > -1) {
-                            const [taskToMove] = studyPlan.tasks[date].splice(taskIndex, 1);
-                            unscheduleReviews(taskToMove); // Remove revisões antigas
-
-                            taskToMove.date = formatDateYMD(newDate); // Atualiza a data da tarefa
-                            if (!studyPlan.tasks[taskToMove.date]) {
-                                studyPlan.tasks[taskToMove.date] = [];
-                            }
-                            studyPlan.tasks[taskToMove.date].push(taskToMove);
-                            
-                            // Se a tarefa já estava concluída, reagenda as revisões
-                            if (taskToMove.completed) {
-                                scheduleReviews(taskToMove);
-                            }
-
-                            saveState();
-                            updateProgress();
-                            renderPlan(viewDate);
-                            openEditModal();
-                            alert('Data da aula atualizada!');
-                        }
-                    } else if (newDateStr) {
-                        alert("Formato de data inválido. Use AAAA-MM-DD.");
-                    }
-                }
-            };
-
+            // Inicializa a lista de edição ao abrir o modal
             renderList(allTasks);
+
+            // Filtro de busca no modal de edição
+            searchInput.addEventListener('input', (e) => {
+                const filter = e.target.value.toLowerCase();
+                const filtered = allTasks.filter(task =>
+                    task.subject.toLowerCase().includes(filter) ||
+                    task.topic.toLowerCase().includes(filter)
+                );
+                renderList(filtered);
+            });
+
+            // Exibe o modal
             editTasksModal.classList.remove('hidden');
         }
 
+    // =================== EVENT LISTENERS (PONTO DE IGNIÇÃO) ===================
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Inicializa a aplicação
+        await loadState(); 
+        setupChart();
+        renderPlan(viewDate);
+        updateProgress();
+        startCountdown();
+        document.getElementById('currentDate').textContent = formatDateDMY(new Date());
+        
+        // Conecta os botões às suas funções
+        document.getElementById('add-task-btn').addEventListener('click', () => {
+            document.getElementById('add-task-form').reset();
+            addTaskModal.classList.remove('hidden');
+        });
+        
         document.getElementById('edit-tasks-btn').addEventListener('click', openEditModal);
+        
+        document.getElementById('add-task-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const date = document.getElementById('task-date').value;
+            const subject = document.getElementById('task-subject').value;
+            const lesson = document.getElementById('task-lesson').value;
+            const topic = document.getElementById('task-topic').value;
+            const type = document.getElementById('task-type').value;
 
-        // =====================================================================
+            // Generate a new task object
+            const newTask = {
+                id: generateUniqueId({ subject, lesson, type }),
+                date: date,
+                subject: subject,
+                lesson: lesson,
+                topic: topic,
+                type: type,
+                completed: false
+            };
 
-        document.getElementById('export-backup-btn').addEventListener('click', () => {
+            if (!studyPlan.tasks[date]) {
+                studyPlan.tasks[date] = [];
+            }
+            studyPlan.tasks[date].push(newTask);
+
+            saveState();
+            renderPlan(viewDate);
+            updateProgress();
+            addTaskModal.classList.add('hidden');
+        });
+
+        planContent.addEventListener('change', (e) => {
+            if (e.target.matches('.task-checkbox')) {
+                const { id, date, type } = e.target.dataset;
+                let taskList;
+                if (type.startsWith('review')) {
+                    taskList = studyPlan.reviews[date];
+                } else {
+                    taskList = studyPlan.tasks[date];
+                }
+                
+                const task = taskList ? taskList.find(t => t.id === id) : undefined;
+
+                if (task) {
+                    task.completed = e.target.checked;
+                    
+                    if (task.type === 'study' || task.type === 'pdf' || task.type === 'video' || task.type === 'legis') {
+                        if (task.completed) {
+                            scheduleReviews(task);
+                        } else {
+                            unscheduleReviews(task);
+                        }
+                    }
+
+                    updateProgress();
+                    saveState();
+                    renderPlan(viewDate);
+                }
+            }
+        });
+
+       document.getElementById('calendar-container').addEventListener('click', (e) => {
+            const dayElement = e.target.closest('.calendar-day');
+            if (dayElement) {
+                viewDate = new Date(dayElement.dataset.date + 'T00:00:00');
+                renderPlan(viewDate);
+            }
+            if (e.target.id === 'prev-month') {
+                viewDate.setMonth(viewDate.getMonth() - 1);
+                renderPlan(viewDate);
+            }
+            if (e.target.id === 'next-month') {
+                viewDate.setMonth(viewDate.getMonth() + 1);
+                renderPlan(viewDate);
+            }
+        });
+
+        document.querySelectorAll('.close-modal').forEach(btn => {
+            btn.addEventListener('click', () => {
+                allTasksModal.classList.add('hidden');
+                addTaskModal.classList.add('hidden'); // Adicionado
+                editTasksModal.classList.add('hidden'); // Adicionado
+            });
+        });
+        
+        document.querySelectorAll('.close-modal').forEach(btn => {
+            btn.addEventListener('click', () => {
+                allTasksModal.classList.add('hidden');
+                addTaskModal.classList.add('hidden');
+                editTasksModal.classList.add('hidden');
+            });
+        });
+        
+document.getElementById('export-backup-btn').addEventListener('click', () => {
             const dataStr = JSON.stringify(studyPlan, null, 2);
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
             const exportFileDefaultName = 'backup_plano_estudos.json';
@@ -1564,10 +1466,6 @@ function scheduleReviews(completedTask) {
 
         document.getElementById('import-backup-btn').addEventListener('click', () => {
             document.getElementById('import-backup-file').click();
-        });
-        
-        document.getElementById('import-csv-btn').addEventListener('click', () => {
-            document.getElementById('import-csv-file').click();
         });
         
         document.getElementById('view-all-tasks-btn').addEventListener('click', () => {
@@ -1605,72 +1503,18 @@ function scheduleReviews(completedTask) {
             event.target.value = '';
         });
 
-        document.getElementById('import-csv-file').addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const csv = e.target.result;
-                    const lines = csv.split('\n').slice(1); 
-                    let newTasksCount = 0;
-                    lines.forEach(line => {
-                        if (line.trim() === '') return;
-                        const [date, subject, lesson, topic, type] = line.split(',');
-                        const task = { date: date.trim(), subject: subject.trim(), lesson: lesson.trim(), topic: topic.trim(), type: 'study' };
-                        const id = generateUniqueId(task);
-                        const dateStr = formatDateYMD(new Date(task.date + 'T00:00:00'));
-
-                        if (!studyPlan.tasks[dateStr]) {
-                            studyPlan.tasks[dateStr] = [];
-                        }
-                        
-                        if (!studyPlan.tasks[dateStr].some(t => t.id === id)) {
-                             studyPlan.tasks[dateStr].push({ ...task, id, completed: false });
-                             newTasksCount++;
-                        }
-                    });
-                    saveState();
-                    renderPlan(viewDate);
-                    updateProgress();
-                    alert(`${newTasksCount} novas aulas importadas com sucesso!`);
-
-                } catch (err) {
-                    alert('Erro ao processar o arquivo CSV. Verifique o formato.');
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = '';
-        });
-
         document.getElementById('reset-btn').addEventListener('click', () => {
             if (confirm('Tem certeza que deseja apagar todo o progresso? Esta ação não pode ser desfeita.')) {
-                localStorage.removeItem(STORAGE_KEY);
                 studyPlan = initializeStudyPlan();
                 saveState();
                 renderPlan(viewDate);
                 updateProgress();
                 alert('Progresso resetado.');
             }
-        });
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            await loadState(); 
-            setupChart();
-            renderPlan(viewDate);
-            updateProgress();
-            renderSubjectProgress();
-            startCountdown();
-            document.getElementById('currentDate').textContent = formatDateDMY(new Date());
-
-            // Adiciona os listeners dos novos botões aqui dentro, após o app carregar
-            document.getElementById('add-task-btn').addEventListener('click', () => {
-                document.getElementById('add-task-form').reset();
-                addTaskModal.classList.remove('hidden');
-            });
-            document.getElementById('edit-tasks-btn').addEventListener('click', openEditModal);
-        });
+        });    }); // <-- Fecha o addEventListener('DOMContentLoaded', ...)
 
 </script>
+
 </body>
+
 </html>
