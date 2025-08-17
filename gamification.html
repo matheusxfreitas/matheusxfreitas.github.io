@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="theme-light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jornada do Herói - Painel de Estudos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link id="favicon" rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23D5A021'/%3E%3Ctext x='50' y='50' font-size='50' fill='white' text-anchor='middle' dy='.3em' font-family='Inter, sans-serif' font-weight='bold'%3EPSI%3C/text%E3E%3C/svg%3E">
+    <meta name="theme-color" content="#D5A021">
+    <style>
+        :root {
+            --bg-color: #FDFBF8;
+            --card-bg-color: #FFFFFF;
+            --text-color: #1f2937;
+            --muted-text-color: #6b7280;
+            --header-text-color: #1f2937;
+            --border-color: #e5e7eb;
+            --accent-color: #D5A021;
+            --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+        }
+        html.theme-dark {
+            --bg-color: #111827;
+            --card-bg-color: #1f2937;
+            --text-color: #d1d5db;
+            --muted-text-color: #9ca3af;
+            --header-text-color: #ffffff;
+            --border-color: #374151;
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-color);
+        }
+        .card {
+            background-color: var(--card-bg-color);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--card-shadow);
+        }
+        .slot {
+            background-color: var(--bg-color);
+            border: 2px dashed var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .slot .item-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            image-rendering: pixelated;
+            padding: 12px;
+        }
+        .slot .slot-name {
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: var(--muted-text-color);
+            font-weight: 500;
+        }
+        .item-card {
+            transition: all 0.2s ease-in-out;
+        }
+        .item-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 10px rgba(213, 160, 33, 0.3);
+        }
+        .progress-bar-bg {
+            background-color: var(--border-color);
+        }
+        .progress-bar-fill {
+            background-color: var(--accent-color);
+        }
+        .blurred { filter: blur(8px); }
+        .modal.hidden { display: none; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Mural de Senha -->
+    <div id="password-wall" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 backdrop-blur-sm">
+        <div class="w-full max-w-xs card p-6 rounded-lg shadow-xl">
+            <h2 class="text-xl font-bold text-center mb-4">Acessar Jornada</h2>
+            <form id="password-form" class="space-y-4">
+                <input type="password" id="password-input" placeholder="Palavra-passe" class="shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline">
+                <button type="submit" class="w-full bg-[#D5A021] hover:bg-amber-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Liberar Acesso
+                </button>
+                <p id="password-error" class="text-red-500 text-xs text-center italic h-4"></p>
+            </form>
+        </div>
+    </div>
+
+    <div id="app-container" class="min-h-screen flex flex-col items-center justify-center p-4 relative">
+        <!-- Botão de Desenvolvedor -->
+        <button id="dev-button" class="absolute top-4 right-4 p-2 rounded-full card hover:bg-gray-100 z-20">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"></path></svg>
+        </button>
+
+        <div class="w-full max-w-5xl mx-auto">
+            <header class="text-center mb-8">
+                <h1 class="text-4xl font-bold" style="color: var(--header-text-color);">Jornada do Herói Psicólogo</h1>
+                <p class="text-lg" style="color: var(--muted-text-color);">Sua evolução nos estudos, refletida em seu poder.</p>
+                 <a href="./index.html" class="inline-block mt-4 text-sm font-semibold py-2 px-4 rounded-lg" style="color: var(--accent-color); border: 1px solid var(--accent-color);">Voltar ao Painel de Estudos</a>
+            </header>
+
+            <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Coluna Esquerda: Avatar -->
+                <section class="lg:col-span-1 card rounded-lg p-6">
+                    <h2 class="text-2xl font-bold mb-4 text-center">Seu Herói</h2>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div></div>
+                        <div id="slot-helmet" class="aspect-square slot rounded-md flex items-center justify-center">
+                            <span class="slot-name">Elmo</span>
+                        </div>
+                        <div></div>
+                        <div id="slot-weapon" class="aspect-square slot rounded-md flex items-center justify-center">
+                             <span class="slot-name">Arma</span>
+                        </div>
+                        <div id="slot-armor" class="aspect-square slot rounded-md flex items-center justify-center">
+                             <span class="slot-name">Armadura</span>
+                        </div>
+                        <div id="slot-shield" class="aspect-square slot rounded-md flex items-center justify-center">
+                             <span class="slot-name">Escudo</span>
+                        </div>
+                        <div></div>
+                        <div id="slot-pants" class="aspect-square slot rounded-md flex items-center justify-center">
+                             <span class="slot-name">Calças</span>
+                        </div>
+                        <div></div>
+                        <div></div>
+                        <div id="slot-boots" class="aspect-square slot rounded-md flex items-center justify-center">
+                             <span class="slot-name">Botas</span>
+                        </div>
+                        <div></div>
+                    </div>
+                </section>
+
+                <!-- Coluna Direita: Itens e Progresso -->
+                <section class="lg:col-span-2 card rounded-lg p-6">
+                    <h2 class="text-2xl font-bold mb-4">Arsenal do Conhecimento</h2>
+                    <div id="inventory-container" class="space-y-6">
+                        <!-- Itens serão populados pelo JS -->
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal de Desenvolvedor -->
+    <div id="dev-modal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-40 p-4">
+        <div class="w-full max-w-md card rounded-lg p-6">
+            <h2 class="text-xl font-bold mb-4">Ferramentas de Desenvolvedor</h2>
+            <p class="text-sm text-gray-500 mb-4">Simule o progresso para testar a aquisição de itens. Isso <strong>não</strong> salvará os dados.</p>
+            <div id="dev-controls-container" class="space-y-4 max-h-64 overflow-y-auto pr-2">
+                <!-- Controles de simulação aqui -->
+            </div>
+            <div class="flex justify-end gap-4 mt-6">
+                <button id="dev-close-btn" class="text-sm font-semibold py-2 px-4 rounded-lg">Fechar</button>
+                <button id="dev-simulate-btn" class="bg-[#D5A021] hover:bg-amber-600 text-white text-sm font-bold py-2 px-4 rounded-lg">Simular Progresso</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        // =================== CONFIGURAÇÃO E VARIÁVEIS GLOBAIS ===================
+        const firebaseConfig = {
+            apiKey: "AIzaSyA050ckDIuD1ujjyRee81r0Vv_jygoHs1Q",
+            authDomain: "meu-painel-de-estudos-v2.firebaseapp.com",
+            projectId: "meu-painel-de-estudos-v2",
+            storageBucket: "meu-painel-de-estudos-v2.firebasestorage.app",
+            messagingSenderId: "889152606734",
+            appId: "1:889152606734:web:09457849b695f3f1d4625f"
+        };
+
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        let studyPlan = {};
+
+        // =================== DEFINIÇÕES DE FUNÇÕES ===================
+        
+        function startApp() {
+            db.collection("progresso").doc("meuPlano").onSnapshot((doc) => {
+                if (doc.exists) {
+                    studyPlan = doc.data();
+                    if (!studyPlan.gamification || !studyPlan.gamification.config) {
+                        console.log("Aguardando a inicialização da gamificação pelo painel principal...");
+                        return;
+                    }
+                    renderPage(studyPlan);
+                } else {
+                    console.log("Documento do plano de estudos não encontrado!");
+                }
+            }, (error) => {
+                console.error("Erro ao ouvir o plano de estudos:", error);
+            });
+        }
+
+        function renderPage(data) {
+            renderAvatar(data);
+            renderInventory(data);
+        }
+
+        function renderAvatar(data) {
+            if (!data.gamification || !data.gamification.player) return;
+
+            const { equipped } = data.gamification.player;
+            const { items } = data.gamification.config;
+
+            for (const slotName in equipped) {
+                const slotElement = document.getElementById(`slot-${slotName}`);
+                if (!slotElement) continue;
+
+                const itemId = equipped[slotName];
+                const slotNameSpan = slotElement.querySelector('.slot-name');
+                slotElement.innerHTML = '';
+                if(slotNameSpan) slotElement.appendChild(slotNameSpan);
+
+                if (itemId) {
+                    const item = items.find(i => i.id === itemId);
+                    if (item) {
+                        const itemImage = document.createElement('div');
+                        itemImage.innerHTML = item.image;
+                        itemImage.className = 'item-image';
+                        slotElement.insertBefore(itemImage, slotNameSpan);
+                        slotElement.title = item.name;
+                    }
+                } else {
+                    slotElement.title = slotName.charAt(0).toUpperCase() + slotName.slice(1);
+                }
+            }
+        }
+
+        function renderInventory(data) {
+            if (!data.gamification || !data.gamification.config) return;
+
+            const { items, slotMapping } = data.gamification.config;
+            const inventoryContainer = document.getElementById('inventory-container');
+            inventoryContainer.innerHTML = '';
+            
+            const allTasks = Object.values(data.tasks || {}).flat();
+            const subjects = [...new Set(Object.values(slotMapping))].map(slot => {
+                return Object.keys(slotMapping).find(key => slotMapping[key] === slot);
+            }).filter(Boolean);
+
+            subjects.forEach(subject => {
+                const slot = slotMapping[subject];
+                const itemsForSubject = items.filter(item => item.subject === subject).sort((a, b) => a.tier - b.tier);
+                
+                const totalTasksForSubject = allTasks.filter(t => t.subject === subject).length;
+                const completedTasksForSubject = allTasks.filter(t => t.subject === subject && t.completed).length;
+                const progressPercentage = totalTasksForSubject > 0 ? (completedTasksForSubject / totalTasksForSubject) * 100 : 0;
+
+                let sectionHTML = `
+                    <div>
+                        <h3 class="text-xl font-bold mb-2">${subject}</h3>
+                        <div class="w-full progress-bar-bg rounded-full h-2.5 mb-4">
+                            <div class="progress-bar-fill h-2.5 rounded-full" style="width: ${progressPercentage.toFixed(2)}%"></div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                `;
+
+                itemsForSubject.forEach(item => {
+                    const isEquipped = data.gamification.player.equipped[slot] === item.id;
+                    const isUnlocked = isItemUnlocked(item, data);
+                    
+                    sectionHTML += `
+                        <div class="item-card card rounded-lg p-3 text-center ${isEquipped ? 'border-2 border-amber-400' : ''} ${!isUnlocked ? 'opacity-50' : ''}">
+                            <div class="h-24 w-full flex items-center justify-center">${item.image}</div>
+                            <p class="font-semibold mt-2 text-sm">${item.name}</p>
+                            <p class="text-xs text-gray-500">Nível ${item.tier}</p>
+                        </div>
+                    `;
+                });
+
+                sectionHTML += `</div></div>`;
+                inventoryContainer.innerHTML += sectionHTML;
+            });
+        }
+        
+        function isItemUnlocked(item, data) {
+            const { player, config } = data.gamification;
+            const allEquippedItems = Object.values(player.equipped).filter(Boolean);
+            
+            const hasUnlockedTier = allEquippedItems.some(equippedId => {
+                const equippedItem = config.items.find(i => i.id === equippedId);
+                return equippedItem && equippedItem.subject === item.subject && equippedItem.tier >= item.tier;
+            });
+            
+            return hasUnlockedTier;
+        }
+
+        function openDevModal() {
+            const devModal = document.getElementById('dev-modal');
+            const devControlsContainer = document.getElementById('dev-controls-container');
+            const devSimulateBtn = document.getElementById('dev-simulate-btn');
+
+            devModal.classList.remove('hidden');
+
+            if (!studyPlan.gamification || !studyPlan.gamification.config) {
+                devControlsContainer.innerHTML = `<p class="text-center text-gray-500">Aguardando dados do Firebase... Por favor, tente novamente em um instante.</p>`;
+                devSimulateBtn.disabled = true;
+                return;
+            }
+            
+            devSimulateBtn.disabled = false;
+            devControlsContainer.innerHTML = '';
+            const { slotMapping } = studyPlan.gamification.config;
+            const allTasks = Object.values(studyPlan.tasks || {}).flat();
+            
+            const subjects = [...new Set(Object.values(slotMapping))].map(slot => {
+                return Object.keys(slotMapping).find(key => slotMapping[key] === slot);
+            }).filter(Boolean);
+
+            subjects.forEach(subject => {
+                const totalTasks = allTasks.filter(t => t.subject === subject).length;
+                const completedTasks = allTasks.filter(t => t.subject === subject && t.completed).length;
+                
+                const controlHTML = `
+                    <div>
+                        <label class="block text-sm font-medium">${subject}</label>
+                        <div class="flex items-center gap-2 mt-1">
+                            <input type="number" id="dev-input-${subject.replace(/\s/g, '')}" value="${completedTasks}" min="0" max="${totalTasks}" class="w-24 border-gray-300 rounded-md shadow-sm text-sm">
+                            <span class="text-sm text-gray-500">/ ${totalTasks} aulas</span>
+                        </div>
+                    </div>
+                `;
+                devControlsContainer.innerHTML += controlHTML;
+            });
+        }
+
+        // =================== EXECUÇÃO PRINCIPAL E EVENT LISTENERS ===================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elementos da página
+            const passwordWall = document.getElementById('password-wall');
+            const appContainer = document.getElementById('app-container');
+            const passwordForm = document.getElementById('password-form');
+            const passwordInput = document.getElementById('password-input');
+            const passwordError = document.getElementById('password-error');
+            const devButton = document.getElementById('dev-button');
+            const devModal = document.getElementById('dev-modal');
+            const devCloseBtn = document.getElementById('dev-close-btn');
+            const devSimulateBtn = document.getElementById('dev-simulate-btn');
+
+            // Listener do formulário de senha
+            passwordForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (passwordInput.value === 'passei2025') {
+                    sessionStorage.setItem('isAuthenticated', 'true');
+                    passwordWall.classList.add('hidden');
+                    appContainer.classList.remove('blurred');
+                    startApp();
+                } else {
+                    passwordError.textContent = 'Senha incorreta.';
+                    passwordInput.value = '';
+                    setTimeout(() => { passwordError.textContent = ''; }, 2000);
+                }
+            });
+
+            // Listeners do modo de desenvolvedor
+            devButton.addEventListener('click', openDevModal);
+            devCloseBtn.addEventListener('click', () => devModal.classList.add('hidden'));
+            
+            devSimulateBtn.addEventListener('click', () => {
+                const simulatedPlan = JSON.parse(JSON.stringify(studyPlan));
+                const allSimulatedTasks = Object.values(simulatedPlan.tasks).flat();
+                const { items, slotMapping } = simulatedPlan.gamification.config;
+
+                allSimulatedTasks.forEach(t => t.completed = false);
+                Object.keys(simulatedPlan.gamification.player.equipped).forEach(slot => {
+                    simulatedPlan.gamification.player.equipped[slot] = null;
+                });
+
+                const subjects = [...new Set(Object.values(slotMapping))].map(slot => {
+                    return Object.keys(slotMapping).find(key => slotMapping[key] === slot);
+                }).filter(Boolean);
+
+                subjects.forEach(subject => {
+                    const input = document.getElementById(`dev-input-${subject.replace(/\s/g, '')}`);
+                    const completedCount = parseInt(input.value, 10);
+                    const tasksForSubject = allSimulatedTasks.filter(t => t.subject === subject);
+                    for(let i = 0; i < completedCount && i < tasksForSubject.length; i++) {
+                        tasksForSubject[i].completed = true;
+                    }
+                });
+
+                const thresholds = { TIER_1: 0.01, TIER_2: 0.25, TIER_3: 0.50, TIER_4: 0.75 };
+                
+                subjects.forEach(subject => {
+                    const tasksForSubject = allSimulatedTasks.filter(t => t.subject === subject);
+                    const total = tasksForSubject.length;
+                    const completed = tasksForSubject.filter(t => t.completed).length;
+                    const progress = total > 0 ? completed / total : 0;
+                    
+                    let bestTierUnlocked = 0;
+                    if (progress >= thresholds.TIER_1) bestTierUnlocked = 1;
+                    if (progress >= thresholds.TIER_2) bestTierUnlocked = 2;
+                    if (progress >= thresholds.TIER_3) bestTierUnlocked = 3;
+                    if (progress >= thresholds.TIER_4) bestTierUnlocked = 4;
+                    
+                    if (bestTierUnlocked > 0) {
+                        const itemToEquip = items.find(item => item.subject === subject && item.tier === bestTierUnlocked);
+                        if (itemToEquip) {
+                            const slot = slotMapping[subject];
+                            simulatedPlan.gamification.player.equipped[slot] = itemToEquip.id;
+                            if (slot === 'weapon') {
+                               const armorToEquip = items.find(item => item.id.startsWith('arm_') && item.tier === bestTierUnlocked);
+                               if(armorToEquip) simulatedPlan.gamification.player.equipped['armor'] = armorToEquip.id;
+                            }
+                        }
+                    }
+                });
+
+                renderPage(simulatedPlan);
+                devModal.classList.add('hidden');
+            });
+
+            // Verificação inicial de autenticação
+            if (sessionStorage.getItem('isAuthenticated') === 'true') {
+                passwordWall.classList.add('hidden');
+                appContainer.classList.remove('blurred');
+                startApp();
+            } else {
+                appContainer.classList.add('blurred');
+            }
+        });
+    </script>
+
+</body>
+</html>
