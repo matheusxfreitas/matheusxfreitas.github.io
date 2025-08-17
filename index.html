@@ -58,10 +58,10 @@
     </div>
 </div>
 
-<div class="container mx-auto p-4 md:p-8 max-w-7xl">
+<div id="app-container" class="container mx-auto p-4 md:p-8 max-w-7xl">
     <header class="mb-8">
         <div class="text-center">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Meu Painel de Estudos 4.6</h1>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Meu Painel de Estudos 4.7</h1>
             <p class="text-lg text-gray-600 mt-2">Missão: Aprovação Psicólogo(a) - Prefeitura de Uberlândia</p>
         </div>
         <div class="mt-6 flex flex-wrap justify-center items-center gap-2">
@@ -76,12 +76,12 @@
             
             <!-- Menu de Ajustes -->
             <div class="relative settings-dropdown">
-                <button class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2">
+                <button id="settings-button" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                     Ajustes
                 </button>
-                <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
-                    <div id="settings-menu" class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border"></div>
+                <!-- CORREÇÃO: Removido o div extra e o ID foi movido para o container principal do menu -->
+                <div id="settings-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
                     <a href="#" id="export-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Exportar Backup</a>
                     <a href="#" id="import-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Importar Backup</a>
                     <a href="#" id="reset-btn" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Resetar Progresso</a>
@@ -189,109 +189,114 @@
 </div>
 
 <!-- Modal Visualizar Todas as Aulas (z-index 50) -->
+<!-- CORREÇÃO: Reestruturação do Modal para corrigir o bug de scroll -->
 <div id="allTasksModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col">
-        <div class="flex justify-between items-center p-4 border-b">
+        <!-- Header (não muda) -->
+        <div class="flex justify-between items-center p-4 border-b flex-shrink-0">
             <h3 class="text-xl font-bold">Gerenciar Aulas</h3>
             <button class="close-modal text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
         </div>
         
-        <!-- Abas (Tabs) -->
-        <div class="flex border-b">
+        <!-- Abas (não muda) -->
+        <div class="flex border-b flex-shrink-0">
             <button id="tab-active" class="tab-button active">Aulas Ativas</button>
             <button id="tab-trash" class="tab-button">Lixeira</button>
         </div>
         
-        <!-- Conteúdo das Abas -->
-        <div id="tab-content-active" class="tab-pane">
-            <div id="tab-content-active" class="tab-pane flex-grow flex flex-col overflow-hidden"></div>
-            <div class="p-4 border-b">
-                <div id="all-tasks-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-center"></div>
-                <div class="flex flex-wrap gap-2 items-center">
-                    <input type="text" id="all-tasks-search" class="flex-grow p-2 border rounded-md" placeholder="Buscar por matéria ou tópico...">
-                    <button id="shift-all-forward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiar Não-Concluídas (+1 dia)</button>
-                    <button id="shift-all-backward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiantar Não-Concluídas (-1 dia)</button>
-                </div>
-                 <!-- Ações Contextuais para Seleção -->
-                <div id="selected-actions-container" class="hidden mt-4 flex flex-wrap gap-2 items-center p-2 bg-amber-50 border border-amber-200 rounded-md">
-                    <span id="selection-count" class="text-sm font-semibold text-gray-700"></span>
-                    <button id="shift-selected-forward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiar</button>
-                    <button id="shift-selected-backward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiantar</button>
-                    <button id="delete-selected-btn" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Excluir</button>
-                </div>
-                <!-- Filtros e Ordenação -->
-                <div class="mt-4 p-2 bg-gray-50 rounded-md border">
-                    <div class="flex flex-wrap gap-4 items-center">
-                        <div class="flex items-center gap-2">
-                            <label for="filter-subject" class="text-sm font-medium">Matéria:</label>
-                            <select id="filter-subject" class="p-1 border rounded-md text-sm">
-                                <option value="">Todas</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <label for="sort-by" class="text-sm font-medium">Ordenar por:</label>
-                            <select id="sort-by" class="p-1 border rounded-md text-sm">
-                                <option value="date-asc">Data (Crescente)</option>
-                                <option value="date-desc">Data (Decrescente)</option>
-                                <option value="subject-asc">Matéria (A-Z)</option>
-                                <option value="subject-desc">Matéria (Z-A)</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <input type="checkbox" id="filter-not-completed" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]">
-                            <label for="filter-not-completed" class="text-sm font-medium">Não Concluídas</label>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <input type="checkbox" id="filter-overdue" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]">
-                            <label for="filter-overdue" class="text-sm font-medium">Atrasadas</label>
-                        </div>
+        <!-- Container principal do conteúdo que vai crescer para preencher o espaço -->
+        <div class="flex-grow overflow-hidden relative">
+            <!-- Painel de Aulas Ativas -->
+            <div id="tab-content-active" class="tab-pane absolute inset-0 flex flex-col">
+                <!-- Seção de filtros e ações (altura fixa) -->
+                <div class="p-4 border-b flex-shrink-0">
+                    <div id="all-tasks-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-center"></div>
+                    <div class="flex flex-wrap gap-2 items-center">
+                        <input type="text" id="all-tasks-search" class="flex-grow p-2 border rounded-md" placeholder="Buscar por matéria ou tópico...">
+                        <button id="shift-all-forward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiar Não-Concluídas (+1 dia)</button>
+                        <button id="shift-all-backward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiantar Não-Concluídas (-1 dia)</button>
                     </div>
-                    <div id="results-count-container" class="mt-2 text-sm font-semibold text-gray-600"></div>
+                    <div id="selected-actions-container" class="hidden mt-4 flex flex-wrap gap-2 items-center p-2 bg-amber-50 border border-amber-200 rounded-md">
+                        <span id="selection-count" class="text-sm font-semibold text-gray-700"></span>
+                        <button id="shift-selected-forward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiar</button>
+                        <button id="shift-selected-backward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiantar</button>
+                        <button id="delete-selected-btn" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Excluir</button>
+                    </div>
+                    <div class="mt-4 p-2 bg-gray-50 rounded-md border">
+                        <div class="flex flex-wrap gap-4 items-center">
+                            <div class="flex items-center gap-2">
+                                <label for="filter-subject" class="text-sm font-medium">Matéria:</label>
+                                <select id="filter-subject" class="p-1 border rounded-md text-sm"><option value="">Todas</option></select>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label for="sort-by" class="text-sm font-medium">Ordenar por:</label>
+                                <select id="sort-by" class="p-1 border rounded-md text-sm">
+                                    <option value="date-asc">Data (Crescente)</option>
+                                    <option value="date-desc">Data (Decrescente)</option>
+                                    <option value="subject-asc">Matéria (A-Z)</option>
+                                    <option value="subject-desc">Matéria (Z-A)</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="filter-not-completed" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]">
+                                <label for="filter-not-completed" class="text-sm font-medium">Não Concluídas</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="filter-overdue" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]">
+                                <label for="filter-overdue" class="text-sm font-medium">Atrasadas</label>
+                            </div>
+                        </div>
+                        <div id="results-count-container" class="mt-2 text-sm font-semibold text-gray-600"></div>
+                    </div>
+                </div>
+                <!-- Seção da tabela com scroll -->
+                <div class="overflow-y-auto flex-grow p-4">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <tr>
+                                <th class="px-6 py-3 text-left"><input type="checkbox" id="select-all-tasks-checkbox" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]"></th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aula</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tópico</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="all-tasks-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
                 </div>
             </div>
-            <div class="p-4 overflow-y-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left"><input type="checkbox" id="select-all-tasks-checkbox" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]"></th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aula</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tópico</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="all-tasks-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                </table>
-            </div>
-        </div>
 
-        <div id="tab-content-trash" class="tab-pane hidden">
-            <div id="tab-content-trash" class="tab-pane hidden flex-grow flex flex-col overflow-hidden"></div>
-            <div class="p-4 border-b">
-                <p class="text-sm text-gray-600">Aulas excluídas são mantidas aqui. Você pode restaurá-las ou excluí-las permanentemente.</p>
-                <div id="trash-actions-container" class="hidden mt-2 flex flex-wrap gap-2 items-center">
-                     <button id="restore-all-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-green-600 border-green-300">Restaurar Selecionadas</button>
-                     <button id="delete-all-perm-btn" class="bg-red-700 hover:bg-red-800 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Excluir Selecionadas</button>
+            <!-- Painel da Lixeira -->
+            <div id="tab-content-trash" class="tab-pane hidden absolute inset-0 flex flex-col">
+                <!-- Seção de ações da lixeira (altura fixa) -->
+                <div class="p-4 border-b flex-shrink-0">
+                    <p class="text-sm text-gray-600">Aulas excluídas são mantidas aqui. Você pode restaurá-las ou excluí-las permanentemente.</p>
+                    <div id="trash-actions-container" class="hidden mt-2 flex flex-wrap gap-2 items-center">
+                         <button id="restore-all-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-green-600 border-green-300">Restaurar Selecionadas</button>
+                         <button id="delete-all-perm-btn" class="bg-red-700 hover:bg-red-800 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Excluir Selecionadas</button>
+                    </div>
                 </div>
-            </div>
-            <div class="p-4 overflow-y-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left"><input type="checkbox" id="select-all-trash-checkbox" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]"></th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tópico</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="trash-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                </table>
+                <!-- Seção da tabela da lixeira com scroll -->
+                <div class="overflow-y-auto flex-grow p-4">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <tr>
+                                <th class="px-6 py-3 text-left"><input type="checkbox" id="select-all-trash-checkbox" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]"></th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tópico</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trash-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
 
 <!-- Modal de Confirmação (z-index 70) -->
 <div id="confirmationModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[70]">
@@ -325,6 +330,7 @@
     viewDate.setHours(0, 0, 0, 0);
     let studyPlan = {};
     let progressChart;
+    let isAuthenticated = false; // Flag to track authentication
 
     const planContent = document.getElementById('plan-content');
     const allTasksModal = document.getElementById('allTasksModal');
@@ -333,21 +339,26 @@
 
     // =================== LÓGICA DO PASSWORD WALL ===================
     const passwordWall = document.getElementById('password-wall');
-    const appContainer = document.querySelector('.container');
+    const appContainer = document.getElementById('app-container');
     const passwordForm = document.getElementById('password-form');
     const passwordInput = document.getElementById('password-input');
     const passwordError = document.getElementById('password-error');
-
-    if (appContainer) {
+    
+    // Check if user is already authenticated from a previous session
+    if (sessionStorage.getItem('isAuthenticated') === 'true') {
+        isAuthenticated = true;
+        passwordWall.classList.add('hidden');
+    } else {
         appContainer.classList.add('blurred');
     }
+
     passwordForm.addEventListener('submit', (e) => {
         e.preventDefault();
         if (passwordInput.value === 'passei2025') {
+            isAuthenticated = true;
+            sessionStorage.setItem('isAuthenticated', 'true'); // Save auth state
             passwordWall.classList.add('hidden');
-            if (appContainer) {
-                appContainer.classList.remove('blurred');
-            }
+            appContainer.classList.remove('blurred');
         } else {
             passwordError.textContent = 'Senha incorreta.';
             passwordInput.value = '';
@@ -423,12 +434,10 @@
 
     function closeModal(modalElement) {
         modalElement.classList.add('hidden');
-        // Apenas remove a classe se nenhum outro modal estiver aberto
         if (document.querySelectorAll('.modal:not(.hidden)').length === 0) {
             document.body.classList.remove('modal-open');
         }
     }
-
 
     // =================== LÓGICA PRINCIPAL DA APLICAÇÃO ===================
    
@@ -1306,7 +1315,6 @@
         const totalTasksCount = Object.values(studyPlan.tasks || {}).flat().length;
         let allTasks = Object.values(studyPlan.tasks || {}).flat();
         
-        // Aplicar Filtros
         const subjectFilter = document.getElementById('filter-subject').value;
         if (subjectFilter) allTasks = allTasks.filter(task => task.subject === subjectFilter);
         
@@ -1489,35 +1497,45 @@
     // =================== EVENT LISTENERS (PONTO DE IGNIÇÃO) ===================
     document.addEventListener('DOMContentLoaded', async () => {
         
-    // --- CÓDIGO NOVO PARA O MENU DE AJUSTES ---
-    const settingsButton = document.querySelector('.settings-dropdown button');
-    const settingsMenu = document.getElementById('settings-menu');
-
-    settingsButton.addEventListener('click', (event) => {
-        // Impede que o clique no botão seja detectado pelo listener da janela
-        event.stopPropagation(); 
-        // Alterna a visibilidade do menu
-        settingsMenu.classList.toggle('hidden');
-    });
-
-    // Fecha o menu se clicar em qualquer outro lugar da página
-    window.addEventListener('click', () => {
-        if (!settingsMenu.classList.contains('hidden')) {
-            settingsMenu.classList.add('hidden');
+        if (isAuthenticated) {
+            await loadState(); 
+            setupChart();
+            renderPlan(viewDate);
+            updateProgress();
+            startCountdown();
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('pt-BR');
         }
-    });
-    // --- FIM DO CÓDIGO NOVO ---
 
-        await loadState(); 
-        setupChart();
-        renderPlan(viewDate);
-        updateProgress();
-        startCountdown();
-        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('pt-BR');
+        passwordForm.addEventListener('submit', async () => {
+            if (isAuthenticated) {
+                await loadState();
+                setupChart();
+                renderPlan(viewDate);
+                updateProgress();
+                startCountdown();
+                document.getElementById('currentDate').textContent = new Date().toLocaleDateString('pt-BR');
+            }
+        });
+
+        // --- CORREÇÃO: LÓGICA DO MENU DE AJUSTES ---
+        const settingsButton = document.getElementById('settings-button');
+        const settingsMenu = document.getElementById('settings-menu');
+
+        settingsButton.addEventListener('click', (event) => {
+            event.stopPropagation(); 
+            settingsMenu.classList.toggle('hidden');
+        });
+
+        window.addEventListener('click', (event) => {
+            if (!settingsMenu.classList.contains('hidden') && !settingsMenu.contains(event.target) && event.target !== settingsButton) {
+                settingsMenu.classList.add('hidden');
+            }
+        });
         
         document.getElementById('home-btn').addEventListener('click', () => {
              document.getElementById('calendar-container').style.display = 'block';
-             renderPlan(new Date());
+             viewDate = new Date(); // Reset viewDate to today
+             renderPlan(viewDate);
         });
 
         document.getElementById('add-task-btn').addEventListener('click', () => {
@@ -1643,10 +1661,12 @@
             linkElement.setAttribute('href', 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr));
             linkElement.setAttribute('download', 'backup_plano_estudos.json');
             linkElement.click();
+            settingsMenu.classList.add('hidden');
         });
         document.getElementById('import-backup-btn').addEventListener('click', (e) => {
             e.preventDefault();
             document.getElementById('import-backup-file').click()
+            settingsMenu.classList.add('hidden');
         });
         document.getElementById('import-backup-file').addEventListener('change', (event) => {
             const file = event.target.files[0];
@@ -1664,6 +1684,7 @@
         });
         document.getElementById('reset-btn').addEventListener('click', (e) => {
             e.preventDefault();
+            settingsMenu.classList.add('hidden');
             showConfirmation('Tem certeza que deseja apagar todo o progresso?', () => {
                 studyPlan = initializeStudyPlan();
                 saveState();
