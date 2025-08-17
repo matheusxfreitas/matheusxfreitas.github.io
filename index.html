@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="theme-light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,48 +9,83 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Favicons -->
-    <link rel="icon" href="/favicon.ico" sizes="any">
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <link rel="manifest" href="/site.webmanifest">
-    <meta name="theme-color" content="#0ea5e9">
+    <link id="favicon" rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23FBBF24'/%3E%3Ctext x='50' y='50' font-size='50' fill='white' text-anchor='middle' dy='.3em' font-family='Inter, sans-serif' font-weight='bold'%3EPSI%3C/text%3E%3C/svg%3E">
+    <meta name="theme-color" content="#FBBF24">
     <style>
+        :root {
+            --bg-color: #FDFBF8;
+            --card-bg-color: #FFFFFF;
+            --text-color: #1f2937;
+            --muted-text-color: #6b7280;
+            --header-text-color: #1f2937;
+            --border-color: #e5e7eb;
+            --control-button-bg: #fff;
+            --control-button-border: #ddd;
+            --accent-color: #D5A021;
+            --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+        }
+        html.theme-dark {
+            --bg-color: #111827;
+            --card-bg-color: #1f2937;
+            --text-color: #d1d5db;
+            --muted-text-color: #9ca3af;
+            --header-text-color: #ffffff;
+            --border-color: #374151;
+            --control-button-bg: #374151;
+            --control-button-border: #4b5563;
+        }
+        html.theme-sepia {
+            --bg-color: #f1e7d0;
+            --card-bg-color: #fdf6e3;
+            --text-color: #586e75;
+            --muted-text-color: #839496;
+            --header-text-color: #073642;
+            --border-color: #eee8d5;
+            --control-button-bg: #eee8d5;
+            --control-button-border: #93a1a1;
+        }
+
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #FDFBF8; 
-            color: #1f2937;
+            background-color: var(--bg-color); 
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
         }
-        main, .modal .bg-white, .bg-white { 
-            border: 1px solid #e5e7eb; 
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+        main, .modal .bg-white, .bg-white, .bg-gray-50 { 
+            background-color: var(--card-bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color); 
+            box-shadow: var(--card-shadow);
         }
         header {
-            border-bottom: 1px solid #e5e7eb;
+            background-color: var(--card-bg-color);
+            border-bottom: 1px solid var(--border-color);
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
+        h1, h2, h3, #modal-title { color: var(--header-text-color); }
+        .text-gray-800 { color: var(--header-text-color); }
+        .text-gray-600, .text-gray-500, .text-gray-700 { color: var(--muted-text-color); }
+
         .control-button {
-            background-color: #fff;
-            border: 1px solid #ddd;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            background-color: var(--control-button-bg);
+            border: 1px solid var(--control-button-border);
+            color: var(--text-color);
+            box-shadow: var(--card-shadow);
             transition: all 0.2s ease;
         }
         .control-button:hover { 
-            background-color: #f9f9f9; 
-            border-color: #ccc;
+            border-color: var(--accent-color);
             transform: translateY(-1px);
         }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
         .calendar-day { transition: all 0.2s ease; position: relative; }
-        .calendar-day:hover { background-color: #f7f3ef; }
-        .calendar-day.has-task::after { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background-color: #D5A021; position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); }
-        .calendar-day.selected { background-color: #D5A021; color: white; font-weight: bold; }
+        .calendar-day:hover { background-color: var(--control-button-bg); }
+        .calendar-day.has-task::after { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background-color: var(--accent-color); position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); }
+        .calendar-day.selected { background-color: var(--accent-color); color: white; font-weight: bold; }
         
-        .task-card { border-left: 4px solid #D6BFAA; transition: box-shadow 0.3s ease; position: relative; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1); border-top: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb;}
+        .task-card { border-left: 4px solid #D6BFAA; transition: box-shadow 0.3s ease; position: relative; box-shadow: var(--card-shadow); border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);}
         .task-card.review-r1 { border-left-color: #6A9C89; }
-        .task-card.review-r3 { border-left-color: #D5A021; }
+        .task-card.review-r3 { border-left-color: var(--accent-color); }
         .task-card.review-r5 { border-left-color: #A25B5B; }
         .task-card.overdue { border-left-color: #ef4444; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
@@ -70,11 +105,17 @@
         .action-btn:hover { background-color: #e0e0e0; }
         .action-btn svg { width: 1rem; height: 1rem; color: #555; }
 
-        .tab-button { padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; color: #6b7280; }
-        .tab-button.active { border-bottom-color: #D5A021; font-weight: 600; color: #D5A021; }
+        .tab-button { padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; color: var(--muted-text-color); }
+        .tab-button.active { border-bottom-color: var(--accent-color); font-weight: 600; color: var(--accent-color); }
         
-        .stat-card { cursor: pointer; transition: all 0.2s ease-in-out; border: 2px solid transparent; }
-        .stat-card.selected { border-color: #D5A021; transform: translateY(-4px); box-shadow: 0 4px 10px rgba(213, 160, 33, 0.3); }
+        .stat-card { cursor: pointer; transition: all 0.2s ease-in-out; border: 2px solid transparent; background-color: var(--control-button-bg); color: var(--text-color); }
+        .stat-card.selected { border-color: var(--accent-color); transform: translateY(-4px); box-shadow: 0 4px 10px rgba(213, 160, 33, 0.3); }
+
+        input, select, textarea {
+            background-color: var(--control-button-bg);
+            border: 1px solid var(--control-button-border);
+            color: var(--text-color);
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
@@ -101,7 +142,7 @@
                     <span class="text-2xl font-bold">PSI</span>
                 </div>
                 <div>
-                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Meu Painel de Estudos</h1>
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Meu Painel de Estudos 3.0</h1>
                 </div>
             </div>
             <div class="flex items-center gap-2">
@@ -119,11 +160,21 @@
                     <button id="settings-button" class="control-button text-sm font-semibold p-2 rounded-full flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                     </button>
-                    <div id="settings-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
-                        <a href="#" id="export-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Exportar Backup</a>
-                        <a href="#" id="import-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Importar Backup</a>
-                        <a href="#" id="reset-btn" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Resetar Progresso</a>
-                        <input type="file" id="import-backup-file" class="hidden" accept=".json">
+                    <div id="settings-menu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-10 border">
+                        <div class="p-4">
+                            <label for="theme-selector" class="block text-sm font-medium text-gray-700 mb-2">Tema da Página</label>
+                            <select id="theme-selector" class="w-full p-2 border rounded-md">
+                                <option value="theme-light">Claro</option>
+                                <option value="theme-dark">Escuro</option>
+                                <option value="theme-sepia">Sépia</option>
+                            </select>
+                        </div>
+                        <div class="border-t">
+                            <a href="#" id="export-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Exportar Backup</a>
+                            <a href="#" id="import-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Importar Backup</a>
+                            <a href="#" id="reset-btn" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Resetar Progresso</a>
+                            <input type="file" id="import-backup-file" class="hidden" accept=".json">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -312,6 +363,10 @@
                                 <input type="checkbox" id="filter-overdue" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]">
                                 <label for="filter-overdue" class="text-sm font-medium">Atrasadas</label>
                             </div>
+                             <div class="flex items-center gap-2">
+                                <input type="checkbox" id="filter-reviews" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]">
+                                <label for="filter-reviews" class="text-sm font-medium">Revisões</label>
+                            </div>
                         </div>
                         <div id="results-count-container" class="mt-2 text-sm font-semibold"></div>
                     </div>
@@ -406,7 +461,6 @@
 
 <script>
     // =================== CONFIGURAÇÃO E VARIÁVEIS GLOBAIS ===================
-    // =================== CONFIGURAÇÃO E VARIÁVEIS GLOBAIS ===================
         const firebaseConfig = {
         apiKey: "AIzaSyA050ckDIuD1ujjyRee81r0Vv_jygoHs1Q",
         authDomain: "meu-painel-de-estudos-v2.firebaseapp.com",
@@ -458,29 +512,22 @@
         }
     });
     
-    // =================== FUNÇÕES AUXILIARES DE DATA E HEADER ===================
-    function updateDynamicHeader() {
-        const greetingEl = document.getElementById('dynamic-greeting');
-        if (greetingEl) {
-            const now = new Date();
-            const hour = now.getHours();
-            let greeting;
-
-            if (hour >= 5 && hour < 12) {
-                greeting = "Bom dia!";
-            } else if (hour >= 12 && hour < 18) {
-                greeting = "Boa tarde!";
-            } else {
-                greeting = "Boa noite!";
-            }
-
-            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const formattedDate = now.toLocaleDateString('pt-BR', dateOptions);
-
-            greetingEl.textContent = `${greeting} Hoje é ${formattedDate}.`;
+    // =================== LÓGICA DE TEMAS ===================
+    const themeSelector = document.getElementById('theme-selector');
+    const applyTheme = (theme) => {
+        document.documentElement.className = ''; // Limpa classes antigas
+        document.documentElement.classList.add(theme);
+        localStorage.setItem('study-theme', theme);
+        if (progressChart) {
+            progressChart.destroy();
+            setupChart();
+            updateProgress();
         }
-    }
+    };
 
+    themeSelector.addEventListener('change', (e) => applyTheme(e.target.value));
+    
+    // =================== FUNÇÕES AUXILIARES DE DATA ===================
     function formatDateYMD(date) {
         const d = new Date(date);
         const year = d.getFullYear();
@@ -554,9 +601,10 @@
     // =================== LÓGICA PRINCIPAL DA APLICAÇÃO ===================
     function initializeStudyPlan() {
         let plan = { tasks: {}, reviews: {}, history: [], dailyGoals: {}, deletedTasks: {} };
+        
         let allTasks = [
             // Exemplo: { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '1', topic: '...', type: 'video', completed: true },
-        
+    
             // --- JUNHO 2025 ---
             { date: '2025-06-24', subject: 'Língua Portuguesa', lesson: '1', topic: 'Panorama das Classes Gramaticais', type: 'video', completed: true },
             { date: '2025-06-24', subject: 'Língua Portuguesa', lesson: '2', topic: 'Panorama das Classes Gramaticais II', type: 'video', completed: true },
@@ -1168,7 +1216,8 @@
             { subject: 'Administração Pública', lesson: 'L8', topic: 'Estatuto dos Servidores - Responsabilidades', type: 'legis' },
             { subject: 'Administração Pública', lesson: 'L9', topic: 'Plano de Cargos e Carreiras (LC nº 671/2018) - Estrutura Geral', type: 'legis' },
             { subject: 'Administração Pública', lesson: 'L10', topic: 'Revisão Geral - Legislação Municipal', type: 'legis' },
-        ];        
+        ];
+        
         allTasks.forEach(task => {
             const id = generateUniqueId(task);
             const dateStr = formatDateYMD(new Date(task.date + 'T03:00:00Z'));
@@ -1232,6 +1281,10 @@
         card.className = cardClasses;
         const title = task.type.startsWith('review') ? `${task.reviewType}: ${task.subject} - Aula ${task.lesson}` : `${task.subject} - Aula ${task.lesson}`;
         
+        const typeIcon = task.type === 'video' 
+            ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 text-gray-500"><path d="m22 8-6 4 6 4V8Z"></path><rect x="2" y="6" width="14" height="12" rx="2" ry="2"></rect></svg>` 
+            : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 text-gray-500"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>`;
+
         const notebookLinkIcon = task.notebookLink ? `
             <a href="${task.notebookLink}" target="_blank" class="action-btn" title="Abrir caderno no NotebookLM">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
@@ -1250,7 +1303,7 @@
                 <div class="flex-shrink-0 pt-1"><input type="checkbox" id="${task.id}" data-id="${task.id}" data-date="${task.date}" data-type="${task.type}" class="task-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${task.completed ? 'checked' : ''}></div>
                 <div class="flex-1">
                     <label for="${task.id}" class="cursor-pointer">
-                        <p class="font-semibold text-gray-800">${title}</p>
+                        <p class="font-semibold text-gray-800 flex items-center">${!task.type.startsWith('review') ? typeIcon : ''} ${title}</p>
                         <p class="text-sm text-gray-600">${task.topic}</p>
                         ${isOverdue ? `<p class="text-xs text-red-600 font-semibold">Atrasada desde: ${formatDateDMY(task.date)}</p>` : ''}
                     </label>
@@ -1423,12 +1476,12 @@
             currentDate.setDate(currentDate.getDate() + 1);
             while(currentDate <= examEve) {
                 const dayOfWeek = currentDate.getDay();
-                if (dayOfWeek >= 1 && dayOfWeek <= 7) { // Conta todos os dias da semana (incluindo final de semana)
+                if (dayOfWeek >= 1 && dayOfWeek <= 7) { // Conta todos os dias (incluindo final de semana)
                     freeDays++;
                 }
                 currentDate.setDate(currentDate.getDate() + 1);
             }
-            const freeHours = freeDays * 5; // 5 horas de estudo por dia
+            const freeHours = freeDays * 6; // 6 horas de estudo por dia
             const totalDays = Math.floor((examEve - lastScheduledDate) / (1000 * 60 * 60 * 24));
             content = `<p class="text-2xl font-bold">${freeHours} horas</p><p class="text-sm text-gray-600">(${totalDays} dias corridos) para remanejar aulas.</p>`;
         }
@@ -1438,10 +1491,42 @@
 
     const setupChart = () => {
         const ctx = document.getElementById('progressChart').getContext('2d');
+        const theme = localStorage.getItem('study-theme') || 'theme-light';
+        let bgColor = '#EAEAEA';
+        let borderColor = '#FFFFFF';
+        if (theme === 'theme-dark') {
+            bgColor = '#374151';
+            borderColor = '#1f2937';
+        } else if (theme === 'theme-sepia') {
+            bgColor = '#eee8d5';
+            borderColor = '#fdf6e3';
+        }
+
         progressChart = new Chart(ctx, {
             type: 'doughnut',
-            data: { labels: ['Concluído', 'Pendente'], datasets: [{ data: [0, 1], backgroundColor: ['#D5A021', '#EAEAEA'], borderColor: ['#FFFFFF'], borderWidth: 2, hoverOffset: 4 }] },
-            options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: true } } }
+            data: { labels: ['Concluído', 'Pendente'], datasets: [{ data: [0, 1], backgroundColor: ['#D5A021', bgColor], borderColor: [borderColor], borderWidth: 2, hoverOffset: 4 }] },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                cutout: '75%', 
+                plugins: { 
+                    legend: { display: false }, 
+                    tooltip: { 
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                const value = context.raw;
+                                const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return `${label}${value} (${percentage}%)`;
+                            }
+                        }
+                    } 
+                } 
+            }
         });
     };
 
@@ -1449,31 +1534,39 @@
     function renderAllTasksTable() {
         const tableBody = document.getElementById('all-tasks-table-body');
         const resultsContainer = document.getElementById('results-count-container');
-        const totalTasksCount = Object.values(studyPlan.tasks || {}).flat().length;
-        let allTasks = Object.values(studyPlan.tasks || {}).flat();
+        
+        const allTasks = Object.values(studyPlan.tasks || {}).flat();
+        const allReviews = Object.values(studyPlan.reviews || {}).flat();
+        let itemsToShow = [...allTasks, ...allReviews];
+        const totalItemsCount = itemsToShow.length;
+
+        const reviewsOnlyFilter = document.getElementById('filter-reviews').checked;
+        if (reviewsOnlyFilter) {
+            itemsToShow = allReviews;
+        }
         
         const subjectFilter = document.getElementById('filter-subject').value;
-        if (subjectFilter) allTasks = allTasks.filter(task => task.subject === subjectFilter);
+        if (subjectFilter) itemsToShow = itemsToShow.filter(task => task.subject === subjectFilter);
         
         const notCompletedFilter = document.getElementById('filter-not-completed').checked;
-        if (notCompletedFilter) allTasks = allTasks.filter(task => !task.completed);
+        if (notCompletedFilter) itemsToShow = itemsToShow.filter(task => !task.completed);
         
         const completedFilter = document.getElementById('filter-completed').checked;
-        if (completedFilter) allTasks = allTasks.filter(task => task.completed);
+        if (completedFilter) itemsToShow = itemsToShow.filter(task => task.completed);
         
         const overdueFilter = document.getElementById('filter-overdue').checked;
         if (overdueFilter) {
             const todayStr = formatDateYMD(new Date());
-            allTasks = allTasks.filter(task => !task.completed && task.date < todayStr);
+            itemsToShow = itemsToShow.filter(task => !task.completed && task.date < todayStr);
         }
 
         const searchText = document.getElementById('all-tasks-search').value.toLowerCase();
-        if (searchText) allTasks = allTasks.filter(task => task.subject.toLowerCase().includes(searchText) || task.topic.toLowerCase().includes(searchText));
+        if (searchText) itemsToShow = itemsToShow.filter(task => task.subject.toLowerCase().includes(searchText) || task.topic.toLowerCase().includes(searchText));
         
-        resultsContainer.textContent = `Mostrando ${allTasks.length} de ${totalTasksCount} aulas.`;
+        resultsContainer.textContent = `Mostrando ${itemsToShow.length} de ${totalItemsCount} itens.`;
 
         const sortBy = document.getElementById('sort-by').value;
-        allTasks.sort((a, b) => {
+        itemsToShow.sort((a, b) => {
             switch (sortBy) {
                 case 'date-desc': return new Date(b.date) - new Date(a.date);
                 case 'subject-asc': return a.subject.localeCompare(b.subject);
@@ -1481,7 +1574,7 @@
                 default: return new Date(a.date) - new Date(b.date);
             }
         });
-        tableBody.innerHTML = allTasks.map(task => `<tr><td class="px-6 py-4"><input type="checkbox" class="task-select-checkbox h-4 w-4" data-id="${task.id}" data-date="${task.date}"></td><td class="px-6 py-4">${formatDateDMY(task.date)}</td><td class="px-6 py-4">${task.subject}</td><td class="px-6 py-4">${task.lesson}</td><td class="px-6 py-4">${task.topic}</td><td class="px-6 py-4 flex items-center gap-2"><button class="action-btn task-edit-btn-table" data-id="${task.id}" data-date="${task.date}" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button><button class="action-btn task-delete-btn-table" data-id="${task.id}" data-date="${task.date}" title="Excluir"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td></tr>`).join('');
+        tableBody.innerHTML = itemsToShow.map(task => `<tr><td class="px-6 py-4"><input type="checkbox" class="task-select-checkbox h-4 w-4" data-id="${task.id}" data-date="${task.date}"></td><td class="px-6 py-4">${formatDateDMY(task.date)}</td><td class="px-6 py-4">${task.subject}</td><td class="px-6 py-4">${task.lesson}</td><td class="px-6 py-4">${task.topic}</td><td class="px-6 py-4 flex items-center gap-2"><button class="action-btn task-edit-btn-table" data-id="${task.id}" data-date="${task.date}" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button><button class="action-btn task-delete-btn-table" data-id="${task.id}" data-date="${task.date}" title="Excluir"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td></tr>`).join('');
     }
 
     function renderHistoryTable() {
@@ -1541,12 +1634,30 @@
         const allTasks = Object.values(studyPlan.tasks || {}).flat();
         const overdueTasks = allTasks.filter(task => !task.completed && task.date < todayStr);
         
-        if (overdueTasks.length === 0) { planContent.innerHTML += `<div class="text-center p-4 bg-green-50 rounded-lg border border-green-200"><p class="text-green-700 font-semibold">Parabéns! Nenhuma tarefa atrasada.</p></div>`; return; }
+        let overdueHours = 0;
+        overdueTasks.forEach(task => {
+            if (task.type === 'pdf') {
+                overdueHours += 2.5;
+            } else {
+                overdueHours += 0.75; // 45 min
+            }
+        });
+
+        let headerHTML = `<div class="flex justify-between items-center mb-4">
+                            <h2 class="text-2xl font-bold">Aulas Atrasadas</h2>
+                            <button id="reschedule-overdue-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg text-blue-600 border-blue-300">Encaixar Aulas Atrasadas</button>
+                          </div>`;
+
+        if (overdueTasks.length === 0) { 
+            planContent.innerHTML = headerHTML + `<div class="text-center p-4 bg-green-50 rounded-lg border border-green-200"><p class="text-green-700 font-semibold">Parabéns! Nenhuma tarefa atrasada.</p></div>`; 
+            document.getElementById('reschedule-overdue-btn').disabled = true;
+            return; 
+        }
 
         const totalTasks = Object.values(studyPlan.tasks || {}).flat().length;
         const overduePercentage = totalTasks > 0 ? ((overdueTasks.length / totalTasks) * 100).toFixed(1) : 0;
-        const overdueHours = (overdueTasks.length * 45 / 60).toFixed(1);
-        planContent.innerHTML += `<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"><div class="bg-red-50 p-4 rounded-lg text-center"><p class="text-2xl font-bold text-red-700">${overdueTasks.length}</p><p class="text-sm font-semibold text-red-600">Total de Aulas Atrasadas</p></div><div class="bg-yellow-50 p-4 rounded-lg text-center"><p class="text-2xl font-bold text-yellow-700">${overduePercentage}%</p><p class="text-sm font-semibold text-yellow-600">do Total de Aulas</p></div><div class="bg-blue-50 p-4 rounded-lg text-center md:col-span-2"><p class="text-2xl font-bold text-blue-700">${overdueHours} horas</p><p class="text-sm font-semibold text-blue-600">de Estudo Acumulado (aprox.)</p></div></div>`;
+        
+        planContent.innerHTML = headerHTML + `<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"><div class="bg-red-50 p-4 rounded-lg text-center"><p class="text-2xl font-bold text-red-700">${overdueTasks.length}</p><p class="text-sm font-semibold text-red-600">Total de Aulas Atrasadas</p></div><div class="bg-yellow-50 p-4 rounded-lg text-center"><p class="text-2xl font-bold text-yellow-700">${overduePercentage}%</p><p class="text-sm font-semibold text-yellow-600">do Total de Aulas</p></div><div class="bg-blue-50 p-4 rounded-lg text-center md:col-span-2"><p class="text-2xl font-bold text-blue-700">${overdueHours.toFixed(1)} horas</p><p class="text-sm font-semibold text-blue-600">de Estudo Acumulado (aprox.)</p></div></div>`;
         
         const groupedByDate = overdueTasks.reduce((acc, task) => { (acc[task.date] = acc[task.date] || []).push(task); return acc; }, {});
         Object.keys(groupedByDate).sort().forEach(dateStr => {
@@ -1600,7 +1711,7 @@
     function populateSubjectSelect(selectElement) {
         const allTasks = Object.values(studyPlan.tasks || {}).flat();
         const subjects = [...new Set(allTasks.map(task => task.subject))].sort();
-        selectElement.innerHTML = subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+        selectElement.innerHTML = subjects.map(s => `<option value="${s}">${s}</option>`).join('') + '<option value="new">Adicionar nova...</option>';
     }
 
     function shiftAllTasks(days) {
@@ -1749,6 +1860,10 @@
     // =================== EVENT LISTENERS (PONTO DE IGNIÇÃO) ===================
     document.addEventListener('DOMContentLoaded', async () => {
         
+        const savedTheme = localStorage.getItem('study-theme') || 'theme-light';
+        themeSelector.value = savedTheme;
+        applyTheme(savedTheme);
+
         if (isAuthenticated) {
             await loadState(); 
             populateInitialHistory();
@@ -1756,7 +1871,6 @@
             renderPlan(viewDate);
             updateProgress();
             startCountdown();
-            updateDynamicHeader();
         }
 
         passwordForm.addEventListener('submit', async () => {
@@ -1767,7 +1881,6 @@
                 renderPlan(viewDate);
                 updateProgress();
                 startCountdown();
-                updateDynamicHeader();
             }
         });
 
@@ -1991,7 +2104,7 @@
 
         document.getElementById('view-overdue-tasks-btn').addEventListener('click', renderOverdueTasks);
         
-        ['all-tasks-search', 'filter-subject', 'sort-by', 'filter-not-completed', 'filter-completed', 'filter-overdue'].forEach(id => {
+        ['all-tasks-search', 'filter-subject', 'sort-by', 'filter-not-completed', 'filter-completed', 'filter-overdue', 'filter-reviews'].forEach(id => {
             document.getElementById(id).addEventListener('input', renderAllTasksTable);
         });
         
@@ -2168,6 +2281,19 @@
                 importFromCSV(file);
             }
             event.target.value = '';
+        });
+
+        // Adicionar nova matéria
+        document.getElementById('task-subject').addEventListener('change', (e) => {
+            if (e.target.value === 'new') {
+                const newSubject = prompt("Digite o nome da nova matéria:");
+                if (newSubject && newSubject.trim() !== '') {
+                    const newOption = new Option(newSubject.trim(), newSubject.trim(), true, true);
+                    e.target.add(newOption, e.target.options[e.target.options.length - 1]);
+                } else {
+                    e.target.value = e.target.options[0].value;
+                }
+            }
         });
 
     });
