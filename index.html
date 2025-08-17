@@ -1423,7 +1423,7 @@
             currentDate.setDate(currentDate.getDate() + 1);
             while(currentDate <= examEve) {
                 const dayOfWeek = currentDate.getDay();
-                if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Conta dias úteis (Seg-Sex)
+                if (dayOfWeek >= 1 && dayOfWeek <= 7) { // Conta todos os dias da semana (incluindo final de semana)
                     freeDays++;
                 }
                 currentDate.setDate(currentDate.getDate() + 1);
