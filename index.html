@@ -61,7 +61,7 @@
 <div id="app-container" class="container mx-auto p-4 md:p-8 max-w-7xl">
     <header class="mb-8">
         <div class="text-center">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Meu Painel de Estudos 4.7</h1>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Meu Painel de Estudos 4.8</h1>
             <p class="text-lg text-gray-600 mt-2">Missão: Aprovação Psicólogo(a) - Prefeitura de Uberlândia</p>
         </div>
         <div class="mt-6 flex flex-wrap justify-center items-center gap-2">
@@ -80,7 +80,6 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                     Ajustes
                 </button>
-                <!-- CORREÇÃO: Removido o div extra e o ID foi movido para o container principal do menu -->
                 <div id="settings-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
                     <a href="#" id="export-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Exportar Backup</a>
                     <a href="#" id="import-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Importar Backup</a>
@@ -189,25 +188,24 @@
 </div>
 
 <!-- Modal Visualizar Todas as Aulas (z-index 50) -->
-<!-- CORREÇÃO: Reestruturação do Modal para corrigir o bug de scroll -->
 <div id="allTasksModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col">
-        <!-- Header (não muda) -->
+        <!-- Header -->
         <div class="flex justify-between items-center p-4 border-b flex-shrink-0">
             <h3 class="text-xl font-bold">Gerenciar Aulas</h3>
             <button class="close-modal text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
         </div>
         
-        <!-- Abas (não muda) -->
+        <!-- Abas -->
         <div class="flex border-b flex-shrink-0">
             <button id="tab-active" class="tab-button active">Aulas Ativas</button>
             <button id="tab-trash" class="tab-button">Lixeira</button>
         </div>
         
-        <!-- Container principal do conteúdo que vai crescer para preencher o espaço -->
-        <div class="flex-grow overflow-hidden relative">
+        <!-- CORREÇÃO: Container principal do conteúdo reestruturado com flexbox -->
+        <div class="flex-grow overflow-hidden flex flex-col">
             <!-- Painel de Aulas Ativas -->
-            <div id="tab-content-active" class="tab-pane absolute inset-0 flex flex-col">
+            <div id="tab-content-active" class="tab-pane flex flex-col h-full overflow-hidden">
                 <!-- Seção de filtros e ações (altura fixa) -->
                 <div class="p-4 border-b flex-shrink-0">
                     <div id="all-tasks-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-center"></div>
@@ -268,7 +266,7 @@
             </div>
 
             <!-- Painel da Lixeira -->
-            <div id="tab-content-trash" class="tab-pane hidden absolute inset-0 flex flex-col">
+            <div id="tab-content-trash" class="tab-pane hidden flex flex-col h-full overflow-hidden">
                 <!-- Seção de ações da lixeira (altura fixa) -->
                 <div class="p-4 border-b flex-shrink-0">
                     <p class="text-sm text-gray-600">Aulas excluídas são mantidas aqui. Você pode restaurá-las ou excluí-las permanentemente.</p>
@@ -444,6 +442,7 @@
     function initializeStudyPlan() {
         let plan = { tasks: {}, reviews: {}, dailyGoals: {} };
         
+        // O array de `allTasks` foi omitido por ser muito grande, mas o original do seu código será usado aqui.
         let allTasks = [
             // --- JUNHO 2025 ---
             { date: '2025-06-24', subject: 'Língua Portuguesa', lesson: '1', topic: 'Panorama das Classes Gramaticais', type: 'video', completed: true },
@@ -1517,7 +1516,6 @@
             }
         });
 
-        // --- CORREÇÃO: LÓGICA DO MENU DE AJUSTES ---
         const settingsButton = document.getElementById('settings-button');
         const settingsMenu = document.getElementById('settings-menu');
 
