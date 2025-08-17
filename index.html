@@ -31,7 +31,7 @@
         .modal-content { white-space: pre-wrap; }
         .control-button { background-color: #fff; border: 1px solid #ddd; transition: all 0.2s ease; }
         .control-button:hover { background-color: #f9f9f9; border-color: #ccc; }
-        ```css
+        
         .blurred {
             filter: blur(8px);
             transition: filter 0.3s ease-in-out;
@@ -70,8 +70,8 @@
                 <button id="import-backup-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Importar Backup (Progresso)</button>
                 <input type="file" id="import-backup-file" class="hidden" accept=".json">
                 <button id="export-csv-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Exportar Aulas (CSV)</button>
-                <button id="import-csv-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Importar Novas Aulas (CSV)</button>
-                <input type="file" id="import-csv-file" class="hidden" accept=".csv">
+                <button id="add-task-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-green-600 border-green-300">Incluir Aula(s)</button>
+                <button id="edit-tasks-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-blue-600 border-blue-300">Editar Aulas</button>
                 <button id="reset-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-red-600">Resetar Progresso</button>
             </div>
         </header>
@@ -124,6 +124,57 @@
                         </div>
                 </aside>
             </div>
+        
+                <div id="addTaskModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg">
+                <div class="flex justify-between items-center p-4 border-b">
+                    <h3 class="text-xl font-bold">Incluir Nova Aula</h3>
+                    <button class="close-modal text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+                </div>
+                <form id="add-task-form" class="p-6 space-y-4">
+                    <div>
+                        <label for="task-date" class="block text-sm font-medium text-gray-700">Data</label>
+                        <input type="date" id="task-date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                    </div>
+                    <div>
+                        <label for="task-subject" class="block text-sm font-medium text-gray-700">Matéria</label>
+                        <input type="text" id="task-subject" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                    </div>
+                    <div>
+                        <label for="task-lesson" class="block text-sm font-medium text-gray-700">Nº da Aula</label>
+                        <input type="text" id="task-lesson" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                    </div>
+                    <div>
+                        <label for="task-topic" class="block text-sm font-medium text-gray-700">Tópico</label>
+                        <input type="text" id="task-topic" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                    </div>
+                    <div>
+                        <label for="task-type" class="block text-sm font-medium text-gray-700">Tipo</label>
+                        <select id="task-type" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                            <option value="video">Videoaula</option>
+                            <option value="pdf">PDF</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end pt-4">
+                        <button type="submit" class="bg-[#D5A021] hover:bg-amber-600 text-white font-bold py-2 px-4 rounded">Salvar Aula</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="editTasksModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+                <div class="flex justify-between items-center p-4 border-b">
+                    <h3 class="text-xl font-bold">Editar Aulas Cadastradas</h3>
+                    <button class="close-modal text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+                </div>
+                <div class="p-4">
+                    <input type="text" id="edit-tasks-search" class="w-full p-2 border rounded-md" placeholder="Buscar por matéria ou tópico para editar...">
+                </div>
+                <div id="edit-tasks-list" class="p-4 overflow-y-auto space-y-2">
+                    </div>
+            </div>
+        </div>
         </main>
     </div>
 
@@ -180,6 +231,8 @@
         const planContent = document.getElementById('plan-content');
         const progressText = document.getElementById('progressText');
         const allTasksModal = document.getElementById('allTasksModal');
+        const addTaskModal = document.getElementById('addTaskModal');
+        const editTasksModal = document.getElementById('editTasksModal');
         const modalTitle = document.getElementById('modalTitle');
         const modalContent = document.getElementById('modalContent');
         const modalLoading = document.getElementById('modalLoading');
@@ -1317,6 +1370,8 @@ function scheduleReviews(completedTask) {
         document.querySelectorAll('.close-modal').forEach(btn => {
             btn.addEventListener('click', () => {
                 allTasksModal.classList.add('hidden');
+                addTaskModal.classList.add('hidden'); // Adicionado
+                editTasksModal.classList.add('hidden'); // Adicionado
             });
         });
 
@@ -1465,6 +1520,148 @@ function scheduleReviews(completedTask) {
             startCountdown();
             document.getElementById('currentDate').textContent = formatDateDMY(new Date());
         });
+
+// =================== NOVAS FUNÇÕES: INCLUIR E EDITAR AULAS ===================
+
+        // Abre o modal de Adicionar Aula
+        document.getElementById('add-task-btn').addEventListener('click', () => {
+            document.getElementById('add-task-form').reset(); // Limpa o formulário
+            addTaskModal.classList.remove('hidden');
+        });
+
+        // Lógica para salvar a nova aula
+        document.getElementById('add-task-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const date = document.getElementById('task-date').value;
+            const subject = document.getElementById('task-subject').value;
+            const lesson = document.getElementById('task-lesson').value;
+            const topic = document.getElementById('task-topic').value;
+            const type = document.getElementById('task-type').value;
+
+            // Formata a data para corresponder ao nosso sistema
+            const dateStr = formatDateYMD(new Date(date + 'T00:00:00'));
+
+            const newTask = {
+                date: dateStr,
+                subject,
+                lesson,
+                topic,
+                type,
+                completed: false,
+                id: generateUniqueId({subject, lesson, type})
+            };
+
+            if (!studyPlan.tasks[dateStr]) {
+                studyPlan.tasks[dateStr] = [];
+            }
+            studyPlan.tasks[dateStr].push(newTask);
+
+            saveState();
+            renderPlan(viewDate);
+            updateProgress();
+            
+            addTaskModal.classList.add('hidden');
+            alert('Aula adicionada com sucesso!');
+        });
+
+
+        // Função para popular e mostrar o modal de Edição
+        const openEditModal = () => {
+            const listContainer = document.getElementById('edit-tasks-list');
+            const searchInput = document.getElementById('edit-tasks-search');
+            listContainer.innerHTML = 'Carregando aulas...';
+
+            // Pega todas as aulas e ordena por data
+            const allTasks = Object.values(studyPlan.tasks).flat().sort((a,b) => new Date(a.date) - new Date(b.date));
+            
+            const renderList = (tasksToRender) => {
+                listContainer.innerHTML = '';
+                if (tasksToRender.length === 0) {
+                    listContainer.innerHTML = '<p class="text-center text-gray-500">Nenhuma aula encontrada.</p>';
+                    return;
+                }
+                tasksToRender.forEach(task => {
+                    const taskEl = document.createElement('div');
+                    taskEl.className = 'p-3 border rounded-md flex justify-between items-center';
+                    taskEl.innerHTML = `
+                        <div>
+                            <p class="font-semibold">${task.subject} - Aula ${task.lesson}</p>
+                            <p class="text-sm text-gray-600">${task.topic} (${formatDateDMY(new Date(task.date + 'T00:00:00'))})</p>
+                        </div>
+                        <div class="space-x-2">
+                            <button class="edit-btn text-blue-500 hover:underline" data-id="${task.id}" data-date="${task.date}">Editar</button>
+                            <button class="delete-btn text-red-500 hover:underline" data-id="${task.id}" data-date="${task.date}">Excluir</button>
+                        </div>
+                    `;
+                    listContainer.appendChild(taskEl);
+                });
+            };
+
+            searchInput.onkeyup = () => {
+                const query = searchInput.value.toLowerCase();
+                const filteredTasks = allTasks.filter(t => t.subject.toLowerCase().includes(query) || t.topic.toLowerCase().includes(query));
+                renderList(filteredTasks);
+            };
+            
+            listContainer.onclick = (e) => {
+                const { id, date } = e.target.dataset;
+
+                // Lógica de Exclusão
+                if (e.target.classList.contains('delete-btn')) {
+                    if (confirm('Tem certeza que deseja excluir esta aula? As revisões associadas também serão removidas.')) {
+                        const taskIndex = studyPlan.tasks[date].findIndex(t => t.id === id);
+                        if (taskIndex > -1) {
+                            const [deletedTask] = studyPlan.tasks[date].splice(taskIndex, 1);
+                            unscheduleReviews(deletedTask); // Remove as revisões
+                            saveState();
+                            updateProgress();
+                            renderPlan(viewDate);
+                            openEditModal(); // Atualiza a lista no modal
+                            alert('Aula excluída com sucesso!');
+                        }
+                    }
+                }
+
+                // Lógica de Edição (apenas data)
+                if (e.target.classList.contains('edit-btn')) {
+                    const newDateStr = prompt("Digite a nova data para esta aula (formato AAAA-MM-DD):", date);
+                    const newDate = new Date(newDateStr + 'T00:00:00');
+                    if (newDateStr && !isNaN(newDate)) {
+                        const taskIndex = studyPlan.tasks[date].findIndex(t => t.id === id);
+                        if (taskIndex > -1) {
+                            const [taskToMove] = studyPlan.tasks[date].splice(taskIndex, 1);
+                            unscheduleReviews(taskToMove); // Remove revisões antigas
+
+                            taskToMove.date = formatDateYMD(newDate); // Atualiza a data da tarefa
+                            if (!studyPlan.tasks[taskToMove.date]) {
+                                studyPlan.tasks[taskToMove.date] = [];
+                            }
+                            studyPlan.tasks[taskToMove.date].push(taskToMove);
+                            
+                            // Se a tarefa já estava concluída, reagenda as revisões
+                            if (taskToMove.completed) {
+                                scheduleReviews(taskToMove);
+                            }
+
+                            saveState();
+                            updateProgress();
+                            renderPlan(viewDate);
+                            openEditModal();
+                            alert('Data da aula atualizada!');
+                        }
+                    } else if (newDateStr) {
+                        alert("Formato de data inválido. Use AAAA-MM-DD.");
+                    }
+                }
+            };
+
+            renderList(allTasks);
+            editTasksModal.classList.remove('hidden');
+        }
+
+        document.getElementById('edit-tasks-btn').addEventListener('click', openEditModal);
+        // =====================================================================
+        
 </script>
 </body>
 </html>
