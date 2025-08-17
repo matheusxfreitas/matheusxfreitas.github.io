@@ -10,6 +10,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link id="favicon" rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23D5A021'/%3E%3Ctext x='50' y='50' font-size='50' fill='white' text-anchor='middle' dy='.3em' font-family='Inter, sans-serif' font-weight='bold'%3EPSI%3C/text%E3E%3C/svg%3E">
     <meta name="theme-color" content="#D5A021">
+    
+    <!-- PASSO 1: O "Cartão da Biblioteca" - Link para o CSS de sprites do Habitica -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/HabitRPG/habitica@develop/website/public/css/sprites.css">
+
     <style>
         :root {
             --bg-color: #FDFBF8;
@@ -44,13 +48,9 @@
             border: 2px dashed var(--border-color);
             transition: all 0.3s ease;
             position: relative;
-        }
-        .slot .item-image {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            image-rendering: pixelated;
-            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .slot .slot-name {
             position: absolute;
@@ -63,19 +63,33 @@
         }
         .item-card {
             transition: all 0.2s ease-in-out;
+            border: 2px solid transparent;
         }
-        .item-card:hover {
-            transform: translateY(-4px);
+        .item-card.equipped {
+            border-color: var(--accent-color);
             box-shadow: 0 4px 10px rgba(213, 160, 33, 0.3);
+        }
+        .item-card:not(.unlocked) {
+            opacity: 0.5;
+            filter: grayscale(80%);
         }
         .progress-bar-bg {
             background-color: var(--border-color);
         }
         .progress-bar-fill {
             background-color: var(--accent-color);
+            transition: width 0.5s ease-in-out;
         }
         .blurred { filter: blur(8px); }
         .modal.hidden { display: none; }
+
+        /* PASSO 1 (cont.): Regra para ajustar o tamanho dos sprites */
+        .shop_sprite {
+            width: 90px;
+            height: 90px;
+            transform: scale(0.75); /* Reduz um pouco para caber melhor */
+            image-rendering: pixelated;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -113,26 +127,26 @@
                     <h2 class="text-2xl font-bold mb-4 text-center">Seu Herói</h2>
                     <div class="grid grid-cols-3 gap-4">
                         <div></div>
-                        <div id="slot-helmet" class="aspect-square slot rounded-md flex items-center justify-center">
+                        <div id="slot-helmet" class="aspect-square slot rounded-md">
                             <span class="slot-name">Elmo</span>
                         </div>
                         <div></div>
-                        <div id="slot-weapon" class="aspect-square slot rounded-md flex items-center justify-center">
+                        <div id="slot-weapon" class="aspect-square slot rounded-md">
                              <span class="slot-name">Arma</span>
                         </div>
-                        <div id="slot-armor" class="aspect-square slot rounded-md flex items-center justify-center">
+                        <div id="slot-armor" class="aspect-square slot rounded-md">
                              <span class="slot-name">Armadura</span>
                         </div>
-                        <div id="slot-shield" class="aspect-square slot rounded-md flex items-center justify-center">
+                        <div id="slot-shield" class="aspect-square slot rounded-md">
                              <span class="slot-name">Escudo</span>
                         </div>
                         <div></div>
-                        <div id="slot-pants" class="aspect-square slot rounded-md flex items-center justify-center">
+                        <div id="slot-pants" class="aspect-square slot rounded-md">
                              <span class="slot-name">Calças</span>
                         </div>
                         <div></div>
                         <div></div>
-                        <div id="slot-boots" class="aspect-square slot rounded-md flex items-center justify-center">
+                        <div id="slot-boots" class="aspect-square slot rounded-md">
                              <span class="slot-name">Botas</span>
                         </div>
                         <div></div>
@@ -158,9 +172,12 @@
             <div id="dev-controls-container" class="space-y-4 max-h-64 overflow-y-auto pr-2">
                 <!-- Controles de simulação aqui -->
             </div>
-            <div class="flex justify-end gap-4 mt-6">
-                <button id="dev-close-btn" class="text-sm font-semibold py-2 px-4 rounded-lg">Fechar</button>
-                <button id="dev-simulate-btn" class="bg-[#D5A021] hover:bg-amber-600 text-white text-sm font-bold py-2 px-4 rounded-lg">Simular Progresso</button>
+            <div class="flex justify-between items-center mt-6">
+                <button id="dev-reset-btn" class="text-sm font-semibold py-2 px-4 rounded-lg text-red-600">Resetar</button>
+                <div class="flex gap-4">
+                    <button id="dev-close-btn" class="text-sm font-semibold py-2 px-4 rounded-lg">Fechar</button>
+                    <button id="dev-simulate-btn" class="bg-[#D5A021] hover:bg-amber-600 text-white text-sm font-bold py-2 px-4 rounded-lg">Simular</button>
+                </div>
             </div>
         </div>
     </div>
@@ -193,12 +210,9 @@
                 if (doc.exists) {
                     let data = doc.data();
                     
-                    // *** CORREÇÃO PRINCIPAL AQUI ***
-                    // Verifica se a estrutura de gamificação existe. Se não, cria e salva.
-                    if (!data.gamification || !data.gamification.config) {
-                        console.log("Estrutura de gamificação não encontrada. Criando uma nova...");
+                    if (!data.gamification || !data.gamification.config || !data.gamification.config.items[0].cssClass) {
+                        console.log("Estrutura de gamificação desatualizada ou não encontrada. Criando/Atualizando...");
                         data.gamification = getInitialGamificationState();
-                        // Salva a nova estrutura no Firebase. O 'merge: true' evita sobrescrever outros dados.
                         docRef.set({ gamification: data.gamification }, { merge: true })
                             .catch(error => console.error("Erro ao salvar a gamificação inicial:", error));
                     }
@@ -214,72 +228,43 @@
             });
         }
         
-        // Função que retorna a estrutura inicial da gamificação
+        // PASSO 3: Atualizando a "Enciclopédia" de Itens
         function getInitialGamificationState() {
-            // Esta função deve ser mantida sincronizada com a da página index.html
-            // Sprites SVG são definidos aqui para serem auto-contidos
-            const sprites = {
-                helm: [
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#795548"><path d="M8 1a2 2 0 00-2 2v1h4V3a2 2 0 00-2-2zM3 5a1 1 0 00-1 1v3h12V6a1 1 0 00-1-1H3z"/></svg>`,
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#7f8c8d"><path d="M8 0a3 3 0 00-3 3v1h2V3a1 1 0 012 0v1h2V3a3 3 0 00-3-3zM2 5a2 2 0 00-2 2v3h16V7a2 2 0 00-2-2H2z"/></svg>`,
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#bdc3c7"><path d="M8 0a3 3 0 00-3 3v1h2V3a1 1 0 012 0v1h2V3a3 3 0 00-3-3zM2 5a2 2 0 00-2 2v4h16V7a2 2 0 00-2-2H2zm12 5H2v1h12v-1z"/></svg>`,
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#f1c40f"><path d="M8 0l-2 4h4L8 0zM3 4a1 1 0 00-1 1v5h12V5a1 1 0 00-1-1H3zm-2 6l2 4h8l2-4H1z"/></svg>`
-                ],
-                weapon: [
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#95a5a6"><path d="M14 0l-4 4h-2l-2 2v2l-4 4 2 2 4-4v-2l2-2h2l4-4-2-2z"/></svg>`,
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#34495e"><path d="M16 0l-6 6-2-2-6 6 2 2 6-6 2 2 6-6-2-2zM0 12v4h4v-4H0z"/></svg>`,
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#c0392b"><path d="M4 0h8v6h4v4h-4v6H4v-6H0V6h4V0z"/></svg>`,
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#8e44ad"><path d="M8 0a2 2 0 100 4 2 2 0 000-4zM6 4h4v12H6V4z"/></svg>`
-                ],
-                armor: [
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#a0522d"><path d="M4 0h8v2H4zM2 3h12v10H2zm2 11h8v2H4z"/></svg>`,
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#95a5a6"><path d="M3 0h10l2 4v8l-2 4H3l-2-4V4L3 0zm1 4h8v8H4V4z"/></svg>`,
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#7f8c8d"><path d="M2 0h12l2 3v10l-2 3H2L0 13V3L2 0zm2 3h8v10H4V3z"/></svg>`,
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#3498db"><path d="M2 0h12l2 3v10l-2 3H2L0 13V3L2 0zm1 3h10v10H3V3zm1 1v8h8V4H4z"/></svg>`
-                ],
-                shield: [
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#cd853f"><circle cx="8" cy="8" r="7"/></svg>`,
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#7f8c8d"><path d="M8 0a8 8 0 00-8 8 8 8 0 008 8 8 8 0 008-8A8 8 0 008 0zm0 2a6 6 0 016 6 6 6 0 01-6 6 6 6 0 01-6-6 6 6 0 016-6z"/></svg>`,
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#bdc3c7"><path d="M2 0h12l2 2v12l-2 2H2l-2-2V2L2 0z"/></svg>`,
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#2980b9"><path d="M8 0L0 4v8l8 4 8-4V4L8 0zm0 2.23L13.3 5v6l-5.3 2.67L2.7 11V5L8 2.23z"/></svg>`
-                ],
-                boots: [
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#8b4513"><path d="M2 8h5v8H2zm7 0h5v8H9z"/></svg>`,
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#7f8c8d"><path d="M2 6h5v10H0V9l2-3zm7 0h5l2 3v7h-7V6z"/></svg>`,
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#bdc3c7"><path d="M2 4h5v12H0V7l2-3zm7 0h5l2 3v9h-7V4zM3 5v10h3V5H3zm7 0v10h3V5h-3z"/></svg>`,
-                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#e67e22"><path d="M2 2h5v14H0V5l2-3zm7 0h5l2 3v11h-7V2zM3 3v12h3V3H3zm7 0v12h3V3h-3z"/></svg>`
-                ]
-            };
             return {
                 player: { equipped: { helmet: null, armor: null, pants: null, boots: null, weapon: null, shield: null } },
                 config: {
                     slotMapping: {
                         'Língua Portuguesa': 'helmet',
-                        'Conhecimentos Específicos': 'weapon',
+                        'Conhecimentos Específicos': 'weapon', // Mapeia para arma e armadura
                         'Administração Pública': 'shield',
                         'Raciocínio Lógico-Matemático': 'boots'
                     },
                     items: [
-                        { id: 'helm_1', name: 'Viseira do Alfabeto', subject: 'Língua Portuguesa', tier: 1, image: sprites.helm[0] },
-                        { id: 'helm_2', name: 'Elmo da Gramática', subject: 'Língua Portuguesa', tier: 2, image: sprites.helm[1] },
-                        { id: 'helm_3', name: 'Elmo da Sintaxe Apurada', subject: 'Língua Portuguesa', tier: 3, image: sprites.helm[2] },
-                        { id: 'helm_4', name: 'Coroa da Oratória', subject: 'Língua Portuguesa', tier: 4, image: sprites.helm[3] },
-                        { id: 'wpn_1', name: 'Adaga do Behaviorismo', subject: 'Conhecimentos Específicos', tier: 1, image: sprites.weapon[0] },
-                        { id: 'wpn_2', name: 'Espada da Psicanálise', subject: 'Conhecimentos Específicos', tier: 2, image: sprites.weapon[1] },
-                        { id: 'wpn_3', name: 'Martelo da TCC', subject: 'Conhecimentos Específicos', tier: 3, image: sprites.weapon[2] },
-                        { id: 'wpn_4', name: 'Cajado Sistêmico', subject: 'Conhecimentos Específicos', tier: 4, image: sprites.weapon[3] },
-                        { id: 'arm_1', name: 'Gibão do Psicodiagnóstico', subject: 'Conhecimentos Específicos', tier: 1, image: sprites.armor[0] },
-                        { id: 'arm_2', name: 'Peitoral do Atendimento Clínico', subject: 'Conhecimentos Específicos', tier: 2, image: sprites.armor[1] },
-                        { id: 'arm_3', name: 'Cota de Malha das Políticas Públicas', subject: 'Conhecimentos Específicos', tier: 3, image: sprites.armor[2] },
-                        { id: 'arm_4', name: 'Armadura de Placas do SUAS', subject: 'Conhecimentos Específicos', tier: 4, image: sprites.armor[3] },
-                        { id: 'shd_1', name: 'Broquel da Lei Orgânica', subject: 'Administração Pública', tier: 1, image: sprites.shield[0] },
-                        { id: 'shd_2', name: 'Escudo do Servidor Público', subject: 'Administração Pública', tier: 2, image: sprites.shield[1] },
-                        { id: 'shd_3', name: 'Escudo de Torre da Constituição', subject: 'Administração Pública', tier: 3, image: sprites.shield[2] },
-                        { id: 'shd_4', name: 'Baluarte da Probidade', subject: 'Administração Pública', tier: 4, image: sprites.shield[3] },
-                        { id: 'bts_1', name: 'Sandálias da Aritmética', subject: 'Raciocínio Lógico-Matemático', tier: 1, image: sprites.boots[0] },
-                        { id: 'bts_2', name: 'Botas da Lógica Proposicional', subject: 'Raciocínio Lógico-Matemático', tier: 2, image: sprites.boots[1] },
-                        { id: 'bts_3', name: 'Grevas da Análise Combinatória', subject: 'Raciocínio Lógico-Matemático', tier: 3, image: sprites.boots[2] },
-                        { id: 'bts_4', name: 'Sabatons da Probabilidade', subject: 'Raciocínio Lógico-Matemático', tier: 4, image: sprites.boots[3] }
+                        // Elmos (Língua Portuguesa)
+                        { id: 'helm_1', name: 'Viseira do Alfabeto', subject: 'Língua Portuguesa', tier: 1, cssClass: 'shop_head_warrior_0' },
+                        { id: 'helm_2', name: 'Elmo da Gramática', subject: 'Língua Portuguesa', tier: 2, cssClass: 'shop_head_warrior_1' },
+                        { id: 'helm_3', name: 'Elmo da Sintaxe Apurada', subject: 'Língua Portuguesa', tier: 3, cssClass: 'shop_head_warrior_2' },
+                        { id: 'helm_4', name: 'Coroa da Oratória', subject: 'Língua Portuguesa', tier: 4, cssClass: 'shop_head_armoire_4' },
+                        // Armas (Conhecimentos Específicos)
+                        { id: 'wpn_1', name: 'Adaga do Behaviorismo', subject: 'Conhecimentos Específicos', tier: 1, cssClass: 'shop_weapon_warrior_0' },
+                        { id: 'wpn_2', name: 'Espada da Psicanálise', subject: 'Conhecimentos Específicos', tier: 2, cssClass: 'shop_weapon_warrior_1' },
+                        { id: 'wpn_3', name: 'Martelo da TCC', subject: 'Conhecimentos Específicos', tier: 3, cssClass: 'shop_weapon_warrior_2' },
+                        { id: 'wpn_4', name: 'Cajado Sistêmico', subject: 'Conhecimentos Específicos', tier: 4, cssClass: 'shop_weapon_wizard_4' },
+                        // Armaduras (Conhecimentos Específicos)
+                        { id: 'arm_1', name: 'Gibão do Psicodiagnóstico', subject: 'Conhecimentos Específicos', tier: 1, cssClass: 'shop_armor_warrior_0' },
+                        { id: 'arm_2', name: 'Peitoral do Atendimento Clínico', subject: 'Conhecimentos Específicos', tier: 2, cssClass: 'shop_armor_warrior_1' },
+                        { id: 'arm_3', name: 'Cota de Malha das Políticas Públicas', subject: 'Conhecimentos Específicos', tier: 3, cssClass: 'shop_armor_warrior_2' },
+                        { id: 'arm_4', name: 'Armadura de Placas do SUAS', subject: 'Conhecimentos Específicos', tier: 4, cssClass: 'shop_armor_warrior_4' },
+                        // Escudos (Administração Pública)
+                        { id: 'shd_1', name: 'Broquel da Lei Orgânica', subject: 'Administração Pública', tier: 1, cssClass: 'shop_shield_warrior_0' },
+                        { id: 'shd_2', name: 'Escudo do Servidor Público', subject: 'Administração Pública', tier: 2, cssClass: 'shop_shield_warrior_1' },
+                        { id: 'shd_3', name: 'Escudo de Torre da Constituição', subject: 'Administração Pública', tier: 3, cssClass: 'shop_shield_warrior_2' },
+                        { id: 'shd_4', name: 'Baluarte da Probidade', subject: 'Administração Pública', tier: 4, cssClass: 'shop_shield_armoire_4' },
+                        // Botas (Raciocínio Lógico-Matemático)
+                        { id: 'bts_1', name: 'Sandálias da Aritmética', subject: 'Raciocínio Lógico-Matemático', tier: 1, cssClass: 'shop_shoes_warrior_0' },
+                        { id: 'bts_2', name: 'Botas da Lógica Proposicional', subject: 'Raciocínio Lógico-Matemático', tier: 2, cssClass: 'shop_shoes_warrior_1' },
+                        { id: 'bts_3', name: 'Grevas da Análise Combinatória', subject: 'Raciocínio Lógico-Matemático', tier: 3, cssClass: 'shop_shoes_warrior_2' },
+                        { id: 'bts_4', name: 'Sabatons da Probabilidade', subject: 'Raciocínio Lógico-Matemático', tier: 4, cssClass: 'shop_shoes_armoire_4' }
                     ]
                 }
             };
@@ -292,7 +277,6 @@
 
         function renderAvatar(data) {
             if (!data.gamification || !data.gamification.player) return;
-
             const { equipped } = data.gamification.player;
             const { items } = data.gamification.config;
 
@@ -303,15 +287,15 @@
                 const itemId = equipped[slotName];
                 const slotNameSpan = slotElement.querySelector('.slot-name');
                 slotElement.innerHTML = '';
-                if(slotNameSpan) slotElement.appendChild(slotNameSpan);
+                if (slotNameSpan) slotElement.appendChild(slotNameSpan);
 
                 if (itemId) {
                     const item = items.find(i => i.id === itemId);
                     if (item) {
-                        const itemImage = document.createElement('div');
-                        itemImage.innerHTML = item.image;
-                        itemImage.className = 'item-image';
-                        slotElement.insertBefore(itemImage, slotNameSpan);
+                        // PASSO 3 (cont.): Criando o div com as classes do Habitica
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = `shop_sprite ${item.cssClass}`;
+                        slotElement.insertBefore(itemDiv, slotNameSpan);
                         slotElement.title = item.name;
                     }
                 } else {
@@ -322,7 +306,6 @@
 
         function renderInventory(data) {
             if (!data.gamification || !data.gamification.config) return;
-
             const { items, slotMapping } = data.gamification.config;
             const inventoryContainer = document.getElementById('inventory-container');
             inventoryContainer.innerHTML = '';
@@ -354,8 +337,10 @@
                     const isUnlocked = isItemUnlocked(item, data);
                     
                     sectionHTML += `
-                        <div class="item-card card rounded-lg p-3 text-center ${isEquipped ? 'border-2 border-amber-400' : ''} ${!isUnlocked ? 'opacity-50' : ''}">
-                            <div class="h-24 w-full flex items-center justify-center">${item.image}</div>
+                        <div class="item-card card rounded-lg p-3 text-center ${isEquipped ? 'equipped' : ''} ${isUnlocked ? 'unlocked' : ''}">
+                            <div class="h-24 w-full flex items-center justify-center">
+                                <div class="shop_sprite ${item.cssClass}"></div>
+                            </div>
                             <p class="font-semibold mt-2 text-sm">${item.name}</p>
                             <p class="text-xs text-gray-500">Nível ${item.tier}</p>
                         </div>
@@ -429,6 +414,7 @@
             const devModal = document.getElementById('dev-modal');
             const devCloseBtn = document.getElementById('dev-close-btn');
             const devSimulateBtn = document.getElementById('dev-simulate-btn');
+            const devResetBtn = document.getElementById('dev-reset-btn');
 
             passwordForm.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -447,6 +433,11 @@
             devButton.addEventListener('click', openDevModal);
             devCloseBtn.addEventListener('click', () => devModal.classList.add('hidden'));
             
+            devResetBtn.addEventListener('click', () => {
+                renderPage(studyPlan); // Renderiza com os dados reais do Firebase
+                devModal.classList.add('hidden');
+            });
+
             devSimulateBtn.addEventListener('click', () => {
                 const simulatedPlan = JSON.parse(JSON.stringify(studyPlan));
                 const allSimulatedTasks = Object.values(simulatedPlan.tasks).flat();
