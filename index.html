@@ -20,7 +20,7 @@
         .calendar-day:hover { background-color: #f7f3ef; }
         .calendar-day.has-task::after { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background-color: #D5A021; position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); }
         .calendar-day.selected { background-color: #D5A021; color: white; font-weight: bold; }
-        .task-card { background-color: #FFFFFF; border-left: 4px solid #D6BFAA; transition: box-shadow 0.3s ease; }
+        .task-card { background-color: #FFFFFF; border-left: 4px solid #D6BFAA; transition: box-shadow 0.3s ease; position: relative; }
         .task-card.review-r1 { border-left-color: #6A9C89; }
         .task-card.review-r3 { border-left-color: #D5A021; }
         .task-card.review-r5 { border-left-color: #A25B5B; }
@@ -41,6 +41,32 @@
         }
         .hidden {
             display: none;
+        }
+        /* Estilos para o menu de ações no card da tarefa */
+        .task-card .actions-menu {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            display: none;
+            gap: 0.5rem;
+        }
+        .task-card:hover .actions-menu {
+            display: flex;
+        }
+        .action-btn {
+            background-color: #f0f0f0;
+            border-radius: 9999px;
+            padding: 0.35rem;
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+        }
+        .action-btn:hover {
+            background-color: #e0e0e0;
+        }
+        .action-btn svg {
+            width: 1rem;
+            height: 1rem;
+            color: #555;
         }
     </style>
 </head>
@@ -63,7 +89,7 @@
     
     <header class="mb-8">
         <div class="text-center">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Meu Painel de Estudos 3.0</h1>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Meu Painel de Estudos 2.0</h1>
             <p class="text-lg text-gray-600 mt-2">Missão: Aprovação Psicólogo(a) - Prefeitura de Uberlândia</p>
         </div>
         <div class="mt-6 flex flex-wrap justify-center gap-2">
@@ -1037,6 +1063,22 @@
             title = `${task.subject} - Aula ${task.lesson}`;
         }
 
+        let actionsMenu = '';
+        // Adiciona menu de ações apenas para tarefas principais (não revisões)
+        if (!task.type.startsWith('review')) {
+            actionsMenu = `
+                <div class="actions-menu">
+                    <button class="action-btn task-edit-btn" data-id="${task.id}" data-date="${task.date}" title="Editar Aula">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>
+                    </button>
+                    <button class="action-btn task-delete-btn" data-id="${task.id}" data-date="${task.date}" data-type="${task.type}" title="Excluir Aula">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                </div>
+            `;
+        }
+
+
         card.innerHTML = `
             <div class="flex items-start space-x-4">
                 <div class="flex-shrink-0 pt-1">
@@ -1049,6 +1091,7 @@
                     </label>
                 </div>
             </div>
+            ${actionsMenu}
         `;
         return card;
     }
@@ -1499,6 +1542,65 @@
                     saveState();
                     renderPlan(viewDate);
                 }
+            }
+        });
+
+        planContent.addEventListener('click', (e) => {
+            const editBtn = e.target.closest('.task-edit-btn');
+            const deleteBtn = e.target.closest('.task-delete-btn');
+
+            if (editBtn) {
+                const { id, date } = editBtn.dataset;
+                const taskList = studyPlan.tasks[date];
+                const task = taskList ? taskList.find(t => t.id === id) : undefined;
+
+                if (task) {
+                    document.getElementById('modal-title').textContent = 'Editar Aula';
+                    document.getElementById('task-id').value = task.id;
+                    document.getElementById('original-task-date').value = task.date;
+                    document.getElementById('task-date').value = task.date;
+                    document.getElementById('task-subject').value = task.subject;
+                    document.getElementById('task-lesson').value = task.lesson;
+                    document.getElementById('task-topic').value = task.topic;
+                    document.getElementById('task-type').value = task.type;
+                    addTaskModal.classList.remove('hidden');
+                }
+            }
+
+            if (deleteBtn) {
+                const { id, date, type } = deleteBtn.dataset;
+                
+                showConfirmation('Tem certeza que deseja excluir este item?', () => {
+                    let itemDeleted = false;
+                    if (type.startsWith('review')) {
+                        if (studyPlan.reviews[date]) {
+                            const initialLength = studyPlan.reviews[date].length;
+                            studyPlan.reviews[date] = studyPlan.reviews[date].filter(t => t.id !== id);
+                            if (studyPlan.reviews[date].length === 0) {
+                                delete studyPlan.reviews[date];
+                            }
+                            itemDeleted = studyPlan.reviews[date]?.length !== initialLength;
+                        }
+                    } else {
+                        if (studyPlan.tasks[date]) {
+                            const taskToDelete = studyPlan.tasks[date].find(t => t.id === id);
+                            if (taskToDelete) {
+                                unscheduleReviews(taskToDelete); // Remove associated reviews
+                                studyPlan.tasks[date] = studyPlan.tasks[date].filter(t => t.id !== id);
+                                if (studyPlan.tasks[date].length === 0) {
+                                    delete studyPlan.tasks[date];
+                                }
+                                itemDeleted = true;
+                            }
+                        }
+                    }
+                    
+                    if (itemDeleted) {
+                        saveState();
+                        renderPlan(viewDate);
+                        updateProgress();
+                    }
+                });
             }
         });
 
