@@ -1014,7 +1014,7 @@
             return card;
         }
 
-        function scheduleReviews(completedTask) {
+function scheduleReviews(completedTask) {
             const completionDate = new Date(completedTask.date + 'T00:00:00');
             const reviewDays = { 'review-r1': 1, 'review-r3': 7, 'review-r5': 30 };
 
@@ -1022,6 +1022,9 @@
                 const reviewDate = addDays(completionDate, daysToAdd);
                 const reviewDateStr = formatDateYMD(reviewDate);
 
+                if (!studyPlan.reviews) {
+                    studyPlan.reviews = {};
+                }
                 if (!studyPlan.reviews[reviewDateStr]) {
                     studyPlan.reviews[reviewDateStr] = [];
                 }
@@ -1052,12 +1055,8 @@
                 const reviewDateStr = formatDateYMD(reviewDate);
                 const reviewId = `${deselectedTask.id}-${reviewType}`;
 
-                // Verifica se existe uma lista de revisões para essa data
-                if (studyPlan.reviews[reviewDateStr]) {
-                    // Filtra a lista, removendo a revisão com o ID correspondente
+                if (studyPlan.reviews && studyPlan.reviews[reviewDateStr]) {
                     studyPlan.reviews[reviewDateStr] = studyPlan.reviews[reviewDateStr].filter(r => r.id !== reviewId);
-                    
-                    // Se a lista de revisões ficar vazia, remove a entrada para limpar o objeto
                     if (studyPlan.reviews[reviewDateStr].length === 0) {
                         delete studyPlan.reviews[reviewDateStr];
                     }
@@ -1070,9 +1069,9 @@
             if (!container) return;
             container.innerHTML = '';
 
-            // MODIFICAÇÃO: Pega apenas as aulas principais (ignora revisões)
-            const allStudyTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks) : []).flat().filter(task => task.type === 'study');
-            
+            const allStudyTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks).flat() : []).filter(task => task.type !== 'review' && task.type !== 'legis');
+            if (allStudyTasks.length === 0) return;
+
             const subjects = [...new Set(allStudyTasks.map(task => task.subject))];
 
             subjects.sort().forEach(subject => {
@@ -1098,19 +1097,31 @@
         };
 
         const updateProgress = () => {
-            // MODIFICAÇÃO: Calcula o progresso geral baseado apenas nas aulas principais
-            const allStudyTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks) : []).flat().filter(task => task.type === 'study');
-            const completedTasks = allStudyTasks.filter(task => task.completed).length;
-            const totalTasks = allStudyTasks.length;
-            const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            const allStudyTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks).flat() : []).filter(task => task.type !== 'review' && task.type !== 'legis');
+            const completedStudyTasks = allStudyTasks.filter(task => task.completed).length;
+            const totalStudyTasks = allStudyTasks.length;
+            const percentage = totalStudyTasks > 0 ? Math.round((completedStudyTasks / totalStudyTasks) * 100) : 0;
             
             progressText.textContent = `${percentage}%`;
             
             if (progressChart) {
                 const allTasksAndReviews = (studyPlan.tasks ? Object.values(studyPlan.tasks) : []).flat().concat((studyPlan.reviews ? Object.values(studyPlan.reviews) : []).flat());
                 const totalCompleted = allTasksAndReviews.filter(t => t.completed).length;
-                const totalPending = allTasksAndReviews.length - totalCompleted;
-                progressChart.data.datasets[0].data = [totalCompleted, totalPending];
+                const totalItems = allTasksAndReviews.length;
+                progressChart.data.datasets[0].data = [totalCompleted, totalItems - totalCompleted];
+                
+                // Atualiza a propriedade 'total' para o tooltip
+                progressChart.options.plugins.tooltip.callbacks.label = function(context) {
+                    let label = context.label || '';
+                    if (label) {
+                        label += ': ';
+                    }
+                    if (context.parsed !== null) {
+                        const percentage = totalItems > 0 ? Math.round((context.raw / totalItems) * 100) : 0;
+                        label += `${context.raw} (${percentage}%)`;
+                    }
+                    return label;
+                };
                 progressChart.update();
             }
 
@@ -1119,16 +1130,12 @@
 
         const setupChart = () => {
             const ctx = document.getElementById('progressChart').getContext('2d');
-            const allTasksAndReviews = (studyPlan.tasks ? Object.values(studyPlan.tasks) : []).flat().concat((studyPlan.reviews ? Object.values(studyPlan.reviews) : []).flat());
-            const completed = allTasksAndReviews.filter(task => task.completed).length;
-            const total = allTasksAndReviews.length;
-
             progressChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: ['Concluído', 'Pendente'],
                     datasets: [{
-                        data: [completed, total - completed],
+                        data: [0, 1], // Inicia com valores não nulos para evitar erros
                         backgroundColor: ['#D5A021', '#EAEAEA'],
                         borderColor: ['#FFFFFF'],
                         borderWidth: 4,
@@ -1142,19 +1149,9 @@
                     plugins: {
                         legend: { display: false },
                         tooltip: { 
-                            enabled: true, // HABILITA O TOOLTIP
+                            enabled: true,
                             callbacks: {
-                                label: function(context) {
-                                    let label = context.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    if (context.parsed !== null) {
-                                        const percentage = Math.round((context.parsed / total) * 100);
-                                        label += `${context.raw} (${percentage}%)`;
-                                    }
-                                    return label;
-                                }
+                                label: function(context) { return context.label; } // Será atualizado dinamicamente
                             }
                         }
                     }
@@ -1227,24 +1224,29 @@
         planContent.addEventListener('change', (e) => {
             if (e.target.matches('.task-checkbox')) {
                 const { id, date, type } = e.target.dataset;
-                let taskList = type.startsWith('review') ? studyPlan.reviews[date] : studyPlan.tasks[date];
-                const task = taskList.find(t => t.id === id);
+                let taskList;
+                if (type.startsWith('review')) {
+                    taskList = studyPlan.reviews[date];
+                } else {
+                    taskList = studyPlan.tasks[date];
+                }
+                
+                const task = taskList ? taskList.find(t => t.id === id) : undefined;
 
                 if (task) {
                     task.completed = e.target.checked;
-
-                    // LÓGICA ATUALIZADA: Cria ou remove revisões
-                    if (task.type === 'study') {
+                    
+                    if (task.type === 'study' || task.type === 'pdf' || task.type === 'video' || task.type === 'legis') {
                         if (task.completed) {
-                            scheduleReviews(task); // Se marcou, agenda as revisões
+                            scheduleReviews(task);
                         } else {
-                            unscheduleReviews(task); // Se desmarcou, remove as revisões
+                            unscheduleReviews(task);
                         }
                     }
 
                     updateProgress();
                     saveState();
-                    renderPlan(viewDate); // Re-renderiza para mostrar as mudanças no calendário
+                    renderPlan(viewDate);
                 }
             }
         });
@@ -1267,7 +1269,6 @@
 
         document.querySelectorAll('.close-modal').forEach(btn => {
             btn.addEventListener('click', () => {
-                
                 allTasksModal.classList.add('hidden');
             });
         });
@@ -1400,9 +1401,9 @@
 
         document.getElementById('reset-btn').addEventListener('click', () => {
             if (confirm('Tem certeza que deseja apagar todo o progresso? Esta ação não pode ser desfeita.')) {
-                localStorage.removeItem(STORAGE_KEY); // Mantido caso queira voltar atrás um dia
+                localStorage.removeItem(STORAGE_KEY);
                 studyPlan = initializeStudyPlan();
-                saveState(); // Salva o estado zerado no Firebase
+                saveState();
                 renderPlan(viewDate);
                 updateProgress();
                 alert('Progresso resetado.');
@@ -1411,10 +1412,9 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadState(); 
-            renderPlan(viewDate);
             setupChart();
+            renderPlan(viewDate);
             updateProgress();
-            renderSubjectProgress();
             startCountdown();
             document.getElementById('currentDate').textContent = formatDateDMY(new Date());
         });
