@@ -9,7 +9,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Favicons -->
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
@@ -18,41 +17,144 @@
     <link rel="manifest" href="/site.webmanifest">
     <meta name="theme-color" content="#0ea5e9">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #FDFBF8; }
+        :root {
+            --background-color: #FDFBF8;
+            --text-color: #1f2937;
+            --card-bg-color: #FFFFFF;
+            --border-color: #e5e7eb;
+            --header-text-color: #1f2937;
+            --muted-text-color: #6b7280;
+            --control-button-bg: #fff;
+            --control-button-border: #ddd;
+            --selected-day-bg: #D5A021;
+            --selected-day-text: white;
+            --tab-active-border: #D5A021;
+            --tab-active-text: #D5A021;
+        }
+
+        html.dark {
+            --background-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg-color: #1e1e1e;
+            --border-color: #444;
+            --header-text-color: #ffffff;
+            --muted-text-color: #a0a0a0;
+            --control-button-bg: #2a2a2a;
+            --control-button-border: #555;
+            --selected-day-bg: #D5A021;
+            --selected-day-text: #121212;
+            --tab-active-border: #D5A021;
+            --tab-active-text: #D5A021;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--background-color); 
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        #app-container, #allTasksModal .bg-white, #addTaskModal .bg-white, #confirmationModal .bg-white, .bg-white, .bg-gray-50, .bg-gray-100 {
+            background-color: var(--card-bg-color);
+            color: var(--text-color);
+            border-color: var(--border-color);
+        }
+
+        h1, h2, h3, #modal-title {
+             color: var(--header-text-color);
+        }
+        p, label, span, div, th, td {
+            color: var(--text-color);
+        }
+       
+        .text-gray-600, .text-gray-500, .text-gray-700 {
+            color: var(--muted-text-color);
+        }
+        .dark .text-gray-700 { color: var(--text-color); }
+        .dark .text-gray-600 { color: var(--muted-text-color); }
+
+        .control-button {
+            background-color: var(--control-button-bg);
+            border: 1px solid var(--control-button-border);
+            transition: all 0.2s ease;
+        }
+        .control-button:hover {
+            background-color: #f9f9f9;
+            border-color: #ccc;
+        }
+        .dark .control-button:hover {
+            background-color: #3a3a3a;
+            border-color: #777;
+        }
+        
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
         .calendar-day { transition: all 0.2s ease; position: relative; }
         .calendar-day:hover { background-color: #f7f3ef; }
+        .dark .calendar-day:hover { background-color: #2a2a2a; }
+
         .calendar-day.has-task::after { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background-color: #D5A021; position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); }
         .calendar-day.overdue-task::before { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background-color: #ef4444; position: absolute; top: 6px; left: 50%; transform: translateX(-50%); }
-        .calendar-day.selected { background-color: #D5A021; color: white; font-weight: bold; }
-        .task-card { background-color: #FFFFFF; border-left: 4px solid #D6BFAA; transition: box-shadow 0.3s ease; position: relative; }
+        
+        .calendar-day.selected { background-color: var(--selected-day-bg); color: var(--selected-day-text); font-weight: bold; }
+        
+        .task-card { background-color: var(--card-bg-color); border-left: 4px solid #D6BFAA; transition: box-shadow 0.3s ease; position: relative; }
         .task-card.review-r1 { border-left-color: #6A9C89; }
         .task-card.review-r3 { border-left-color: #D5A021; }
         .task-card.review-r5 { border-left-color: #A25B5B; }
         .task-card.overdue { border-left-color: #ef4444; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
         .task-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .dark .task-card:hover { box-shadow: 0 4px 12px rgba(255,255,255,0.08); }
         .task-card.legis { border-left-color: #38bdf8; }
+        
         .task-checkbox:checked + label { text-decoration: line-through; color: #9A9A9A; }
+        .dark .task-checkbox:checked + label { color: #777; }
+
         .chart-container { position: relative; width: 100%; max-width: 250px; margin-left: auto; margin-right: auto; height: 250px; }
+        
         .modal.hidden { display: none; }
         body.modal-open { overflow: hidden; }
-        .control-button { background-color: #fff; border: 1px solid #ddd; transition: all 0.2s ease; }
-        .control-button:hover { background-color: #f9f9f9; border-color: #ccc; }
+        
         .blurred { filter: blur(8px); transition: filter 0.3s ease-in-out; }
         .hidden { display: none; }
+        
         .task-card .actions-menu { position: absolute; top: 0.5rem; right: 0.5rem; display: none; gap: 0.5rem; }
         .task-card:hover .actions-menu { display: flex; }
+        
         .action-btn { background-color: #f0f0f0; border-radius: 9999px; padding: 0.35rem; transition: background-color 0.2s ease; cursor: pointer; }
+        .dark .action-btn { background-color: #3a3a3a; }
         .action-btn:hover { background-color: #e0e0e0; }
+        .dark .action-btn:hover { background-color: #4a4a4a; }
         .action-btn svg { width: 1rem; height: 1rem; color: #555; }
+        .dark .action-btn svg { color: #ccc; }
+
         .tab-button { padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; }
-        .tab-button.active { border-bottom-color: #D5A021; font-weight: 600; color: #D5A021; }
+        .tab-button.active { border-bottom-color: var(--tab-active-border); font-weight: 600; color: var(--tab-active-text); }
+        
+        input, select {
+            background-color: var(--control-button-bg);
+            border: 1px solid var(--control-button-border);
+            color: var(--text-color);
+        }
+        
+        .stat-card {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border: 2px solid transparent;
+        }
+        .stat-card.selected {
+            border-color: #D5A021;
+            transform: translateY(-4px);
+            box-shadow: 0 4px 10px rgba(213, 160, 33, 0.3);
+        }
+        .dark thead { background-color: #2a2a2a; }
+        .dark #all-tasks-table-body, .dark #trash-table-body, .dark #history-table-body { background-color: var(--card-bg-color); }
+        .dark .divide-y > :not([hidden]) ~ :not([hidden]) { border-color: var(--border-color); }
+
     </style>
 </head>
 <body class="text-gray-800">
 
-<!-- Mural de Senha -->
 <div id="password-wall" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 backdrop-blur-sm">
     <div class="w-full max-w-xs bg-white p-6 rounded-lg shadow-xl">
         <h2 class="text-xl font-bold text-center text-gray-800 mb-4">Acessar Painel</h2>
@@ -68,21 +170,27 @@
 
 <div id="app-container" class="container mx-auto p-4 md:p-8 max-w-7xl">
     <header class="mb-8">
-        <div class="text-center">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Meu Painel de Estudos 4.0</h1>
+        <div class="text-center relative">
+            <h1 class="text-3xl md:text-4xl font-bold">Meu Painel de Estudos 4.0</h1>
             <p class="text-lg text-gray-600 mt-2">Missão: Aprovação Psicólogo(a) - Prefeitura de Uberlândia</p>
+            
+            <button id="theme-toggle" class="absolute top-0 right-0 p-2 rounded-full control-button">
+                <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+            </button>
         </div>
         <div class="mt-6 flex flex-wrap justify-center items-center gap-2">
-            <!-- Botões de Ação Principais -->
             <button id="home-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                 Início
             </button>
             <button id="view-overdue-tasks-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-red-600 border-red-300">Visualizar Aulas Atrasadas</button>
-            <button id="add-task-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-green-600 border-green-300">Incluir Aula(s)</button>
+            <a href="./questoes.html" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2 text-green-600 border-green-300">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 17l4 4 4-4"/><path d="M12 3v18"/><path d="M20 13v-3a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/></svg>
+                Painel de Questões
+            </a>
             <button id="manage-tasks-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-blue-600 border-blue-300">Gerenciar Aulas</button>
             
-            <!-- Menu de Ajustes -->
             <div class="relative settings-dropdown">
                 <button id="settings-button" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
@@ -98,35 +206,31 @@
         </div>
     </header>
 
-    <!-- Cards de Informação -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-center items-center">
+        <div class="bg-white p-5 rounded-lg shadow-sm border flex flex-col justify-center items-center">
             <h3 class="font-semibold text-gray-500 mb-2">Contagem Regressiva</h3>
-            <div id="countdown" class="text-2xl font-bold text-[#4A4A4A]"></div>
+            <div id="countdown" class="text-2xl font-bold"></div>
         </div>
-        <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-center items-center">
+        <div class="bg-white p-5 rounded-lg shadow-sm border flex flex-col justify-center items-center">
             <h3 class="font-semibold text-gray-500 mb-2">Data da Prova</h3>
-            <p class="text-2xl font-bold text-[#4A4A4A]">26/10/2025</p>
+            <p class="text-2xl font-bold">26/10/2025</p>
         </div>
-        <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-center items-center">
+        <div class="bg-white p-5 rounded-lg shadow-sm border flex flex-col justify-center items-center">
             <h3 class="font-semibold text-gray-500 mb-2">Progresso Geral</h3>
-            <p id="progressText" class="text-2xl font-bold text-[#4A4A4A]">0%</p>
+            <p id="progressText" class="text-2xl font-bold">0%</p>
         </div>
-         <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-center items-center">
+         <div class="bg-white p-5 rounded-lg shadow-sm border flex flex-col justify-center items-center">
             <h3 class="font-semibold text-gray-500 mb-2">Hoje é</h3>
-            <p id="currentDate" class="text-xl font-bold text-[#4A4A4A] text-center"></p>
+            <p id="currentDate" class="text-xl font-bold text-center"></p>
         </div>
     </div>
 
-    <!-- Conteúdo Principal -->
-    <main class="bg-white p-4 sm:p-6 rounded-lg shadow-md border border-gray-200">
+    <main class="bg-white p-4 sm:p-6 rounded-lg shadow-md border">
         <div class="flex flex-col lg:flex-row gap-8">
-            <!-- Coluna Esquerda: Calendário e Tarefas -->
             <div class="w-full lg:w-2/3">
                 <div id="calendar-container"></div>
                 <div id="plan-content" class="space-y-4 mt-6"></div>
             </div>
-            <!-- Coluna Direita: Gráficos e Legendas -->
             <aside class="w-full lg:w-1/3 lg:border-l lg:pl-8 border-gray-200">
                 <div class="sticky top-8">
                     <h2 class="text-2xl font-bold mb-4 text-center">Progresso Geral</h2>
@@ -144,7 +248,6 @@
                         <h3 class="text-xl font-bold mb-4 text-center">Progresso por Matéria</h3>
                         <div id="subject-progress-bars" class="space-y-4"></div>
                     </div>
-                    <!-- Novo Card: Seções Livres -->
                     <div id="free-sections-container" class="mt-8"></div>
                 </div>
             </aside>
@@ -152,7 +255,6 @@
     </main>
 </div>
 
-<!-- Modal Adicionar/Editar Aula (z-index 60) -->
 <div id="addTaskModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
     <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg">
         <div class="flex justify-between items-center p-4 border-b">
@@ -163,26 +265,25 @@
             <input type="hidden" id="task-id">
             <input type="hidden" id="original-task-date">
             <div>
-                <label for="task-date" class="block text-sm font-medium text-gray-700">Data (DD/MM/AAAA)</label>
-                <input type="date" id="task-date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                <label for="task-date" class="block text-sm font-medium">Data (DD/MM/AAAA)</label>
+                <input type="date" id="task-date" required class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
             </div>
             <div>
-                <label for="task-subject" class="block text-sm font-medium text-gray-700">Matéria</label>
-                <select id="task-subject" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
-                    <!-- Options will be populated by JS -->
-                </select>
+                <label for="task-subject" class="block text-sm font-medium">Matéria</label>
+                <select id="task-subject" required class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
+                    </select>
             </div>
             <div>
-                <label for="task-lesson" class="block text-sm font-medium text-gray-700">Nº da Aula</label>
-                <input type="text" id="task-lesson" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                <label for="task-lesson" class="block text-sm font-medium">Nº da Aula</label>
+                <input type="text" id="task-lesson" required class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
             </div>
             <div>
-                <label for="task-topic" class="block text-sm font-medium text-gray-700">Tópico</label>
-                <input type="text" id="task-topic" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                <label for="task-topic" class="block text-sm font-medium">Tópico</label>
+                <input type="text" id="task-topic" required class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
             </div>
             <div>
-                <label for="task-type" class="block text-sm font-medium text-gray-700">Tipo</label>
-                <select id="task-type" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                <label for="task-type" class="block text-sm font-medium">Tipo</label>
+                <select id="task-type" class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
                     <option value="video">Videoaula</option>
                     <option value="pdf">PDF</option>
                     <option value="legis">Legislação</option>
@@ -195,34 +296,35 @@
     </div>
 </div>
 
-<!-- Modal Visualizar Todas as Aulas (z-index 50) -->
 <div id="allTasksModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col">
-        <!-- Header -->
         <div class="flex justify-between items-center p-4 border-b flex-shrink-0">
             <h3 class="text-xl font-bold">Gerenciar Aulas</h3>
             <button class="close-modal text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
         </div>
         
-        <!-- Abas -->
         <div class="flex border-b flex-shrink-0">
             <button id="tab-active" class="tab-button active">Aulas Ativas</button>
+            <button id="tab-history" class="tab-button">Histórico</button>
             <button id="tab-trash" class="tab-button">Lixeira</button>
         </div>
         
         <div class="flex-grow overflow-hidden flex flex-col">
-            <!-- Painel de Aulas Ativas -->
             <div id="tab-content-active" class="tab-pane flex flex-col h-full overflow-hidden">
-                <!-- Seção de filtros e ações -->
                 <div class="p-4 border-b flex-shrink-0">
                     <div id="all-tasks-stats" class="flex flex-wrap justify-center gap-4 mb-4 text-center"></div>
+                     <div class="flex flex-wrap gap-2 items-center mb-4">
+                        <button id="add-task-btn-modal" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-green-600 border-green-300">Incluir Aula(s)</button>
+                        <button id="import-csv-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Importar Aulas (CSV)</button>
+                        <button id="export-csv-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Exportar Aulas (CSV)</button>
+                    </div>
                     <div class="flex flex-wrap gap-2 items-center">
                         <input type="text" id="all-tasks-search" class="flex-grow p-2 border rounded-md" placeholder="Buscar por matéria ou tópico...">
                         <button id="shift-all-forward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiar Não-Concluídas (+1 dia)</button>
                         <button id="shift-all-backward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiantar Não-Concluídas (-1 dia)</button>
                     </div>
                     <div id="selected-actions-container" class="hidden mt-4 flex flex-wrap gap-2 items-center p-2 bg-amber-50 border border-amber-200 rounded-md">
-                        <span id="selection-count" class="text-sm font-semibold text-gray-700"></span>
+                        <span id="selection-count" class="text-sm font-semibold"></span>
                         <button id="shift-selected-forward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiar</button>
                         <button id="shift-selected-backward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiantar</button>
                         <button id="delete-selected-btn" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Excluir</button>
@@ -251,10 +353,9 @@
                                 <label for="filter-overdue" class="text-sm font-medium">Atrasadas</label>
                             </div>
                         </div>
-                        <div id="results-count-container" class="mt-2 text-sm font-semibold text-gray-600"></div>
+                        <div id="results-count-container" class="mt-2 text-sm font-semibold"></div>
                     </div>
                 </div>
-                <!-- CORREÇÃO: Removido padding (p-4) do container de scroll -->
                 <div class="overflow-y-auto flex-grow">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50 sticky top-0">
@@ -271,18 +372,33 @@
                     </table>
                 </div>
             </div>
+            
+            <div id="tab-content-history" class="tab-pane hidden flex flex-col h-full overflow-hidden">
+                 <div class="p-4 border-b flex-shrink-0">
+                    <p class="text-sm">Aqui estão todas as aulas que você já concluiu.</p>
+                </div>
+                <div class="overflow-y-auto flex-grow">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Conclusão</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tópico</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
 
-            <!-- Painel da Lixeira -->
             <div id="tab-content-trash" class="tab-pane hidden flex flex-col h-full overflow-hidden">
-                <!-- Seção de ações da lixeira -->
                 <div class="p-4 border-b flex-shrink-0">
-                    <p class="text-sm text-gray-600">Aulas excluídas são mantidas aqui. Você pode restaurá-las ou excluí-las permanentemente.</p>
+                    <p class="text-sm">Aulas excluídas são mantidas aqui. Você pode restaurá-las ou excluí-las permanentemente.</p>
                     <div id="trash-actions-container" class="hidden mt-2 flex flex-wrap gap-2 items-center">
                          <button id="restore-all-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-green-600 border-green-300">Restaurar Selecionadas</button>
                          <button id="delete-all-perm-btn" class="bg-red-700 hover:bg-red-800 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Excluir Selecionadas</button>
                     </div>
                 </div>
-                <!-- CORREÇÃO: Removido padding (p-4) do container de scroll -->
                 <div class="overflow-y-auto flex-grow">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50 sticky top-0">
@@ -303,7 +419,6 @@
 </div>
 
 
-<!-- Modal de Confirmação (z-index 70) -->
 <div id="confirmationModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[70]">
     <div class="bg-white rounded-lg shadow-2xl w-full max-w-sm p-6">
         <h3 class="text-lg font-semibold mb-4" id="confirmation-message">Tem certeza?</h3>
@@ -369,6 +484,47 @@
             setTimeout(() => { passwordError.textContent = ''; }, 2000);
         }
     });
+    
+    // =================== DARK MODE ===================
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+
+    if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+        themeToggleLightIcon.classList.remove('hidden');
+    } else {
+        themeToggleDarkIcon.classList.remove('hidden');
+    }
+
+    themeToggleBtn.addEventListener('click', function() {
+        themeToggleDarkIcon.classList.toggle('hidden');
+        themeToggleLightIcon.classList.toggle('hidden');
+        if (localStorage.getItem('color-theme')) {
+            if (localStorage.getItem('color-theme') === 'light') {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('color-theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('color-theme', 'light');
+            }
+        } else {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('color-theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('color-theme', 'dark');
+            }
+        }
+        // Re-render chart for dark mode
+        if (progressChart) {
+            progressChart.destroy();
+            setupChart();
+            updateProgress();
+        }
+    });
+
 
     // =================== FUNÇÕES AUXILIARES DE DATA ===================
     function formatDateYMD(date) {
@@ -446,7 +602,7 @@
     // =================== LÓGICA PRINCIPAL DA APLICAÇÃO ===================
    
     function initializeStudyPlan() {
-        let plan = { tasks: {}, reviews: {}, dailyGoals: {} };
+        let plan = { tasks: {}, reviews: {}, dailyGoals: {}, deletedTasks: {} };
         
         let allTasks = [
             // --- JUNHO 2025 ---
@@ -1133,8 +1289,8 @@
                 <div class="flex-shrink-0 pt-1"><input type="checkbox" id="${task.id}" data-id="${task.id}" data-date="${task.date}" data-type="${task.type}" class="task-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${task.completed ? 'checked' : ''}></div>
                 <div class="flex-1">
                     <label for="${task.id}" class="cursor-pointer">
-                        <p class="font-semibold text-gray-700">${title}</p>
-                        <p class="text-gray-600 text-sm">${task.topic}</p>
+                        <p class="font-semibold">${title}</p>
+                        <p class="text-sm">${task.topic}</p>
                         ${isOverdue ? `<p class="text-xs text-red-600 font-semibold">Atrasada desde: ${formatDateDMY(task.date)}</p>` : ''}
                     </label>
                 </div>
@@ -1185,7 +1341,7 @@
         const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-        let html = `<div class="flex justify-between items-center mb-4"><button id="prev-month" class="control-button p-2 rounded-full">&#x276E;</button><h2 class="text-xl font-bold">${monthNames[month]} ${year}</h2><button id="next-month" class="control-button p-2 rounded-full">&#x276F;</button></div><div class="grid grid-cols-7 gap-1 text-center font-semibold text-gray-600 mb-2">`;
+        let html = `<div class="flex justify-between items-center mb-4"><button id="prev-month" class="control-button p-2 rounded-full">&#x276E;</button><h2 class="text-xl font-bold">${monthNames[month]} ${year}</h2><button id="next-month" class="control-button p-2 rounded-full">&#x276F;</button></div><div class="grid grid-cols-7 gap-1 text-center font-semibold mb-2">`;
         dayNames.forEach(day => { html += `<div>${day}</div>`; });
         html += `</div><div class="calendar-grid gap-1">`;
         for (let i = 0; i < startDayOfWeek; i++) { html += `<div></div>`; }
@@ -1211,13 +1367,13 @@
         const reviewsForDay = studyPlan.reviews[dateStr] || [];
 
         if (tasksForDay.length === 0 && reviewsForDay.length === 0) {
-            planContent.innerHTML = `<div class="text-center p-4 bg-gray-50 rounded-lg"><p class="text-gray-500">Nenhuma tarefa agendada para hoje. Dia de descanso!</p></div>`;
+            planContent.innerHTML = `<div class="text-center p-4 bg-gray-50 rounded-lg"><p>Nenhuma tarefa agendada para hoje. Dia de descanso!</p></div>`;
             return;
         }
 
         const createSection = (title, tasks, colorClass) => {
             if (tasks.length > 0) {
-                let sectionHTML = `<h3 class="text-lg font-bold text-gray-800 mt-4 border-b-2 ${colorClass} pb-2">${title}</h3>`;
+                let sectionHTML = `<h3 class="text-lg font-bold mt-4 border-b-2 ${colorClass} pb-2">${title}</h3>`;
                 tasks.forEach(task => { sectionHTML += createTaskCard(task, !task.completed && task.date < todayStr).outerHTML; });
                 return sectionHTML;
             }
@@ -1229,8 +1385,8 @@
         
         let bloco3Content = createSection('', tasksForDay.filter(t => t.type === 'legis'), '');
         const dailyGoal = studyPlan.dailyGoals[dateStr] || { exercisesCompleted: false };
-        bloco3Content += `<div class="task-card p-4 rounded-lg shadow-sm border-l-4 border-gray-400"><div class="flex items-start space-x-4"><div class="flex-shrink-0 pt-1"><input type="checkbox" id="exercises-checkbox-${dateStr}" data-date="${dateStr}" class="daily-goal-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${dailyGoal.exercisesCompleted ? 'checked' : ''}></div><div class="flex-1"><label for="exercises-checkbox-${dateStr}" class="cursor-pointer"><p class="font-semibold text-gray-700">🎯 Meta de Exercícios do Dia</p><p class="text-gray-600 text-sm">Focar em 2 matérias conforme o plano de rotação semanal.</p></label></div></div></div>`;
-        planContent.innerHTML += `<h3 class="text-lg font-bold text-gray-800 mt-6 border-b-2 border-emerald-500 pb-2">🎯 Bloco 3: Estudo Ativo e Fixação</h3>` + bloco3Content;
+        bloco3Content += `<div class="task-card p-4 rounded-lg shadow-sm border-l-4 border-gray-400"><div class="flex items-start space-x-4"><div class="flex-shrink-0 pt-1"><input type="checkbox" id="exercises-checkbox-${dateStr}" data-date="${dateStr}" class="daily-goal-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${dailyGoal.exercisesCompleted ? 'checked' : ''}></div><div class="flex-1"><label for="exercises-checkbox-${dateStr}" class="cursor-pointer"><p class="font-semibold">🎯 Meta de Exercícios do Dia</p><p class="text-sm">Focar em 2 matérias conforme o plano de rotação semanal.</p></label></div></div></div>`;
+        planContent.innerHTML += `<h3 class="text-lg font-bold mt-6 border-b-2 border-emerald-500 pb-2">🎯 Bloco 3: Estudo Ativo e Fixação</h3>` + bloco3Content;
 
         if (reviewsForDay.length > 0) {
             planContent.innerHTML += createSection('🔁 Revisões Agendadas', reviewsForDay, 'border-red-400');
@@ -1267,7 +1423,7 @@
             const completedTasks = tasksForSubject.filter(task => task.completed).length;
             const totalTasks = tasksForSubject.length;
             const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-            return `<div><div class="flex justify-between mb-1"><span class="text-sm font-semibold text-gray-700">${subject}</span><span class="text-sm font-semibold text-gray-700">${completedTasks}/${totalTasks} (${percentage}%)</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-[#D5A021] h-2.5 rounded-full" style="width: ${percentage}%"></div></div></div>`;
+            return `<div><div class="flex justify-between mb-1"><span class="text-sm font-semibold">${subject}</span><span class="text-sm font-semibold">${completedTasks}/${totalTasks} (${percentage}%)</span></div><div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700"><div class="bg-[#D5A021] h-2.5 rounded-full" style="width: ${percentage}%"></div></div></div>`;
         }).join('');
     };
 
@@ -1283,7 +1439,7 @@
 
         let content = '';
         if (lastScheduledDate >= examEve) {
-            content = `<p class="text-2xl font-bold text-gray-700">0 dias</p><p class="text-sm text-gray-600">Seu cronograma está preenchido até a véspera da prova.</p>`;
+            content = `<p class="text-2xl font-bold">0 dias</p><p class="text-sm">Seu cronograma está preenchido até a véspera da prova.</p>`;
         } else {
             let freeDays = 0;
             let currentDate = new Date(lastScheduledDate);
@@ -1297,17 +1453,18 @@
             }
             const freeHours = freeDays * 3; // 3 blocos de estudo por dia
             const totalDays = Math.floor((examEve - lastScheduledDate) / (1000 * 60 * 60 * 24));
-            content = `<p class="text-2xl font-bold text-gray-700">${freeHours} horas</p><p class="text-sm text-gray-600">(${totalDays} dias corridos) para remanejar aulas.</p>`;
+            content = `<p class="text-2xl font-bold">${freeHours} horas</p><p class="text-sm">(${totalDays} dias corridos) para remanejar aulas.</p>`;
         }
         
-        container.innerHTML = `<div class="p-4 rounded-lg bg-gray-100 border border-gray-200 text-center"><h3 class="font-bold text-lg mb-2">"Gordura" no Cronograma</h3>${content}</div>`;
+        container.innerHTML = `<div class="p-4 rounded-lg bg-gray-100 border text-center"><h3 class="font-bold text-lg mb-2">"Gordura" no Cronograma</h3>${content}</div>`;
     }
 
     const setupChart = () => {
         const ctx = document.getElementById('progressChart').getContext('2d');
+        const isDarkMode = document.documentElement.classList.contains('dark');
         progressChart = new Chart(ctx, {
             type: 'doughnut',
-            data: { labels: ['Concluído', 'Pendente'], datasets: [{ data: [0, 1], backgroundColor: ['#D5A021', '#EAEAEA'], borderColor: ['#FFFFFF'], borderWidth: 4, hoverOffset: 4 }] },
+            data: { labels: ['Concluído', 'Pendente'], datasets: [{ data: [0, 1], backgroundColor: ['#D5A021', isDarkMode ? '#444' : '#EAEAEA'], borderColor: [isDarkMode ? '#1e1e1e' : '#FFFFFF'], borderWidth: 2, hoverOffset: 4 }] },
             options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: true } } }
         });
     };
@@ -1348,10 +1505,21 @@
         tableBody.innerHTML = allTasks.map(task => `<tr><td class="px-6 py-4"><input type="checkbox" class="task-select-checkbox h-4 w-4" data-id="${task.id}" data-date="${task.date}"></td><td class="px-6 py-4">${formatDateDMY(task.date)}</td><td class="px-6 py-4">${task.subject}</td><td class="px-6 py-4">${task.lesson}</td><td class="px-6 py-4">${task.topic}</td><td class="px-6 py-4 flex items-center gap-2"><button class="action-btn task-edit-btn-table" data-id="${task.id}" data-date="${task.date}" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button><button class="action-btn task-delete-btn-table" data-id="${task.id}" data-date="${task.date}" title="Excluir"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td></tr>`).join('');
     }
 
+    function renderHistoryTable() {
+        const tableBody = document.getElementById('history-table-body');
+        const completedTasks = Object.values(studyPlan.tasks || {}).flat().filter(task => task.completed);
+        if (completedTasks.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="3" class="text-center py-8">Nenhuma aula concluída ainda.</td></tr>';
+            return;
+        }
+        completedTasks.sort((a, b) => new Date(b.completionDate) - new Date(a.completionDate)); // Sort by most recent
+        tableBody.innerHTML = completedTasks.map(task => `<tr><td class="px-6 py-4">${new Date(task.completionDate).toLocaleDateString('pt-BR')}</td><td class="px-6 py-4">${task.subject}</td><td class="px-6 py-4">${task.topic}</td></tr>`).join('');
+    }
+
     function renderTrashTable() {
         const tableBody = document.getElementById('trash-table-body');
         const deletedTasks = Object.values(studyPlan.deletedTasks || {});
-        if (deletedTasks.length === 0) { tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">A lixeira está vazia.</td></tr>'; return; }
+        if (deletedTasks.length === 0) { tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-8">A lixeira está vazia.</td></tr>'; return; }
         tableBody.innerHTML = deletedTasks.sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt)).map(task => `<tr><td class="px-6 py-4"><input type="checkbox" class="trash-select-checkbox h-4 w-4" data-id="${task.id}"></td><td class="px-6 py-4">${formatDateDMY(task.date)}</td><td class="px-6 py-4">${task.subject}</td><td class="px-6 py-4">${task.topic}</td><td class="px-6 py-4 space-x-2"><button class="restore-btn text-green-600" data-id="${task.id}">Restaurar</button><button class="perm-delete-btn text-red-600" data-id="${task.id}">Excluir</button></td></tr>`).join('');
     }
 
@@ -1361,11 +1529,10 @@
         const totalTasks = allTasks.length;
         const subjectCounts = allTasks.reduce((acc, task) => { acc[task.subject] = (acc[task.subject] || 0) + 1; return acc; }, {});
         
-        // CORREÇÃO: Estilo diferenciado para o card de "Total de Aulas"
-        let statsHtml = `<div class="p-2 bg-[#D5A021] text-white rounded-lg shadow"><p class="font-bold text-lg">${totalTasks}</p><p class="text-sm">Total de Aulas</p></div>`;
+        let statsHtml = `<div class="p-2 bg-[#D5A021] text-white rounded-lg shadow stat-card" data-subject="all"><p class="font-bold text-lg">${totalTasks}</p><p class="text-sm">Total de Aulas</p></div>`;
         
         Object.entries(subjectCounts).sort().forEach(([subject, count]) => { 
-            statsHtml += `<div class="p-2 bg-gray-100 rounded-lg"><p class="font-bold text-lg">${count}</p><p class="text-sm text-gray-600">${subject}</p></div>`; 
+            statsHtml += `<div class="p-2 bg-gray-100 rounded-lg stat-card" data-subject="${subject}"><p class="font-bold text-lg">${count}</p><p class="text-sm">${subject}</p></div>`; 
         });
         statsContainer.innerHTML = statsHtml;
     }
@@ -1378,7 +1545,7 @@
         const overdueTasks = allTasksAndReviews.filter(task => !task.completed && task.date < todayStr);
         
         const backButton = document.createElement('button');
-        backButton.innerHTML = '&#x2B05;&#xFE0F; Voltar ao Calendário';
+        backButton.innerHTML = '&#x2B05;&#xFE0E; Voltar ao Calendário';
         backButton.className = 'control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm mb-4';
         backButton.onclick = () => {
             document.getElementById('calendar-container').style.display = 'block';
@@ -1397,7 +1564,7 @@
         const groupedByDate = overdueTasks.reduce((acc, task) => { (acc[task.date] = acc[task.date] || []).push(task); return acc; }, {});
         Object.keys(groupedByDate).sort().forEach(dateStr => {
             const dateTitle = document.createElement('h3');
-            dateTitle.className = "text-lg font-bold text-gray-800 mt-6 border-b-2 border-red-400 pb-2";
+            dateTitle.className = "text-lg font-bold mt-6 border-b-2 border-red-400 pb-2";
             dateTitle.textContent = `Atrasadas de: ${formatDateDMY(dateStr)}`;
             planContent.appendChild(dateTitle);
             groupedByDate[dateStr].forEach(task => planContent.appendChild(createTaskCard(task, true)));
@@ -1546,14 +1713,14 @@
              viewDate = new Date(); // Reset viewDate to today
              renderPlan(viewDate);
         });
-
-        document.getElementById('add-task-btn').addEventListener('click', () => {
-            document.getElementById('add-task-form').reset();
-            populateSubjectSelect(document.getElementById('task-subject'));
-            document.getElementById('modal-title').textContent = 'Incluir Nova Aula';
-            document.getElementById('task-id').value = '';
-            document.getElementById('original-task-date').value = '';
-            openModal(addTaskModal);
+        
+        document.getElementById('add-task-btn-modal').addEventListener('click', () => {
+             document.getElementById('add-task-form').reset();
+             populateSubjectSelect(document.getElementById('task-subject'));
+             document.getElementById('modal-title').textContent = 'Incluir Nova Aula';
+             document.getElementById('task-id').value = '';
+             document.getElementById('original-task-date').value = '';
+             openModal(addTaskModal);
         });
 
         document.getElementById('manage-tasks-btn').addEventListener('click', () => {
@@ -1638,6 +1805,11 @@
                 const task = taskList?.find(t => t.id === id);
                 if (task) {
                     task.completed = e.target.checked;
+                     if(task.completed) {
+                        task.completionDate = new Date().toISOString();
+                    } else {
+                        delete task.completionDate;
+                    }
                     if (!type.startsWith('review')) {
                         if (task.completed) scheduleReviews(task); else unscheduleReviews(task);
                     }
@@ -1708,6 +1880,22 @@
             document.getElementById(id).addEventListener('input', renderAllTasksTable);
         });
         
+         document.getElementById('all-tasks-stats').addEventListener('click', (e) => {
+            const card = e.target.closest('.stat-card');
+            if (card) {
+                const subject = card.dataset.subject;
+                document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+
+                if (subject === 'all') {
+                    document.getElementById('filter-subject').value = '';
+                } else {
+                    document.getElementById('filter-subject').value = subject;
+                }
+                renderAllTasksTable();
+            }
+        });
+
         document.getElementById('all-tasks-table-body').addEventListener('click', (e) => {
             const editBtn = e.target.closest('.task-edit-btn-table');
             const deleteBtn = e.target.closest('.task-delete-btn-table');
@@ -1768,19 +1956,21 @@
         document.getElementById('shift-all-backward-btn').addEventListener('click', () => showConfirmation('Adiantar todas as aulas não concluídas em 1 dia?', () => shiftAllTasks(-1)));
 
         // Lógica das Abas e Lixeira
-        document.getElementById('tab-active').addEventListener('click', () => {
-            document.getElementById('tab-active').classList.add('active');
-            document.getElementById('tab-trash').classList.remove('active');
-            document.getElementById('tab-content-active').classList.remove('hidden');
-            document.getElementById('tab-content-trash').classList.add('hidden');
+        const tabs = ['active', 'history', 'trash'];
+        tabs.forEach(tabId => {
+            document.getElementById(`tab-${tabId}`).addEventListener('click', () => {
+                tabs.forEach(id => {
+                    document.getElementById(`tab-${id}`).classList.remove('active');
+                    document.getElementById(`tab-content-${id}`).classList.add('hidden');
+                });
+                document.getElementById(`tab-${tabId}`).classList.add('active');
+                document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
+
+                if(tabId === 'history') renderHistoryTable();
+                if(tabId === 'trash') renderTrashTable();
+            });
         });
-        document.getElementById('tab-trash').addEventListener('click', () => {
-            document.getElementById('tab-trash').classList.add('active');
-            document.getElementById('tab-active').classList.remove('active');
-            document.getElementById('tab-content-trash').classList.remove('hidden');
-            document.getElementById('tab-content-active').classList.add('hidden');
-            renderTrashTable();
-        });
+
         document.getElementById('trash-table-body').addEventListener('click', (e) => {
             const { id } = e.target.dataset;
             if (e.target.classList.contains('restore-btn')) {
