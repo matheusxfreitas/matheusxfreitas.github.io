@@ -391,7 +391,6 @@
         try {
             const docRef = docId ? collection.doc(docId) : collection.doc();
             await docRef.set(data, { merge: true });
-            loadData();
         } catch (error) {
             console.error("Erro ao salvar dados: ", error);
         }
@@ -677,7 +676,7 @@
             }
         });
 
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const total = parseInt(document.getElementById('session-total').value);
             const correct = parseInt(document.getElementById('session-correct').value);
@@ -687,7 +686,8 @@
                 subjectValue = newSubjectInput.value.trim();
                 if (!subjectValue) { alert('Por favor, insira o nome da nova matéria.'); return; }
             }
-            saveData(sessionsCollection, { date: dateInput.value, subject: subjectValue, total: total, correct: correct });
+            await saveData(sessionsCollection, { date: dateInput.value, subject: subjectValue, total: total, correct: correct });
+            loadData();
             form.reset();
             dateInput.value = formatDateYMD(new Date());
             newSubjectInput.classList.add('hidden');
@@ -697,7 +697,7 @@
         document.getElementById('close-edit-modal').addEventListener('click', () => document.getElementById('editSessionModal').classList.add('hidden'));
         document.getElementById('close-edit-goal-modal').addEventListener('click', () => document.getElementById('editGoalModal').classList.add('hidden'));
 
-        document.getElementById('edit-session-form').addEventListener('submit', (e) => {
+        document.getElementById('edit-session-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const sessionId = document.getElementById('edit-session-id').value;
             const total = parseInt(document.getElementById('edit-session-total').value);
@@ -709,17 +709,19 @@
                 total: total,
                 correct: correct,
             };
-            saveData(sessionsCollection, sessionData, sessionId);
+            await saveData(sessionsCollection, sessionData, sessionId);
+            loadData();
             document.getElementById('editSessionModal').classList.add('hidden');
         });
 
-        document.getElementById('edit-goal-form').addEventListener('submit', (e) => {
+        document.getElementById('edit-goal-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const goalId = document.getElementById('edit-goal-id').value;
             const achieved = parseInt(document.getElementById('edit-goal-achieved').value);
             const target = parseInt(document.getElementById('edit-goal-target').value);
             const goalData = { date: goalId, goal: target, achieved: achieved, completed: achieved >= target };
-            saveData(dailyGoalsCollection, goalData, goalId);
+            await saveData(dailyGoalsCollection, goalData, goalId);
+            loadData();
             document.getElementById('editGoalModal').classList.add('hidden');
         });
 
