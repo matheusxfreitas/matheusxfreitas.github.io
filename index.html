@@ -208,7 +208,7 @@
             <div id="tab-content-active" class="tab-pane flex flex-col h-full overflow-hidden">
                 <!-- Seção de filtros e ações (altura fixa) -->
                 <div class="p-4 border-b flex-shrink-0">
-                    <div id="all-tasks-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-center"></div>
+                    <div id="all-tasks-stats" class="flex flex-wrap justify-center gap-4 mb-4 text-center"></div>
                     <div class="flex flex-wrap gap-2 items-center">
                         <input type="text" id="all-tasks-search" class="flex-grow p-2 border rounded-md" placeholder="Buscar por matéria ou tópico...">
                         <button id="shift-all-forward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Adiar Não-Concluídas (+1 dia)</button>
@@ -251,6 +251,7 @@
                 <div class="overflow-y-auto flex-grow p-4">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50 sticky top-0">
+                            <tr class="bg-gray-50"></tr>
                             <tr>
                                 <th class="px-6 py-3 text-left"><input type="checkbox" id="select-all-tasks-checkbox" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]"></th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
@@ -1371,8 +1372,9 @@
         backButton.innerHTML = '&#x2B05;&#xFE0F; Voltar ao Calendário';
         backButton.className = 'control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm mb-4';
         backButton.onclick = () => {
-            document.getElementById('calendar-container').style.display = 'block';
-            renderPlan(viewDate);
+        document.getElementById('calendar-container').style.display = 'block';
+        viewDate = new Date(); // Reset viewDate to today
+        renderPlan(viewDate);
         };
         planContent.appendChild(backButton);
         
