@@ -187,20 +187,102 @@
         // =================== DEFINIÇÕES DE FUNÇÕES ===================
         
         function startApp() {
-            db.collection("progresso").doc("meuPlano").onSnapshot((doc) => {
+            const docRef = db.collection("progresso").doc("meuPlano");
+
+            docRef.onSnapshot((doc) => {
                 if (doc.exists) {
-                    studyPlan = doc.data();
-                    if (!studyPlan.gamification || !studyPlan.gamification.config) {
-                        console.log("Aguardando a inicialização da gamificação pelo painel principal...");
-                        return;
+                    let data = doc.data();
+                    
+                    // *** CORREÇÃO PRINCIPAL AQUI ***
+                    // Verifica se a estrutura de gamificação existe. Se não, cria e salva.
+                    if (!data.gamification || !data.gamification.config) {
+                        console.log("Estrutura de gamificação não encontrada. Criando uma nova...");
+                        data.gamification = getInitialGamificationState();
+                        // Salva a nova estrutura no Firebase. O 'merge: true' evita sobrescrever outros dados.
+                        docRef.set({ gamification: data.gamification }, { merge: true })
+                            .catch(error => console.error("Erro ao salvar a gamificação inicial:", error));
                     }
+                    
+                    studyPlan = data;
                     renderPage(studyPlan);
+
                 } else {
-                    console.log("Documento do plano de estudos não encontrado!");
+                    console.log("Documento do plano de estudos não encontrado! Crie-o na página principal.");
                 }
             }, (error) => {
                 console.error("Erro ao ouvir o plano de estudos:", error);
             });
+        }
+        
+        // Função que retorna a estrutura inicial da gamificação
+        function getInitialGamificationState() {
+            // Esta função deve ser mantida sincronizada com a da página index.html
+            // Sprites SVG são definidos aqui para serem auto-contidos
+            const sprites = {
+                helm: [
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#795548"><path d="M8 1a2 2 0 00-2 2v1h4V3a2 2 0 00-2-2zM3 5a1 1 0 00-1 1v3h12V6a1 1 0 00-1-1H3z"/></svg>`,
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#7f8c8d"><path d="M8 0a3 3 0 00-3 3v1h2V3a1 1 0 012 0v1h2V3a3 3 0 00-3-3zM2 5a2 2 0 00-2 2v3h16V7a2 2 0 00-2-2H2z"/></svg>`,
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#bdc3c7"><path d="M8 0a3 3 0 00-3 3v1h2V3a1 1 0 012 0v1h2V3a3 3 0 00-3-3zM2 5a2 2 0 00-2 2v4h16V7a2 2 0 00-2-2H2zm12 5H2v1h12v-1z"/></svg>`,
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#f1c40f"><path d="M8 0l-2 4h4L8 0zM3 4a1 1 0 00-1 1v5h12V5a1 1 0 00-1-1H3zm-2 6l2 4h8l2-4H1z"/></svg>`
+                ],
+                weapon: [
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#95a5a6"><path d="M14 0l-4 4h-2l-2 2v2l-4 4 2 2 4-4v-2l2-2h2l4-4-2-2z"/></svg>`,
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#34495e"><path d="M16 0l-6 6-2-2-6 6 2 2 6-6 2 2 6-6-2-2zM0 12v4h4v-4H0z"/></svg>`,
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#c0392b"><path d="M4 0h8v6h4v4h-4v6H4v-6H0V6h4V0z"/></svg>`,
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#8e44ad"><path d="M8 0a2 2 0 100 4 2 2 0 000-4zM6 4h4v12H6V4z"/></svg>`
+                ],
+                armor: [
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#a0522d"><path d="M4 0h8v2H4zM2 3h12v10H2zm2 11h8v2H4z"/></svg>`,
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#95a5a6"><path d="M3 0h10l2 4v8l-2 4H3l-2-4V4L3 0zm1 4h8v8H4V4z"/></svg>`,
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#7f8c8d"><path d="M2 0h12l2 3v10l-2 3H2L0 13V3L2 0zm2 3h8v10H4V3z"/></svg>`,
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#3498db"><path d="M2 0h12l2 3v10l-2 3H2L0 13V3L2 0zm1 3h10v10H3V3zm1 1v8h8V4H4z"/></svg>`
+                ],
+                shield: [
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#cd853f"><circle cx="8" cy="8" r="7"/></svg>`,
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#7f8c8d"><path d="M8 0a8 8 0 00-8 8 8 8 0 008 8 8 8 0 008-8A8 8 0 008 0zm0 2a6 6 0 016 6 6 6 0 01-6 6 6 6 0 01-6-6 6 6 0 016-6z"/></svg>`,
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#bdc3c7"><path d="M2 0h12l2 2v12l-2 2H2l-2-2V2L2 0z"/></svg>`,
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#2980b9"><path d="M8 0L0 4v8l8 4 8-4V4L8 0zm0 2.23L13.3 5v6l-5.3 2.67L2.7 11V5L8 2.23z"/></svg>`
+                ],
+                boots: [
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#8b4513"><path d="M2 8h5v8H2zm7 0h5v8H9z"/></svg>`,
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#7f8c8d"><path d="M2 6h5v10H0V9l2-3zm7 0h5l2 3v7h-7V6z"/></svg>`,
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#bdc3c7"><path d="M2 4h5v12H0V7l2-3zm7 0h5l2 3v9h-7V4zM3 5v10h3V5H3zm7 0v10h3V5h-3z"/></svg>`,
+                    `<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#e67e22"><path d="M2 2h5v14H0V5l2-3zm7 0h5l2 3v11h-7V2zM3 3v12h3V3H3zm7 0v12h3V3h-3z"/></svg>`
+                ]
+            };
+            return {
+                player: { equipped: { helmet: null, armor: null, pants: null, boots: null, weapon: null, shield: null } },
+                config: {
+                    slotMapping: {
+                        'Língua Portuguesa': 'helmet',
+                        'Conhecimentos Específicos': 'weapon',
+                        'Administração Pública': 'shield',
+                        'Raciocínio Lógico-Matemático': 'boots'
+                    },
+                    items: [
+                        { id: 'helm_1', name: 'Viseira do Alfabeto', subject: 'Língua Portuguesa', tier: 1, image: sprites.helm[0] },
+                        { id: 'helm_2', name: 'Elmo da Gramática', subject: 'Língua Portuguesa', tier: 2, image: sprites.helm[1] },
+                        { id: 'helm_3', name: 'Elmo da Sintaxe Apurada', subject: 'Língua Portuguesa', tier: 3, image: sprites.helm[2] },
+                        { id: 'helm_4', name: 'Coroa da Oratória', subject: 'Língua Portuguesa', tier: 4, image: sprites.helm[3] },
+                        { id: 'wpn_1', name: 'Adaga do Behaviorismo', subject: 'Conhecimentos Específicos', tier: 1, image: sprites.weapon[0] },
+                        { id: 'wpn_2', name: 'Espada da Psicanálise', subject: 'Conhecimentos Específicos', tier: 2, image: sprites.weapon[1] },
+                        { id: 'wpn_3', name: 'Martelo da TCC', subject: 'Conhecimentos Específicos', tier: 3, image: sprites.weapon[2] },
+                        { id: 'wpn_4', name: 'Cajado Sistêmico', subject: 'Conhecimentos Específicos', tier: 4, image: sprites.weapon[3] },
+                        { id: 'arm_1', name: 'Gibão do Psicodiagnóstico', subject: 'Conhecimentos Específicos', tier: 1, image: sprites.armor[0] },
+                        { id: 'arm_2', name: 'Peitoral do Atendimento Clínico', subject: 'Conhecimentos Específicos', tier: 2, image: sprites.armor[1] },
+                        { id: 'arm_3', name: 'Cota de Malha das Políticas Públicas', subject: 'Conhecimentos Específicos', tier: 3, image: sprites.armor[2] },
+                        { id: 'arm_4', name: 'Armadura de Placas do SUAS', subject: 'Conhecimentos Específicos', tier: 4, image: sprites.armor[3] },
+                        { id: 'shd_1', name: 'Broquel da Lei Orgânica', subject: 'Administração Pública', tier: 1, image: sprites.shield[0] },
+                        { id: 'shd_2', name: 'Escudo do Servidor Público', subject: 'Administração Pública', tier: 2, image: sprites.shield[1] },
+                        { id: 'shd_3', name: 'Escudo de Torre da Constituição', subject: 'Administração Pública', tier: 3, image: sprites.shield[2] },
+                        { id: 'shd_4', name: 'Baluarte da Probidade', subject: 'Administração Pública', tier: 4, image: sprites.shield[3] },
+                        { id: 'bts_1', name: 'Sandálias da Aritmética', subject: 'Raciocínio Lógico-Matemático', tier: 1, image: sprites.boots[0] },
+                        { id: 'bts_2', name: 'Botas da Lógica Proposicional', subject: 'Raciocínio Lógico-Matemático', tier: 2, image: sprites.boots[1] },
+                        { id: 'bts_3', name: 'Grevas da Análise Combinatória', subject: 'Raciocínio Lógico-Matemático', tier: 3, image: sprites.boots[2] },
+                        { id: 'bts_4', name: 'Sabatons da Probabilidade', subject: 'Raciocínio Lógico-Matemático', tier: 4, image: sprites.boots[3] }
+                    ]
+                }
+            };
         }
 
         function renderPage(data) {
@@ -338,7 +420,6 @@
 
         // =================== EXECUÇÃO PRINCIPAL E EVENT LISTENERS ===================
         document.addEventListener('DOMContentLoaded', () => {
-            // Elementos da página
             const passwordWall = document.getElementById('password-wall');
             const appContainer = document.getElementById('app-container');
             const passwordForm = document.getElementById('password-form');
@@ -349,7 +430,6 @@
             const devCloseBtn = document.getElementById('dev-close-btn');
             const devSimulateBtn = document.getElementById('dev-simulate-btn');
 
-            // Listener do formulário de senha
             passwordForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 if (passwordInput.value === 'passei2025') {
@@ -364,7 +444,6 @@
                 }
             });
 
-            // Listeners do modo de desenvolvedor
             devButton.addEventListener('click', openDevModal);
             devCloseBtn.addEventListener('click', () => devModal.classList.add('hidden'));
             
@@ -422,7 +501,6 @@
                 devModal.classList.add('hidden');
             });
 
-            // Verificação inicial de autenticação
             if (sessionStorage.getItem('isAuthenticated') === 'true') {
                 passwordWall.classList.add('hidden');
                 appContainer.classList.remove('blurred');
