@@ -40,7 +40,6 @@
         .action-btn svg { width: 1rem; height: 1rem; color: #555; }
         .tab-button { padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; }
         .tab-button.active { border-bottom-color: #D5A021; font-weight: 600; color: #D5A021; }
-        .settings-dropdown:hover .dropdown-menu { display: block; }
     </style>
 </head>
 <body class="text-gray-800">
@@ -82,6 +81,7 @@
                     Ajustes
                 </button>
                 <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
+                    <div id="settings-menu" class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border"></div>
                     <a href="#" id="export-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Exportar Backup</a>
                     <a href="#" id="import-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Importar Backup</a>
                     <a href="#" id="reset-btn" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Resetar Progresso</a>
@@ -204,6 +204,7 @@
         
         <!-- Conteúdo das Abas -->
         <div id="tab-content-active" class="tab-pane">
+            <div id="tab-content-active" class="tab-pane flex-grow flex flex-col overflow-hidden"></div>
             <div class="p-4 border-b">
                 <div id="all-tasks-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-center"></div>
                 <div class="flex flex-wrap gap-2 items-center">
@@ -266,6 +267,7 @@
         </div>
 
         <div id="tab-content-trash" class="tab-pane hidden">
+            <div id="tab-content-trash" class="tab-pane hidden flex-grow flex flex-col overflow-hidden"></div>
             <div class="p-4 border-b">
                 <p class="text-sm text-gray-600">Aulas excluídas são mantidas aqui. Você pode restaurá-las ou excluí-las permanentemente.</p>
                 <div id="trash-actions-container" class="hidden mt-2 flex flex-wrap gap-2 items-center">
@@ -1486,6 +1488,26 @@
 
     // =================== EVENT LISTENERS (PONTO DE IGNIÇÃO) ===================
     document.addEventListener('DOMContentLoaded', async () => {
+        
+    // --- CÓDIGO NOVO PARA O MENU DE AJUSTES ---
+    const settingsButton = document.querySelector('.settings-dropdown button');
+    const settingsMenu = document.getElementById('settings-menu');
+
+    settingsButton.addEventListener('click', (event) => {
+        // Impede que o clique no botão seja detectado pelo listener da janela
+        event.stopPropagation(); 
+        // Alterna a visibilidade do menu
+        settingsMenu.classList.toggle('hidden');
+    });
+
+    // Fecha o menu se clicar em qualquer outro lugar da página
+    window.addEventListener('click', () => {
+        if (!settingsMenu.classList.contains('hidden')) {
+            settingsMenu.classList.add('hidden');
+        }
+    });
+    // --- FIM DO CÓDIGO NOVO ---
+
         await loadState(); 
         setupChart();
         renderPlan(viewDate);
