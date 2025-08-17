@@ -443,25 +443,7 @@
     });
     
     // =================== FUNÇÕES AUXILIARES DE DATA E HEADER ===================
-    function updateDynamicHeader() {
-        const greetingEl = document.getElementById('dynamic-greeting');
-        const now = new Date();
-        const hour = now.getHours();
-        let greeting;
 
-        if (hour >= 5 && hour < 12) {
-            greeting = "Bom dia!";
-        } else if (hour >= 12 && hour < 18) {
-            greeting = "Boa tarde!";
-        } else {
-            greeting = "Boa noite!";
-        }
-
-        const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        const formattedDate = now.toLocaleDateString('pt-BR', dateOptions);
-
-        greetingEl.textContent = `${greeting} Hoje é ${formattedDate}.`;
-    }
 
     function formatDateYMD(date) {
         const d = new Date(date);
