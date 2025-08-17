@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Painel de Questões 1.8</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #FDFBF8; 
+            color: #4A4A4A;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .stat-card { 
+            background-color: #ffffff; 
+            border-radius: 0.75rem; 
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07);
+            border: 1px solid #e5e7eb;
+            padding: 1.5rem; 
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .filter-btn { transition: all 0.2s ease-in-out; }
+        .filter-btn.active { background-color: #D5A021; color: white; font-weight: 600; border-color: #D5A021; }
+        .chart-container { position: relative; width: 100%; height: 300px; margin-top: 2rem; }
+        .hidden { display: none; }
+        h1, h2, h3 { color: #374151; transition: color 0.3s; }
+        
+        /* Animação de Confete */
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 100;
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0;
+            animation: confetti-fall 3s ease-out forwards;
+        }
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Dark Mode Styles */
+        .dark body { 
+            background-color: #111827; 
+            color: #9ca3af;
+        }
+        .dark h1, .dark h2, .dark h3 { color: #f9fafb; }
+        .dark .stat-card,
+        .dark .bg-white {
+            background-color: #1f2937;
+            border-color: #374151;
+        }
+        .dark .text-gray-700 { color: #d1d5db; }
+        .dark .text-gray-600 { color: #9ca3af; }
+        .dark .text-gray-500 { color: #6b7280; }
+        .dark .filter-btn {
+            background-color: #374151;
+            border-color: #4b5563;
+            color: #d1d5db;
+        }
+        .dark .filter-btn.active {
+            background-color: #D5A021;
+            color: white;
+            border-color: #D5A021;
+        }
+        .dark input, .dark select {
+            background-color: #374151;
+            border-color: #4b5563;
+            color: #f9fafb;
+        }
+        .dark table thead { background-color: #374151; }
+        .dark table tbody { background-color: #1f2937; }
+        .dark table, .dark table tbody, .dark table thead { border-color: #374151; }
+        .dark #streak-container {
+            background-color: #4a3a19;
+            border-color: #D5A021;
+            color: #fefce8;
+        }
+        .dark .bg-green-50 { background-color: rgba(16, 185, 129, 0.1); }
+        .dark .bg-green-100 { background-color: rgba(5, 150, 105, 0.2); }
+        .dark #daily-goal-input { background-color: #374151; }
+        .dark .p-2.rounded-full.bg-gray-100 { background-color: #374151; }
+        .dark .p-2.rounded-full.bg-gray-100:hover { background-color: #4b5563; }
+        .dark #close-edit-modal, .dark #close-edit-goal-modal { color: #9ca3af; }
+        .dark #close-edit-modal:hover, .dark #close-edit-goal-modal:hover { color: #f9fafb; }
+    </style>
+</head>
+<body class="text-gray-700">
+
+<div id="confetti-container"></div>
+
+<div class="container mx-auto p-4 md:p-8 max-w-7xl">
+    <header class="mb-8 text-center relative">
+        <a href="./index.html" title="Voltar ao Painel de Estudos" class="absolute left-0 top-2 flex items-center gap-2 text-gray-500 hover:text-[#D5A021] transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        </a>
+        <h1 class="text-3xl md:text-4xl font-bold">Meu Painel de Questões</h1>
+        <p class="text-lg text-gray-600 mt-2">Análise de Desempenho para Concursos</p>
+        <div class="absolute right-0 top-2">
+            <button id="theme-toggle" class="p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none">
+                <svg id="theme-toggle-sun" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                <svg id="theme-toggle-moon" class="hidden h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Filtros de Período -->
+    <div class="mb-8 flex justify-center gap-2">
+        <button id="filter-today" class="filter-btn active px-4 py-2 rounded-lg bg-white border border-gray-300">Hoje</button>
+        <button id="filter-7days" class="filter-btn px-4 py-2 rounded-lg bg-white border border-gray-300">Últimos 7 dias</button>
+        <button id="filter-all" class="filter-btn px-4 py-2 rounded-lg bg-white border border-gray-300">Período Total</button>
+    </div>
+
+    <!-- Cards de Estatísticas Principais -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="stat-card flex flex-col justify-center items-center">
+            <h3 class="font-semibold text-gray-500 mb-2">Total de Questões</h3>
+            <p id="total-questions" class="text-4xl font-bold text-gray-700">0</p>
+        </div>
+        <div class="stat-card flex flex-col justify-center items-center">
+            <h3 class="font-semibold text-gray-500 mb-2">Acerto Geral</h3>
+            <p id="overall-accuracy" class="text-4xl font-bold text-gray-700">0%</p>
+        </div>
+        <div id="daily-goal-card" class="stat-card flex flex-col justify-center items-center transition-colors duration-500">
+            <h3 class="font-semibold text-gray-500 mb-2">Meta Diária</h3>
+            <div class="flex items-center gap-2">
+                 <span id="daily-goal-progress" class="text-lg font-semibold text-gray-600">0 /</span>
+                 <input type="number" id="daily-goal-input" value="50" class="w-16 text-center text-2xl font-bold bg-gray-100 rounded-md">
+            </div>
+            <p id="daily-goal-status" class="text-sm font-semibold mt-2 h-5">&nbsp;</p>
+        </div>
+        <div class="stat-card flex flex-col justify-center items-center">
+            <h3 class="font-semibold text-gray-500 mb-2">Melhor Matéria</h3>
+            <p id="best-subject" class="text-2xl font-bold text-gray-700 text-center">-</p>
+            <p id="best-subject-accuracy" class="text-sm text-gray-500"></p>
+        </div>
+    </div>
+
+    <!-- Sequência de Metas em Destaque -->
+    <div id="streak-container" class="hidden mb-8 p-4 bg-amber-100 border-l-4 border-amber-500 rounded-r-lg">
+        <p id="goal-streak" class="text-lg font-semibold text-amber-800 text-center"></p>
+    </div>
+
+    <!-- Seção Principal: Formulário e Gráficos -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Coluna Esquerda: Formulário de Registro -->
+        <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-md border border-gray-200">
+            <h2 id="form-title" class="text-xl font-bold mb-4">Registrar Sessão de Questões</h2>
+            <form id="add-session-form" class="space-y-4">
+                <div>
+                    <label for="session-date" class="block text-sm font-medium">Data</label>
+                    <input type="date" id="session-date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                </div>
+                <div>
+                    <label for="session-subject" class="block text-sm font-medium">Matéria</label>
+                    <select id="session-subject" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white">
+                        <option value="Conhecimentos Específicos">Conhecimentos Específicos</option>
+                        <option value="Administração Pública">Administração Pública</option>
+                        <option value="Língua Portuguesa">Língua Portuguesa</option>
+                        <option value="Raciocínio Lógico-Matemático">Raciocínio Lógico-Matemático</option>
+                        <option value="Legislação Municipal">Legislação Municipal</option>
+                        <option value="add_new">Adicionar nova...</option>
+                    </select>
+                    <input type="text" id="new-subject-input" class="hidden mt-2 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3" placeholder="Nome da nova matéria">
+                </div>
+                <div>
+                    <label for="session-total" class="block text-sm font-medium">Questões Respondidas</label>
+                    <input type="number" id="session-total" min="1" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                </div>
+                <div>
+                    <label for="session-correct" class="block text-sm font-medium">Questões Corretas</label>
+                    <input type="number" id="session-correct" min="0" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                </div>
+                <div class="flex justify-end pt-2">
+                    <button type="submit" class="bg-[#D5A021] hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-lg">Salvar Registro</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Coluna Direita: Gráficos -->
+        <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md border border-gray-200">
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div>
+                    <h2 class="text-xl font-bold mb-4 text-center">Desempenho Geral</h2>
+                    <div class="chart-container mx-auto" style="max-width: 250px; height: 250px;">
+                        <canvas id="overallChart"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold mb-4 text-center">Desempenho por Matéria</h2>
+                    <div class="chart-container">
+                        <canvas id="bySubjectChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico de Sessões -->
+    <div class="mt-8 bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <div class="flex justify-between items-center mb-4 flex-wrap gap-4">
+            <h2 class="text-xl font-bold">Histórico de Sessões</h2>
+            <div class="flex items-center gap-2">
+                <label for="history-limit" class="text-sm font-medium">Mostrar:</label>
+                <select id="history-limit" class="border border-gray-300 rounded-md shadow-sm py-1 px-2 bg-white text-sm">
+                    <option value="7">07 itens</option>
+                    <option value="15">15 itens</option>
+                    <option value="30">30 itens</option>
+                    <option value="all">Ver Todos</option>
+                </select>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acertos / Total</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aproveitamento</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="history-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Histórico de Metas -->
+    <div class="mt-8 bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <div class="flex justify-between items-center mb-4 flex-wrap gap-4">
+            <h2 class="text-xl font-bold">Histórico de Metas Diárias</h2>
+            <div class="flex items-center gap-2">
+                <label for="goal-history-limit" class="text-sm font-medium">Mostrar:</label>
+                <select id="goal-history-limit" class="border border-gray-300 rounded-md shadow-sm py-1 px-2 bg-white text-sm">
+                    <option value="7">07 itens</option>
+                    <option value="15">15 itens</option>
+                    <option value="30">30 itens</option>
+                    <option value="all">Ver Todos</option>
+                </select>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progresso / Meta</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="goal-history-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Edição de Sessão -->
+<div id="editSessionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-lg">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h3 class="text-xl font-bold">Editar Sessão</h3>
+            <button id="close-edit-modal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+        </div>
+        <form id="edit-session-form" class="p-6 space-y-4">
+            <input type="hidden" id="edit-session-id">
+            <div>
+                <label for="edit-session-date" class="block text-sm font-medium">Data</label>
+                <input type="date" id="edit-session-date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+            </div>
+            <div>
+                <label for="edit-session-subject" class="block text-sm font-medium">Matéria</label>
+                <select id="edit-session-subject" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white"></select>
+            </div>
+            <div>
+                <label for="edit-session-total" class="block text-sm font-medium">Questões Respondidas</label>
+                <input type="number" id="edit-session-total" min="1" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+            </div>
+            <div>
+                <label for="edit-session-correct" class="block text-sm font-medium">Questões Corretas</label>
+                <input type="number" id="edit-session-correct" min="0" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+            </div>
+            <div class="flex justify-end pt-2">
+                <button type="submit" class="bg-[#D5A021] hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-lg">Atualizar Registro</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de Edição de Meta -->
+<div id="editGoalModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-sm">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h3 class="text-xl font-bold">Editar Meta</h3>
+            <button id="close-edit-goal-modal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+        </div>
+        <form id="edit-goal-form" class="p-6 space-y-4">
+            <input type="hidden" id="edit-goal-id">
+            <div>
+                <label class="block text-sm font-medium">Data: <span id="edit-goal-date-display"></span></label>
+            </div>
+            <div>
+                <label for="edit-goal-achieved" class="block text-sm font-medium">Progresso Realizado</label>
+                <input type="number" id="edit-goal-achieved" min="0" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+            </div>
+            <div>
+                <label for="edit-goal-target" class="block text-sm font-medium">Meta do Dia</label>
+                <input type="number" id="edit-goal-target" min="1" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+            </div>
+            <div class="flex justify-end pt-2">
+                <button type="submit" class="bg-[#D5A021] hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-lg">Salvar Meta</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- Modal de Confirmação -->
+<div id="confirmationModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
+        <h3 class="text-lg font-semibold mb-4" id="confirmation-message">Tem certeza?</h3>
+        <div class="flex justify-end space-x-4">
+            <button id="confirm-cancel-btn" class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300">Cancelar</button>
+            <button id="confirm-ok-btn" class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+    // =================== CONFIGURAÇÃO FIREBASE ===================
+    const firebaseConfig = {
+        apiKey: "AIzaSyAVd3uPqsJdyi1a3VYZbncrLZeq7zF-vNE",
+        authDomain: "meu-painel-de-estudos-5d0ee.firebaseapp.com",
+        projectId: "meu-painel-de-estudos-5d0ee",
+        storageBucket: "meu-painel-de-estudos-5d0ee.appspot.com",
+        messagingSenderId: "700808378235",
+        appId: "1:700808378235:web:64bc3701361324c2c36fde"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const sessionsCollection = db.collection("questoes");
+    const dailyGoalsCollection = db.collection("metasQuestoes");
+
+    // =================== VARIÁVEIS GLOBAIS E GRÁFICOS ===================
+    let allSessions = [];
+    let allGoals = [];
+    let activeFilter = 'today';
+    let historyLimit = 7;
+    let goalHistoryLimit = 7;
+    let overallChart, bySubjectChart;
+
+    // =================== FUNÇÕES DE DATA ===================
+    function formatDateYMD(date) { return date.toISOString().split('T')[0]; }
+
+    // =================== LÓGICA DE DADOS (CRUD) ===================
+    async function loadData() {
+        try {
+            const [sessionsSnapshot, goalsSnapshot] = await Promise.all([
+                sessionsCollection.orderBy("date", "desc").get(),
+                dailyGoalsCollection.orderBy("date", "desc").get()
+            ]);
+            allSessions = sessionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            allGoals = goalsSnapshot.docs.map(doc => ({ id: doc.id, date: doc.id, ...doc.data() }));
+            updateDashboard();
+        } catch (error) {
+            console.error("Erro ao carregar dados: ", error);
+        }
+    }
+
+    async function saveData(collection, data, docId = null) {
+        try {
+            const docRef = docId ? collection.doc(docId) : collection.doc();
+            await docRef.set(data, { merge: true });
+            loadData();
+        } catch (error) {
+            console.error("Erro ao salvar dados: ", error);
+        }
+    }
+    
+    function deleteData(collection, docId, confirmationMessage) {
+        showConfirmation(confirmationMessage, async () => {
+            try {
+                await collection.doc(docId).delete();
+                loadData();
+            } catch (error) {
+                console.error("Erro ao excluir documento: ", error);
+            }
+        });
+    }
+
+    // =================== LÓGICA DE ATUALIZAÇÃO DA DASHBOARD ===================
+    function getFilteredSessions() {
+        const today = new Date();
+        const todayStr = formatDateYMD(today);
+
+        switch (activeFilter) {
+            case 'today': return allSessions.filter(s => s.date === todayStr);
+            case '7days':
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(today.getDate() - 7);
+                return allSessions.filter(s => s.date >= formatDateYMD(sevenDaysAgo) && s.date <= todayStr);
+            default: return allSessions;
+        }
+    }
+
+    async function updateDashboard() {
+        const sessions = getFilteredSessions();
+        
+        const totalQuestions = sessions.reduce((sum, s) => sum + s.total, 0);
+        const totalCorrect = sessions.reduce((sum, s) => sum + s.correct, 0);
+        const overallAccuracy = totalQuestions > 0 ? (totalCorrect / totalQuestions * 100) : 0;
+
+        const subjectStats = sessions.reduce((acc, s) => {
+            if (!acc[s.subject]) acc[s.subject] = { total: 0, correct: 0 };
+            acc[s.subject].total += s.total;
+            acc[s.subject].correct += s.correct;
+            return acc;
+        }, {});
+
+        let bestSubject = { name: '-', accuracy: 0 };
+        for (const subject in subjectStats) {
+            const stats = subjectStats[subject];
+            const accuracy = stats.total > 0 ? (stats.correct / stats.total * 100) : 0;
+            if (accuracy >= bestSubject.accuracy) bestSubject = { name: subject, accuracy: accuracy };
+        }
+
+        document.getElementById('total-questions').textContent = totalQuestions;
+        document.getElementById('overall-accuracy').textContent = `${overallAccuracy.toFixed(1)}%`;
+        document.getElementById('best-subject').textContent = bestSubject.name;
+        document.getElementById('best-subject-accuracy').textContent = bestSubject.name !== '-' ? `${bestSubject.accuracy.toFixed(1)}% de acerto` : '';
+
+        updateOverallChart(totalCorrect, totalQuestions - totalCorrect);
+        updateBySubjectChart(subjectStats);
+        updateHistoryTable(sessions);
+        updateGoalHistoryTable();
+        await updateDailyGoal();
+    }
+    
+    // =================== FUNÇÕES DE RENDERIZAÇÃO E UI ===================
+    function setupCharts() {
+        const overallCtx = document.getElementById('overallChart').getContext('2d');
+        overallChart = new Chart(overallCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Corretas', 'Incorretas'],
+                datasets: [{ data: [0, 0], backgroundColor: ['#2563eb', '#f87171'], borderWidth: 0 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+        });
+
+        const bySubjectCtx = document.getElementById('bySubjectChart').getContext('2d');
+        bySubjectChart = new Chart(bySubjectCtx, {
+            type: 'bar',
+            data: { labels: [], datasets: [{ label: '% de Acerto', data: [], backgroundColor: '#D5A021', borderRadius: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } }, plugins: { legend: { display: false } } }
+        });
+    }
+
+    function updateOverallChart(correct, incorrect) {
+        overallChart.data.datasets[0].data = [correct, incorrect];
+        overallChart.update();
+    }
+
+    function updateBySubjectChart(subjectStats) {
+        const sortedSubjects = Object.keys(subjectStats).sort();
+        bySubjectChart.data.labels = sortedSubjects;
+        bySubjectChart.data.datasets[0].data = sortedSubjects.map(subject => {
+            const stats = subjectStats[subject];
+            return stats.total > 0 ? (stats.correct / stats.total * 100) : 0;
+        });
+        bySubjectChart.update();
+    }
+
+    function updateHistoryTable(sessions) {
+        const tableBody = document.getElementById('history-table-body');
+        const limitedSessions = historyLimit === 'all' ? sessions : sessions.slice(0, historyLimit);
+        if (limitedSessions.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">Nenhum registro encontrado.</td></tr>`;
+            return;
+        }
+        tableBody.innerHTML = limitedSessions.map(s => {
+            const accuracy = s.total > 0 ? (s.correct / s.total * 100) : 0;
+            return `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">${new Date(s.date + 'T03:00:00Z').toLocaleDateString('pt-BR')}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${s.subject}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${s.correct} / ${s.total}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${accuracy.toFixed(1)}%</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center gap-2">
+                        <button onclick="openEditSessionModal('${s.id}')" class="p-2 rounded-full bg-gray-100 hover:bg-gray-200" title="Editar"><svg class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"/></svg></button>
+                        <button onclick="deleteData(sessionsCollection, '${s.id}', 'Excluir este registro de sessão?')" class="p-2 rounded-full bg-gray-100 hover:bg-gray-200" title="Excluir"><svg class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                    </td>
+                </tr>`;
+        }).join('');
+    }
+    
+    function updateGoalHistoryTable() {
+        const tableBody = document.getElementById('goal-history-table-body');
+        const limitedGoals = goalHistoryLimit === 'all' ? allGoals : allGoals.slice(0, goalHistoryLimit);
+        if (limitedGoals.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">Nenhum histórico de metas.</td></tr>`;
+            return;
+        }
+        tableBody.innerHTML = limitedGoals.map(g => `
+            <tr class="${g.completed ? 'bg-green-50' : ''}">
+                <td class="px-6 py-4 whitespace-nowrap">${new Date(g.date + 'T03:00:00Z').toLocaleDateString('pt-BR')}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${g.achieved} / ${g.goal}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${g.completed ? 'Atingida' : 'Não Atingida'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center gap-2">
+                    <button onclick="openEditGoalModal('${g.id}')" class="p-2 rounded-full bg-gray-100 hover:bg-gray-200" title="Editar Meta"><svg class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"/></svg></button>
+                    <button onclick="deleteData(dailyGoalsCollection, '${g.id}', 'Excluir este registro de meta?')" class="p-2 rounded-full bg-gray-100 hover:bg-gray-200" title="Excluir Meta"><svg class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                </td>
+            </tr>`).join('');
+    }
+
+    function openEditSessionModal(sessionId) {
+        const session = allSessions.find(s => s.id === sessionId);
+        if (!session) return;
+        const editModal = document.getElementById('editSessionModal');
+        const editSubjectSelect = document.getElementById('edit-session-subject');
+        
+        const existingSubjects = [...new Set(allSessions.map(s => s.subject))];
+        if (!existingSubjects.includes(session.subject)) existingSubjects.push(session.subject);
+        editSubjectSelect.innerHTML = existingSubjects.sort().map(s => `<option value="${s}">${s}</option>`).join('');
+
+        document.getElementById('edit-session-id').value = session.id;
+        document.getElementById('edit-session-date').value = session.date;
+        editSubjectSelect.value = session.subject;
+        document.getElementById('edit-session-total').value = session.total;
+        document.getElementById('edit-session-correct').value = session.correct;
+        editModal.classList.remove('hidden');
+    }
+
+    function openEditGoalModal(goalId) {
+        const goal = allGoals.find(g => g.id === goalId);
+        if (!goal) return;
+        const editModal = document.getElementById('editGoalModal');
+        document.getElementById('edit-goal-id').value = goal.id;
+        document.getElementById('edit-goal-date-display').textContent = new Date(goal.date + 'T03:00:00Z').toLocaleDateString('pt-BR');
+        document.getElementById('edit-goal-achieved').value = goal.achieved;
+        document.getElementById('edit-goal-target').value = goal.goal;
+        editModal.classList.remove('hidden');
+    }
+
+    function showConfirmation(message, onConfirm) {
+        const modal = document.getElementById('confirmationModal');
+        document.getElementById('confirmation-message').textContent = message;
+        const okBtn = document.getElementById('confirm-ok-btn');
+        const cancelBtn = document.getElementById('confirm-cancel-btn');
+        const close = () => modal.classList.add('hidden');
+        const okListener = () => { onConfirm(); close(); };
+        okBtn.addEventListener('click', okListener, { once: true });
+        cancelBtn.addEventListener('click', close, { once: true });
+        modal.classList.remove('hidden');
+    }
+
+    // =================== LÓGICA DA META DIÁRIA ===================
+    async function updateDailyGoal() {
+        const goalInput = document.getElementById('daily-goal-input');
+        const goal = parseInt(goalInput.value) || 0;
+        const todayStr = formatDateYMD(new Date());
+        const todaysSessions = allSessions.filter(s => s.date === todayStr);
+        const questionsToday = todaysSessions.reduce((sum, s) => sum + s.total, 0);
+
+        document.getElementById('daily-goal-progress').textContent = `${questionsToday} /`;
+        
+        const goalCard = document.getElementById('daily-goal-card');
+        const goalStatus = document.getElementById('daily-goal-status');
+        
+        const goalDoc = allGoals.find(g => g.id === todayStr);
+        const goalAlreadyMetToday = goalDoc ? goalDoc.completed : false;
+        const completed = questionsToday >= goal && goal > 0;
+
+        if (completed) {
+            goalStatus.textContent = "Meta Atingida! 🎉";
+            goalCard.classList.add('bg-green-100');
+            if (!goalAlreadyMetToday) showConfetti();
+        } else {
+            goalStatus.textContent = "Continue focado!";
+            goalCard.classList.remove('bg-green-100');
+        }
+        
+        const goalData = { date: todayStr, goal: goal, achieved: questionsToday, completed: completed };
+        await saveData(dailyGoalsCollection, goalData, todayStr);
+        
+        calculateStreak();
+    }
+
+    function calculateStreak() {
+        let streak = 0;
+        const today = new Date();
+        const sortedGoals = allGoals.sort((a,b) => new Date(b.date) - new Date(a.date));
+        
+        const todayStr = formatDateYMD(today);
+        const todayGoal = sortedGoals.find(g => g.date === todayStr);
+        if(todayGoal && todayGoal.completed) {
+            streak = 1;
+            for (let i = 1; i < sortedGoals.length + 1; i++) {
+                const prevDay = new Date(today);
+                prevDay.setDate(today.getDate() - i);
+                const prevDayStr = formatDateYMD(prevDay);
+                
+                const goalForPrevDay = sortedGoals.find(g => g.date === prevDayStr);
+                if (goalForPrevDay && goalForPrevDay.completed) {
+                    streak++;
+                } else {
+                    break;
+                }
+            }
+        }
+        
+        const streakContainer = document.getElementById('streak-container');
+        const streakEl = document.getElementById('goal-streak');
+        if (streak > 0) {
+            streakEl.textContent = `🔥 Você atingiu sua meta por ${streak} dia(s) consecutivo(s)!`;
+            streakContainer.classList.remove('hidden');
+        } else {
+            streakContainer.classList.add('hidden');
+        }
+    }
+    
+    function showConfetti() {
+        const container = document.getElementById('confetti-container');
+        for (let i = 0; i < 50; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = `${Math.random() * 100}vw`;
+            confetti.style.animationDelay = `${Math.random() * 2}s`;
+            confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            container.appendChild(confetti);
+            setTimeout(() => confetti.remove(), 3000);
+        }
+    }
+
+    // =================== EVENT LISTENERS ===================
+    document.addEventListener('DOMContentLoaded', () => {
+        setupCharts();
+        loadData();
+
+        const form = document.getElementById('add-session-form');
+        const dateInput = document.getElementById('session-date');
+        const subjectSelect = document.getElementById('session-subject');
+        const newSubjectInput = document.getElementById('new-subject-input');
+        const goalInput = document.getElementById('daily-goal-input');
+        
+        goalInput.value = localStorage.getItem('dailyQuestionGoal') || 50;
+        dateInput.value = formatDateYMD(new Date());
+
+        subjectSelect.addEventListener('change', () => {
+            if (subjectSelect.value === 'add_new') {
+                newSubjectInput.classList.remove('hidden');
+                newSubjectInput.required = true;
+            } else {
+                newSubjectInput.classList.add('hidden');
+                newSubjectInput.required = false;
+                newSubjectInput.value = '';
+            }
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const total = parseInt(document.getElementById('session-total').value);
+            const correct = parseInt(document.getElementById('session-correct').value);
+            if (correct > total) { alert('O número de acertos não pode ser maior que o total de questões.'); return; }
+            let subjectValue = subjectSelect.value;
+            if (subjectValue === 'add_new') {
+                subjectValue = newSubjectInput.value.trim();
+                if (!subjectValue) { alert('Por favor, insira o nome da nova matéria.'); return; }
+            }
+            saveData(sessionsCollection, { date: dateInput.value, subject: subjectValue, total: total, correct: correct });
+            form.reset();
+            dateInput.value = formatDateYMD(new Date());
+            newSubjectInput.classList.add('hidden');
+        });
+
+        // Listeners Modais
+        document.getElementById('close-edit-modal').addEventListener('click', () => document.getElementById('editSessionModal').classList.add('hidden'));
+        document.getElementById('close-edit-goal-modal').addEventListener('click', () => document.getElementById('editGoalModal').classList.add('hidden'));
+
+        document.getElementById('edit-session-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const sessionId = document.getElementById('edit-session-id').value;
+            const total = parseInt(document.getElementById('edit-session-total').value);
+            const correct = parseInt(document.getElementById('edit-session-correct').value);
+            if (correct > total) { alert('O número de acertos não pode ser maior que o total de questões.'); return; }
+            const sessionData = {
+                date: document.getElementById('edit-session-date').value,
+                subject: document.getElementById('edit-session-subject').value,
+                total: total,
+                correct: correct,
+            };
+            saveData(sessionsCollection, sessionData, sessionId);
+            document.getElementById('editSessionModal').classList.add('hidden');
+        });
+
+        document.getElementById('edit-goal-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const goalId = document.getElementById('edit-goal-id').value;
+            const achieved = parseInt(document.getElementById('edit-goal-achieved').value);
+            const target = parseInt(document.getElementById('edit-goal-target').value);
+            const goalData = { date: goalId, goal: target, achieved: achieved, completed: achieved >= target };
+            saveData(dailyGoalsCollection, goalData, goalId);
+            document.getElementById('editGoalModal').classList.add('hidden');
+        });
+
+        // Listeners dos Filtros
+        document.querySelectorAll('.filter-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                activeFilter = button.id.replace('filter-', '');
+                updateDashboard();
+            });
+        });
+
+        document.getElementById('history-limit').addEventListener('change', (e) => {
+            historyLimit = e.target.value === 'all' ? 'all' : parseInt(e.target.value);
+            updateHistoryTable(getFilteredSessions());
+        });
+        
+        document.getElementById('goal-history-limit').addEventListener('change', (e) => {
+            goalHistoryLimit = e.target.value === 'all' ? 'all' : parseInt(e.target.value);
+            updateGoalHistoryTable();
+        });
+
+        goalInput.addEventListener('change', () => {
+            localStorage.setItem('dailyQuestionGoal', goalInput.value);
+            updateDailyGoal();
+        });
+        
+        // Theme switcher
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const sunIcon = document.getElementById('theme-toggle-sun');
+        const moonIcon = document.getElementById('theme-toggle-moon');
+
+        const applyTheme = (theme) => {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            }
+        };
+
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        let currentTheme = savedTheme ? savedTheme : (prefersDark ? 'dark' : 'light');
+        applyTheme(currentTheme);
+
+        themeToggleBtn.addEventListener('click', () => {
+            currentTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+            localStorage.setItem('theme', currentTheme);
+            applyTheme(currentTheme);
+        });
+    });
+</script>
+
+</body>
+</html>
