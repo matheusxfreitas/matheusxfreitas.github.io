@@ -9,8 +9,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link id="favicon" rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23FBBF24'/%3E%3Ctext x='50' y='50' font-size='50' fill='white' text-anchor='middle' dy='.3em' font-family='Inter, sans-serif' font-weight='bold'%3EPSI%3C/text%3E%3C/svg%3E">
-    <meta name="theme-color" content="#FBBF24">
+    <link id="favicon" rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23D5A021'/%3E%3Ctext x='50' y='50' font-size='50' fill='white' text-anchor='middle' dy='.3em' font-family='Inter, sans-serif' font-weight='bold'%3EPSI%3C/text%3E%3C/svg%3E">
+    <meta name="theme-color" content="#D5A021">
     <style>
         :root {
             --bg-color: #FDFBF8;
@@ -51,7 +51,7 @@
             color: var(--text-color);
             transition: background-color 0.3s, color 0.3s;
         }
-        main, .modal .bg-white, .bg-white, .bg-gray-50 { 
+        main, .modal .bg-white, .bg-white, .bg-gray-50, .bg-red-50, .bg-yellow-50, .bg-blue-50, .bg-green-50, .bg-amber-50 { 
             background-color: var(--card-bg-color);
             color: var(--text-color);
             border: 1px solid var(--border-color); 
@@ -98,7 +98,7 @@
         body.modal-open { overflow: hidden; }
         .blurred { filter: blur(8px); transition: filter 0.3s ease-in-out; }
         .hidden { display: none; }
-        .task-card .actions-menu { position: absolute; top: 0.5rem; right: 0.5rem; display: none; gap: 0.5rem; align-items: center; }
+        .task-card .actions-menu { position: absolute; top: 50%; right: 0.5rem; transform: translateY(-50%); display: none; gap: 0.5rem; align-items: center; }
         .task-card:hover .actions-menu { display: flex; }
         
         .action-btn { background-color: #f0f0f0; border-radius: 9999px; padding: 0.35rem; transition: background-color 0.2s ease; cursor: pointer; }
@@ -142,7 +142,7 @@
                     <span class="text-2xl font-bold">PSI</span>
                 </div>
                 <div>
-                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Meu Painel de Estudos 3.0</h1>
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Meu Painel de Estudos</h1>
                 </div>
             </div>
             <div class="flex items-center gap-2">
@@ -601,10 +601,10 @@
     // =================== LÓGICA PRINCIPAL DA APLICAÇÃO ===================
     function initializeStudyPlan() {
         let plan = { tasks: {}, reviews: {}, history: [], dailyGoals: {}, deletedTasks: {} };
-        
+        // COLE SUA LISTA DE AULAS AQUI DENTRO DO allTasks
         let allTasks = [
             // Exemplo: { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '1', topic: '...', type: 'video', completed: true },
-    
+            
             // --- JUNHO 2025 ---
             { date: '2025-06-24', subject: 'Língua Portuguesa', lesson: '1', topic: 'Panorama das Classes Gramaticais', type: 'video', completed: true },
             { date: '2025-06-24', subject: 'Língua Portuguesa', lesson: '2', topic: 'Panorama das Classes Gramaticais II', type: 'video', completed: true },
@@ -1475,13 +1475,10 @@
             let currentDate = new Date(lastScheduledDate);
             currentDate.setDate(currentDate.getDate() + 1);
             while(currentDate <= examEve) {
-                const dayOfWeek = currentDate.getDay();
-                if (dayOfWeek >= 1 && dayOfWeek <= 7) { // Conta todos os dias (incluindo final de semana)
-                    freeDays++;
-                }
+                freeDays++;
                 currentDate.setDate(currentDate.getDate() + 1);
             }
-            const freeHours = freeDays * 6; // 6 horas de estudo por dia
+            const freeHours = freeDays * 6;
             const totalDays = Math.floor((examEve - lastScheduledDate) / (1000 * 60 * 60 * 24));
             content = `<p class="text-2xl font-bold">${freeHours} horas</p><p class="text-sm text-gray-600">(${totalDays} dias corridos) para remanejar aulas.</p>`;
         }
@@ -1521,7 +1518,7 @@
                                 const value = context.raw;
                                 const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
                                 const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                return `${label}${value} (${percentage}%)`;
+                                return `${value} (${percentage}%)`;
                             }
                         }
                     } 
@@ -1537,14 +1534,17 @@
         
         const allTasks = Object.values(studyPlan.tasks || {}).flat();
         const allReviews = Object.values(studyPlan.reviews || {}).flat();
-        let itemsToShow = [...allTasks, ...allReviews];
-        const totalItemsCount = itemsToShow.length;
-
+        let itemsToShow;
+        
         const reviewsOnlyFilter = document.getElementById('filter-reviews').checked;
         if (reviewsOnlyFilter) {
             itemsToShow = allReviews;
+        } else {
+            itemsToShow = [...allTasks, ...allReviews];
         }
         
+        const totalItemsCount = itemsToShow.length;
+
         const subjectFilter = document.getElementById('filter-subject').value;
         if (subjectFilter) itemsToShow = itemsToShow.filter(task => task.subject === subjectFilter);
         
@@ -1645,19 +1645,20 @@
 
         let headerHTML = `<div class="flex justify-between items-center mb-4">
                             <h2 class="text-2xl font-bold">Aulas Atrasadas</h2>
-                            <button id="reschedule-overdue-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg text-blue-600 border-blue-300">Encaixar Aulas Atrasadas</button>
                           </div>`;
 
         if (overdueTasks.length === 0) { 
             planContent.innerHTML = headerHTML + `<div class="text-center p-4 bg-green-50 rounded-lg border border-green-200"><p class="text-green-700 font-semibold">Parabéns! Nenhuma tarefa atrasada.</p></div>`; 
-            document.getElementById('reschedule-overdue-btn').disabled = true;
             return; 
         }
 
         const totalTasks = Object.values(studyPlan.tasks || {}).flat().length;
         const overduePercentage = totalTasks > 0 ? ((overdueTasks.length / totalTasks) * 100).toFixed(1) : 0;
         
-        planContent.innerHTML = headerHTML + `<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"><div class="bg-red-50 p-4 rounded-lg text-center"><p class="text-2xl font-bold text-red-700">${overdueTasks.length}</p><p class="text-sm font-semibold text-red-600">Total de Aulas Atrasadas</p></div><div class="bg-yellow-50 p-4 rounded-lg text-center"><p class="text-2xl font-bold text-yellow-700">${overduePercentage}%</p><p class="text-sm font-semibold text-yellow-600">do Total de Aulas</p></div><div class="bg-blue-50 p-4 rounded-lg text-center md:col-span-2"><p class="text-2xl font-bold text-blue-700">${overdueHours.toFixed(1)} horas</p><p class="text-sm font-semibold text-blue-600">de Estudo Acumulado (aprox.)</p></div></div>`;
+        planContent.innerHTML = headerHTML + `<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"><div class="bg-red-50 p-4 rounded-lg text-center"><p class="text-2xl font-bold text-red-700">${overdueTasks.length}</p><p class="text-sm font-semibold text-red-600">Total de Aulas Atrasadas</p></div><div class="bg-yellow-50 p-4 rounded-lg text-center"><p class="text-2xl font-bold text-yellow-700">${overduePercentage}%</p><p class="text-sm font-semibold text-yellow-600">do Total de Aulas</p></div><div class="bg-blue-50 p-4 rounded-lg text-center md:col-span-2"><p class="text-2xl font-bold text-blue-700">${overdueHours.toFixed(1)} horas</p><p class="text-sm font-semibold text-blue-600">de Estudo Acumulado (aprox.)</p></div></div>
+        <div class="text-center mb-6">
+             <button id="reschedule-overdue-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg text-green-600 border-green-300">Encaixar Aulas Atrasadas</button>
+        </div>`;
         
         const groupedByDate = overdueTasks.reduce((acc, task) => { (acc[task.date] = acc[task.date] || []).push(task); return acc; }, {});
         Object.keys(groupedByDate).sort().forEach(dateStr => {
@@ -2122,23 +2123,37 @@
         document.getElementById('all-tasks-table-body').addEventListener('click', (e) => {
             const editBtn = e.target.closest('.task-edit-btn-table');
             const deleteBtn = e.target.closest('.task-delete-btn-table');
-            if (editBtn) openEditModalFromList(editBtn.dataset.id, editBtn.dataset.date);
+            if (editBtn) {
+                const { id, date } = editBtn.dataset;
+                const task = (studyPlan.tasks[date] || []).find(t => t.id === id) || (studyPlan.reviews[date] || []).find(t => t.id === id);
+                if(task && !task.type.startsWith('review')) {
+                    openEditModalFromList(id, date);
+                }
+            }
             if (deleteBtn) {
                 const { id, date } = deleteBtn.dataset;
-                showConfirmation('Mover esta aula para a lixeira?', () => {
-                     if (studyPlan.tasks[date]) {
-                        const taskIndex = studyPlan.tasks[date].findIndex(t => t.id === id);
-                        if (taskIndex > -1) {
-                            const [taskToDelete] = studyPlan.tasks[date].splice(taskIndex, 1);
-                            if (studyPlan.tasks[date].length === 0) delete studyPlan.tasks[date];
-                            if (!studyPlan.deletedTasks) studyPlan.deletedTasks = {};
-                            taskToDelete.deletedAt = new Date().toISOString();
-                            studyPlan.deletedTasks[taskToDelete.id] = taskToDelete;
-                            saveState();
-                            renderAllTasksTable();
-                            updateProgress();
-                        }
+                showConfirmation('Mover este item para a lixeira?', () => {
+                    let taskList = studyPlan.tasks[date] || [];
+                    let reviewList = studyPlan.reviews[date] || [];
+                    let taskIndex = taskList.findIndex(t => t.id === id);
+                    let reviewIndex = reviewList.findIndex(r => r.id === id);
+
+                    if (taskIndex > -1) {
+                        const [taskToDelete] = taskList.splice(taskIndex, 1);
+                        if (taskList.length === 0) delete studyPlan.tasks[date];
+                        if (!studyPlan.deletedTasks) studyPlan.deletedTasks = {};
+                        taskToDelete.deletedAt = new Date().toISOString();
+                        studyPlan.deletedTasks[taskToDelete.id] = taskToDelete;
+                    } else if (reviewIndex > -1) {
+                         const [reviewToDelete] = reviewList.splice(reviewIndex, 1);
+                        if (reviewList.length === 0) delete studyPlan.reviews[date];
+                        if (!studyPlan.deletedTasks) studyPlan.deletedTasks = {};
+                        reviewToDelete.deletedAt = new Date().toISOString();
+                        studyPlan.deletedTasks[reviewToDelete.id] = reviewToDelete;
                     }
+                    saveState();
+                    renderAllTasksTable();
+                    updateProgress();
                 });
             }
             if (e.target.classList.contains('task-select-checkbox')) {
@@ -2154,15 +2169,25 @@
         document.getElementById('delete-selected-btn').addEventListener('click', () => {
             const selected = Array.from(document.querySelectorAll('#all-tasks-table-body .task-select-checkbox:checked')).map(cb => ({ id: cb.dataset.id, date: cb.dataset.date }));
             if (selected.length === 0) return;
-            showConfirmation(`Mover as ${selected.length} aulas para a lixeira?`, () => {
+            showConfirmation(`Mover os ${selected.length} itens para a lixeira?`, () => {
                 selected.forEach(item => {
-                    const taskIndex = studyPlan.tasks[item.date]?.findIndex(t => t.id === item.id);
+                    let taskList = studyPlan.tasks[item.date] || [];
+                    let reviewList = studyPlan.reviews[item.date] || [];
+                    let taskIndex = taskList.findIndex(t => t.id === item.id);
+                    let reviewIndex = reviewList.findIndex(r => r.id === item.id);
+
                     if (taskIndex > -1) {
-                        const [taskToDelete] = studyPlan.tasks[item.date].splice(taskIndex, 1);
-                        if (studyPlan.tasks[item.date].length === 0) delete studyPlan.tasks[item.date];
-                        if (!studyPlan.deletedTasks) studyPlan.deletedTasks = {};
+                        const [taskToDelete] = taskList.splice(taskIndex, 1);
+                        if (taskList.length === 0) delete studyPlan.tasks[item.date];
+                         if (!studyPlan.deletedTasks) studyPlan.deletedTasks = {};
                         taskToDelete.deletedAt = new Date().toISOString();
                         studyPlan.deletedTasks[taskToDelete.id] = taskToDelete;
+                    } else if (reviewIndex > -1) {
+                         const [reviewToDelete] = reviewList.splice(reviewIndex, 1);
+                        if (reviewList.length === 0) delete studyPlan.reviews[item.date];
+                        if (!studyPlan.deletedTasks) studyPlan.deletedTasks = {};
+                        reviewToDelete.deletedAt = new Date().toISOString();
+                        studyPlan.deletedTasks[reviewToDelete.id] = reviewToDelete;
                     }
                 });
                 saveState();
@@ -2212,9 +2237,13 @@
             if (e.target.classList.contains('restore-btn')) {
                 const taskToRestore = studyPlan.deletedTasks[id];
                 if (taskToRestore) {
-                    const date = taskToRestore.date;
-                    if (!studyPlan.tasks[date]) studyPlan.tasks[date] = [];
-                    studyPlan.tasks[date].push(taskToRestore);
+                    if (taskToRestore.type.startsWith('review')) {
+                        if (!studyPlan.reviews[taskToRestore.date]) studyPlan.reviews[taskToRestore.date] = [];
+                        studyPlan.reviews[taskToRestore.date].push(taskToRestore);
+                    } else {
+                        if (!studyPlan.tasks[taskToRestore.date]) studyPlan.tasks[taskToRestore.date] = [];
+                        studyPlan.tasks[taskToRestore.date].push(taskToRestore);
+                    }
                     delete studyPlan.deletedTasks[id];
                     saveState();
                     renderTrashTable();
@@ -2241,13 +2270,17 @@
         document.getElementById('restore-all-btn').addEventListener('click', () => {
             const selectedIds = Array.from(document.querySelectorAll('#trash-table-body .trash-select-checkbox:checked')).map(cb => cb.dataset.id);
             if(selectedIds.length === 0) return;
-            showConfirmation(`Restaurar ${selectedIds.length} aulas da lixeira?`, () => {
+            showConfirmation(`Restaurar ${selectedIds.length} itens da lixeira?`, () => {
                 selectedIds.forEach(id => {
                     const taskToRestore = studyPlan.deletedTasks[id];
                     if (taskToRestore) {
-                        const date = taskToRestore.date;
-                        if (!studyPlan.tasks[date]) studyPlan.tasks[date] = [];
-                        studyPlan.tasks[date].push(taskToRestore);
+                        if (taskToRestore.type.startsWith('review')) {
+                            if (!studyPlan.reviews[taskToRestore.date]) studyPlan.reviews[taskToRestore.date] = [];
+                            studyPlan.reviews[taskToRestore.date].push(taskToRestore);
+                        } else {
+                            if (!studyPlan.tasks[taskToRestore.date]) studyPlan.tasks[taskToRestore.date] = [];
+                            studyPlan.tasks[taskToRestore.date].push(taskToRestore);
+                        }
                         delete studyPlan.deletedTasks[id];
                     }
                 });
@@ -2260,7 +2293,7 @@
         document.getElementById('delete-all-perm-btn').addEventListener('click', () => {
             const selectedIds = Array.from(document.querySelectorAll('#trash-table-body .trash-select-checkbox:checked')).map(cb => cb.dataset.id);
             if(selectedIds.length === 0) return;
-            showConfirmation(`Excluir permanentemente ${selectedIds.length} aulas?`, () => {
+            showConfirmation(`Excluir permanentemente ${selectedIds.length} itens?`, () => {
                 selectedIds.forEach(id => {
                     delete studyPlan.deletedTasks[id];
                 });
