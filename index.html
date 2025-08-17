@@ -9,10 +9,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Warm Harmony -->
-    <!-- Application Structure Plan: A dashboard-style SPA with a weekly planner focus. Key metrics and a progress chart provide at-a-glance motivation. A tabbed daily view keeps the UI clean and focused. Users interact by switching days and checking off tasks, which dynamically updates the progress chart. This structure was chosen to transform a static plan into an active, engaging tracking tool, prioritizing clarity and user motivation. Gemini API features (question generation, topic explanation) are integrated via modals triggered from task cards, enhancing the study loop. -->
-    <!-- Visualization & Content Choices: 1. Countdown (JS Text): Goal=Motivate, Justification=Urgency. 2. Weekly Planner (HTML/JS Tabs): Goal=Organize, Justification=Clarity/Focus. 3. Progress Tracker (Chart.js Donut): Goal=Inform/Motivate, Interaction=Updates on task completion, Justification=Clear visual feedback. 4. Task Icons (Unicode): Goal=Inform, Justification=Scannability. 5. Gemini Features (Modal): Goal=Enhance/Deepen Study, Interaction=Button click on tasks, Justification=Provides on-demand practice and clarification without cluttering the main UI. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #FDFBF8; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
@@ -27,47 +23,20 @@
         .task-card.overdue { border-left-color: #ef4444; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
         .task-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .task-card.legis { border-left-color: #38bdf8; } /* Cor para Legislação */
+        .task-card.legis { border-left-color: #38bdf8; }
         .task-checkbox:checked + label { text-decoration: line-through; color: #9A9A9A; }
         .chart-container { position: relative; width: 100%; max-width: 250px; margin-left: auto; margin-right: auto; height: 250px; }
         .modal.hidden { display: none; }
         .modal-content { white-space: pre-wrap; }
         .control-button { background-color: #fff; border: 1px solid #ddd; transition: all 0.2s ease; }
         .control-button:hover { background-color: #f9f9f9; border-color: #ccc; }
-        
-        .blurred {
-            filter: blur(8px);
-            transition: filter 0.3s ease-in-out;
-        }
-        .hidden {
-            display: none;
-        }
-        /* Estilos para o menu de ações no card da tarefa */
-        .task-card .actions-menu {
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            display: none;
-            gap: 0.5rem;
-        }
-        .task-card:hover .actions-menu {
-            display: flex;
-        }
-        .action-btn {
-            background-color: #f0f0f0;
-            border-radius: 9999px;
-            padding: 0.35rem;
-            transition: background-color 0.2s ease;
-            cursor: pointer;
-        }
-        .action-btn:hover {
-            background-color: #e0e0e0;
-        }
-        .action-btn svg {
-            width: 1rem;
-            height: 1rem;
-            color: #555;
-        }
+        .blurred { filter: blur(8px); transition: filter 0.3s ease-in-out; }
+        .hidden { display: none; }
+        .task-card .actions-menu { position: absolute; top: 0.5rem; right: 0.5rem; display: none; gap: 0.5rem; }
+        .task-card:hover .actions-menu { display: flex; }
+        .action-btn { background-color: #f0f0f0; border-radius: 9999px; padding: 0.35rem; transition: background-color 0.2s ease; cursor: pointer; }
+        .action-btn:hover { background-color: #e0e0e0; }
+        .action-btn svg { width: 1rem; height: 1rem; color: #555; }
     </style>
 </head>
 <body class="text-gray-800">
@@ -86,7 +55,6 @@
 </div>
 
 <div class="container mx-auto p-4 md:p-8 max-w-7xl">
-    
     <header class="mb-8">
         <div class="text-center">
             <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Meu Painel de Estudos 2.0</h1>
@@ -98,7 +66,6 @@
             <button id="export-backup-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Exportar Backup (Progresso)</button>
             <button id="import-backup-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Importar Backup (Progresso)</button>
             <input type="file" id="import-backup-file" class="hidden" accept=".json">
-            <button id="export-csv-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Exportar Aulas (CSV)</button>
             <button id="add-task-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-green-600 border-green-300">Incluir Aula(s)</button>
             <button id="edit-tasks-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-blue-600 border-blue-300">Editar Aulas</button>
             <button id="reset-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm text-red-600">Resetar Progresso</button>
@@ -130,7 +97,6 @@
                 <div id="calendar-container"></div>
                 <div id="plan-content" class="space-y-4 mt-6"></div>
             </div>
-
             <aside class="w-full lg:w-1/3 lg:border-l lg:pl-8 border-gray-200">
                 <div class="sticky top-8">
                     <h2 class="text-2xl font-bold mb-4 text-center">Progresso Geral</h2>
@@ -144,13 +110,11 @@
                          <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-[#A25B5B]"></div><span>R5 (D+30) - Longo Prazo</span></div>
                          <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-red-500"></div><span>Tarefa Atrasada</span></div>
                     </div>
-
                     <div id="subject-progress-container" class="mt-8">
                         <h3 class="text-xl font-bold mb-4 text-center">Progresso por Matéria</h3>
-                        <div id="subject-progress-bars" class="space-y-4">
-                            </div>
+                        <div id="subject-progress-bars" class="space-y-4"></div>
                     </div>
-                    </div>
+                </div>
             </aside>
         </div>
     
@@ -203,34 +167,42 @@
                 <div class="p-4">
                     <input type="text" id="edit-tasks-search" class="w-full p-2 border rounded-md" placeholder="Buscar por matéria ou tópico para editar...">
                 </div>
-                <div id="edit-tasks-list" class="p-4 overflow-y-auto space-y-2">
-                    </div>
+                <div id="edit-tasks-list" class="p-4 overflow-y-auto space-y-2"></div>
             </div>
         </div>
     </main>
 </div>
 
 <div id="allTasksModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col">
         <div class="flex justify-between items-center p-4 border-b">
             <h3 class="text-xl font-bold">Todas as Aulas Cadastradas</h3>
             <button class="close-modal text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
         </div>
-        <div class="p-4">
-            <input type="text" id="all-tasks-search" class="w-full p-2 border rounded-md" placeholder="Buscar por matéria ou tópico...">
+        <div class="p-4 border-b">
+            <div id="all-tasks-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-center"></div>
+            <div class="flex flex-wrap gap-2 items-center">
+                <input type="text" id="all-tasks-search" class="flex-grow p-2 border rounded-md" placeholder="Buscar por matéria ou tópico...">
+                <button id="import-csv-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Importar (CSV)</button>
+                <input type="file" id="import-csv-file" class="hidden" accept=".csv">
+                <button id="export-csv-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Exportar (CSV)</button>
+                <button id="delete-selected-btn" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-sm">Excluir Selecionadas</button>
+            </div>
         </div>
         <div class="p-4 overflow-y-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
+                        <th class="px-6 py-3 text-left">
+                            <input type="checkbox" id="select-all-tasks-checkbox" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]">
+                        </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aula</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tópico</th>
                     </tr>
                 </thead>
-                <tbody id="all-tasks-table-body" class="bg-white divide-y divide-gray-200">
-                </tbody>
+                <tbody id="all-tasks-table-body" class="bg-white divide-y divide-gray-200"></tbody>
             </table>
         </div>
     </div>
@@ -245,7 +217,6 @@
         </div>
     </div>
 </div>
-
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -369,7 +340,7 @@
     // =================== LÓGICA PRINCIPAL DA APLICAÇÃO ===================
    
     function initializeStudyPlan() {
-        let plan = { tasks: {}, reviews: {} };
+        let plan = { tasks: {}, reviews: {}, dailyGoals: {} };
         
         // O array de `allTasks` foi omitido por ser muito grande, mas o original do seu código será usado aqui.
         let allTasks = [
@@ -1036,6 +1007,9 @@
             const doc = await docRef.get();
             if (doc.exists && doc.data().tasks) { // Adicionado verificação para 'tasks'
                 studyPlan = doc.data();
+                 if (!studyPlan.dailyGoals) { // Garante que a propriedade exista
+                    studyPlan.dailyGoals = {};
+                }
             } else {
                 console.log("Nenhum plano encontrado no Firestore, inicializando um novo.");
                 studyPlan = initializeStudyPlan();
@@ -1064,10 +1038,12 @@
         }
 
         let actionsMenu = '';
-        // Adiciona menu de ações apenas para tarefas principais (não revisões)
         if (!task.type.startsWith('review')) {
             actionsMenu = `
                 <div class="actions-menu">
+                    <button class="action-btn task-postpone-btn" data-id="${task.id}" data-date="${task.date}" title="Adiar em 1 dia">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="m14 14-4 4m0-4 4 4"></path></svg>
+                    </button>
                     <button class="action-btn task-edit-btn" data-id="${task.id}" data-date="${task.date}" title="Editar Aula">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>
                     </button>
@@ -1146,7 +1122,6 @@
         }
     }
     
-    // =================== FUNÇÃO DO CALENDÁRIO (FALTANTE) ===================
     function renderCalendar(date) {
         const calendarContainer = document.getElementById('calendar-container');
         const month = date.getMonth();
@@ -1173,12 +1148,10 @@
         });
         html += `</div><div class="calendar-grid gap-1">`;
 
-        // Dias em branco antes do início do mês
         for (let i = 0; i < startDayOfWeek; i++) {
             html += `<div></div>`;
         }
 
-        // Dias do mês
         for (let day = 1; day <= daysInMonth; day++) {
             const currentDate = new Date(year, month, day);
             const dateStr = formatDateYMD(currentDate);
@@ -1198,7 +1171,7 @@
     }
 
     const renderPlan = (date) => {
-        renderCalendar(date); // Agora esta função existe
+        renderCalendar(date);
         const dateStr = formatDateYMD(date);
         planContent.innerHTML = '';
         
@@ -1233,7 +1206,22 @@
                 bloco3Content += createTaskCard(task, !task.completed && isBefore(new Date(task.date), today)).outerHTML;
             });
         }
-        bloco3Content += `<div class="task-card p-4 rounded-lg shadow-sm border-l-4 border-gray-400"> <p class="font-semibold text-gray-700">🎯 Meta de Exercícios do Dia</p> <p class="text-gray-600 text-sm">Focar em 2 matérias conforme o plano de rotação semanal.</p></div>`;
+        
+        const dailyGoal = studyPlan.dailyGoals[dateStr] || { exercisesCompleted: false };
+        bloco3Content += `
+            <div class="task-card p-4 rounded-lg shadow-sm border-l-4 border-gray-400">
+                <div class="flex items-start space-x-4">
+                    <div class="flex-shrink-0 pt-1">
+                        <input type="checkbox" id="exercises-checkbox-${dateStr}" data-date="${dateStr}" class="daily-goal-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${dailyGoal.exercisesCompleted ? 'checked' : ''}>
+                    </div>
+                    <div class="flex-1">
+                         <label for="exercises-checkbox-${dateStr}" class="cursor-pointer">
+                            <p class="font-semibold text-gray-700">🎯 Meta de Exercícios do Dia</p>
+                            <p class="text-gray-600 text-sm">Focar em 2 matérias conforme o plano de rotação semanal.</p>
+                        </label>
+                    </div>
+                </div>
+            </div>`;
         planContent.innerHTML += `<h3 class="text-lg font-bold text-gray-800 mt-6 border-b-2 border-emerald-500 pb-2">🎯 Bloco 3: Estudo Ativo e Fixação</h3>` + bloco3Content;
 
         if (reviewsForDay.length > 0) {
@@ -1309,44 +1297,30 @@
             type: 'doughnut',
             data: {
                 labels: ['Concluído', 'Pendente'],
-                datasets: [{
-                    data: [0, 1],
-                    backgroundColor: ['#D5A021', '#EAEAEA'],
-                    borderColor: ['#FFFFFF'],
-                    borderWidth: 4,
-                    hoverOffset: 4
-                }]
+                datasets: [{ data: [0, 1], backgroundColor: ['#D5A021', '#EAEAEA'], borderColor: ['#FFFFFF'], borderWidth: 4, hoverOffset: 4 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '75%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { 
-                        enabled: true,
-                        callbacks: {
-                            label: function(context) { return context.label; }
-                        }
-                    }
-                }
+                responsive: true, maintainAspectRatio: false, cutout: '75%',
+                plugins: { legend: { display: false }, tooltip: { enabled: true, callbacks: { label: function(context) { return context.label; } } } }
             }
         });
     };
 
     function renderAllTasksTable(filter = '') {
         const tableBody = document.getElementById('all-tasks-table-body');
-        const allTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks) : []).flat();
+        const allTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks).flat() : []);
         allTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
         
         let html = '';
         const filterText = filter.toLowerCase();
 
-        allTasks.filter(task => {
-            return task.subject.toLowerCase().includes(filterText) || task.topic.toLowerCase().includes(filterText);
-        }).forEach(task => {
+        allTasks.filter(task => task.subject.toLowerCase().includes(filterText) || task.topic.toLowerCase().includes(filterText))
+        .forEach(task => {
             html += `
                 <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <input type="checkbox" class="task-select-checkbox h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" data-id="${task.id}" data-date="${task.date}">
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDateDMY(new Date(task.date + 'T00:00:00'))}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${task.subject}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${task.lesson}</td>
@@ -1355,6 +1329,24 @@
             `;
         });
         tableBody.innerHTML = html;
+        document.getElementById('select-all-tasks-checkbox').checked = false;
+    }
+
+    function renderAllTasksStatistics() {
+        const statsContainer = document.getElementById('all-tasks-stats');
+        const allTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks).flat() : []);
+        const totalTasks = allTasks.length;
+        
+        const subjectCounts = allTasks.reduce((acc, task) => {
+            acc[task.subject] = (acc[task.subject] || 0) + 1;
+            return acc;
+        }, {});
+
+        let statsHtml = `<div class="p-2 bg-gray-100 rounded-lg"><p class="font-bold text-lg">${totalTasks}</p><p class="text-sm text-gray-600">Total de Aulas</p></div>`;
+        Object.entries(subjectCounts).sort().forEach(([subject, count]) => {
+            statsHtml += `<div class="p-2 bg-gray-100 rounded-lg"><p class="font-bold text-lg">${count}</p><p class="text-sm text-gray-600">${subject}</p></div>`;
+        });
+        statsContainer.innerHTML = statsHtml;
     }
 
     function renderOverdueTasks() {
@@ -1487,25 +1479,20 @@
             const id = document.getElementById('task-id').value;
             const originalDate = document.getElementById('original-task-date').value;
 
-            if (id) { // Editando tarefa existente
-                // Remove a tarefa antiga
+            if (id) {
                 if (studyPlan.tasks[originalDate]) {
                     studyPlan.tasks[originalDate] = studyPlan.tasks[originalDate].filter(t => t.id !== id);
-                    if (studyPlan.tasks[originalDate].length === 0) {
-                        delete studyPlan.tasks[originalDate];
-                    }
+                    if (studyPlan.tasks[originalDate].length === 0) delete studyPlan.tasks[originalDate];
                 }
             }
             
             const taskData = {
                 id: id || generateUniqueId({ subject, lesson, type }),
                 date: date, subject, lesson, topic, type,
-                completed: false // Resetar o status ao editar
+                completed: false
             };
 
-            if (!studyPlan.tasks[date]) {
-                studyPlan.tasks[date] = [];
-            }
+            if (!studyPlan.tasks[date]) studyPlan.tasks[date] = [];
             studyPlan.tasks[date].push(taskData);
 
             saveState();
@@ -1518,42 +1505,38 @@
         planContent.addEventListener('change', (e) => {
             if (e.target.matches('.task-checkbox')) {
                 const { id, date, type } = e.target.dataset;
-                let taskList;
-                if (type.startsWith('review')) {
-                    taskList = studyPlan.reviews[date];
-                } else {
-                    taskList = studyPlan.tasks[date];
-                }
-                
+                let taskList = type.startsWith('review') ? studyPlan.reviews[date] : studyPlan.tasks[date];
                 const task = taskList ? taskList.find(t => t.id === id) : undefined;
 
                 if (task) {
                     task.completed = e.target.checked;
-                    
                     if (!type.startsWith('review')) {
-                        if (task.completed) {
-                            scheduleReviews(task);
-                        } else {
-                            unscheduleReviews(task);
-                        }
+                        if (task.completed) scheduleReviews(task);
+                        else unscheduleReviews(task);
                     }
-
                     updateProgress();
                     saveState();
                     renderPlan(viewDate);
                 }
+            }
+            if (e.target.matches('.daily-goal-checkbox')) {
+                const { date } = e.target.dataset;
+                if (!studyPlan.dailyGoals[date]) {
+                    studyPlan.dailyGoals[date] = {};
+                }
+                studyPlan.dailyGoals[date].exercisesCompleted = e.target.checked;
+                saveState();
             }
         });
 
         planContent.addEventListener('click', (e) => {
             const editBtn = e.target.closest('.task-edit-btn');
             const deleteBtn = e.target.closest('.task-delete-btn');
+            const postponeBtn = e.target.closest('.task-postpone-btn');
 
             if (editBtn) {
                 const { id, date } = editBtn.dataset;
-                const taskList = studyPlan.tasks[date];
-                const task = taskList ? taskList.find(t => t.id === id) : undefined;
-
+                const task = studyPlan.tasks[date]?.find(t => t.id === id);
                 if (task) {
                     document.getElementById('modal-title').textContent = 'Editar Aula';
                     document.getElementById('task-id').value = task.id;
@@ -1568,39 +1551,46 @@
             }
 
             if (deleteBtn) {
-                const { id, date, type } = deleteBtn.dataset;
-                
-                showConfirmation('Tem certeza que deseja excluir este item?', () => {
-                    let itemDeleted = false;
-                    if (type.startsWith('review')) {
-                        if (studyPlan.reviews[date]) {
-                            const initialLength = studyPlan.reviews[date].length;
-                            studyPlan.reviews[date] = studyPlan.reviews[date].filter(t => t.id !== id);
-                            if (studyPlan.reviews[date].length === 0) {
-                                delete studyPlan.reviews[date];
-                            }
-                            itemDeleted = studyPlan.reviews[date]?.length !== initialLength;
+                const { id, date } = deleteBtn.dataset;
+                showConfirmation('Tem certeza que deseja excluir esta aula e suas revisões?', () => {
+                    if (studyPlan.tasks[date]) {
+                        const taskToDelete = studyPlan.tasks[date].find(t => t.id === id);
+                        if (taskToDelete) {
+                            unscheduleReviews(taskToDelete);
+                            studyPlan.tasks[date] = studyPlan.tasks[date].filter(t => t.id !== id);
+                            if (studyPlan.tasks[date].length === 0) delete studyPlan.tasks[date];
+                            saveState();
+                            renderPlan(viewDate);
+                            updateProgress();
                         }
-                    } else {
-                        if (studyPlan.tasks[date]) {
-                            const taskToDelete = studyPlan.tasks[date].find(t => t.id === id);
-                            if (taskToDelete) {
-                                unscheduleReviews(taskToDelete); // Remove associated reviews
-                                studyPlan.tasks[date] = studyPlan.tasks[date].filter(t => t.id !== id);
-                                if (studyPlan.tasks[date].length === 0) {
-                                    delete studyPlan.tasks[date];
-                                }
-                                itemDeleted = true;
-                            }
-                        }
-                    }
-                    
-                    if (itemDeleted) {
-                        saveState();
-                        renderPlan(viewDate);
-                        updateProgress();
                     }
                 });
+            }
+
+            if (postponeBtn) {
+                const { id, date } = postponeBtn.dataset;
+                const taskList = studyPlan.tasks[date];
+                const taskIndex = taskList?.findIndex(t => t.id === id);
+
+                if (taskIndex > -1) {
+                    const task = taskList[taskIndex];
+                    const nextDay = addDays(new Date(date + 'T00:00:00'), 1);
+                    const nextDayStr = formatDateYMD(nextDay);
+                    
+                    task.date = nextDayStr;
+                    if (!studyPlan.tasks[nextDayStr]) {
+                        studyPlan.tasks[nextDayStr] = [];
+                    }
+                    studyPlan.tasks[nextDayStr].push(task);
+                    
+                    studyPlan.tasks[date].splice(taskIndex, 1);
+                    if (studyPlan.tasks[date].length === 0) {
+                        delete studyPlan.tasks[date];
+                    }
+                    
+                    saveState();
+                    renderPlan(viewDate);
+                }
             }
         });
 
@@ -1621,9 +1611,7 @@
         });
 
         document.querySelectorAll('.close-modal').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.target.closest('.modal').classList.add('hidden');
-            });
+            btn.addEventListener('click', (e) => e.target.closest('.modal').classList.add('hidden'));
         });
 
         document.getElementById('edit-tasks-list').addEventListener('click', (e) => {
@@ -1646,19 +1634,17 @@
             }
 
             if (target.classList.contains('delete-btn')) {
-                showConfirmation('Tem certeza que deseja excluir esta aula? As revisões associadas também serão removidas.', () => {
+                showConfirmation('Tem certeza que deseja excluir esta aula e suas revisões?', () => {
                     if (studyPlan.tasks[date]) {
                         const taskToDelete = studyPlan.tasks[date].find(t => t.id === id);
                         if (taskToDelete) {
-                            unscheduleReviews(taskToDelete); // Remove revisões
+                            unscheduleReviews(taskToDelete);
                             studyPlan.tasks[date] = studyPlan.tasks[date].filter(t => t.id !== id);
-                            if (studyPlan.tasks[date].length === 0) {
-                                delete studyPlan.tasks[date];
-                            }
+                            if (studyPlan.tasks[date].length === 0) delete studyPlan.tasks[date];
                             saveState();
                             renderPlan(viewDate);
                             updateProgress();
-                            openEditModal(); // Atualiza a lista no modal
+                            openEditModal();
                         }
                     }
                 });
@@ -1677,7 +1663,7 @@
         
         document.getElementById('export-csv-btn').addEventListener('click', () => {
             let csvContent = "data:text/csv;charset=utf-8,date,subject,lesson,topic,type\n";
-            const allTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks) : []).flat();
+            const allTasks = (studyPlan.tasks ? Object.values(studyPlan.tasks).flat() : []);
             allTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
             allTasks.forEach(task => {
                 const row = [task.date, `"${task.subject}"`, `"${task.lesson}"`, `"${task.topic}"`, task.type].join(',');
@@ -1692,20 +1678,18 @@
             document.body.removeChild(link);
         });
 
-        document.getElementById('import-backup-btn').addEventListener('click', () => {
-            document.getElementById('import-backup-file').click();
-        });
+        document.getElementById('import-backup-btn').addEventListener('click', () => document.getElementById('import-backup-file').click());
+        document.getElementById('import-csv-btn').addEventListener('click', () => document.getElementById('import-csv-file').click());
         
         document.getElementById('view-all-tasks-btn').addEventListener('click', () => {
             renderAllTasksTable();
+            renderAllTasksStatistics();
             allTasksModal.classList.remove('hidden');
         });
         
         document.getElementById('view-overdue-tasks-btn').addEventListener('click', renderOverdueTasks);
 
-        document.getElementById('all-tasks-search').addEventListener('input', (e) => {
-            renderAllTasksTable(e.target.value);
-        });
+        document.getElementById('all-tasks-search').addEventListener('input', (e) => renderAllTasksTable(e.target.value));
 
         document.getElementById('import-backup-file').addEventListener('change', (event) => {
             const file = event.target.files[0];
@@ -1719,7 +1703,6 @@
                         saveState();
                         renderPlan(viewDate);
                         updateProgress();
-                        showConfirmation('Backup importado com sucesso!', ()=>{});
                     } else {
                         showConfirmation('Arquivo de backup inválido.', ()=>{});
                     }
@@ -1737,6 +1720,40 @@
                 saveState();
                 renderPlan(viewDate);
                 updateProgress();
+            });
+        });
+
+        document.getElementById('select-all-tasks-checkbox').addEventListener('change', (e) => {
+            document.querySelectorAll('#all-tasks-table-body .task-select-checkbox').forEach(checkbox => {
+                checkbox.checked = e.target.checked;
+            });
+        });
+
+        document.getElementById('delete-selected-btn').addEventListener('click', () => {
+            const selected = [];
+            document.querySelectorAll('#all-tasks-table-body .task-select-checkbox:checked').forEach(checkbox => {
+                selected.push({ id: checkbox.dataset.id, date: checkbox.dataset.date });
+            });
+
+            if (selected.length === 0) {
+                showConfirmation("Nenhuma aula selecionada.", () => {});
+                return;
+            }
+
+            showConfirmation(`Tem certeza que deseja excluir as ${selected.length} aulas selecionadas e suas revisões?`, () => {
+                selected.forEach(item => {
+                    const taskToDelete = studyPlan.tasks[item.date]?.find(t => t.id === item.id);
+                    if (taskToDelete) {
+                        unscheduleReviews(taskToDelete);
+                        studyPlan.tasks[item.date] = studyPlan.tasks[item.date].filter(t => t.id !== item.id);
+                        if (studyPlan.tasks[item.date].length === 0) delete studyPlan.tasks[item.date];
+                    }
+                });
+                saveState();
+                renderPlan(viewDate);
+                updateProgress();
+                renderAllTasksTable(); // Refresh the modal list
+                renderAllTasksStatistics();
             });
         });
     });
