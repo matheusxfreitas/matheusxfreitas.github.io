@@ -1660,8 +1660,19 @@ function scheduleReviews(completedTask) {
         }
 
         document.getElementById('edit-tasks-btn').addEventListener('click', openEditModal);
+
         // =====================================================================
-        
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadState(); 
+            setupChart();
+            renderPlan(viewDate);
+            updateProgress();
+            renderSubjectProgress();
+            startCountdown();
+            document.getElementById('currentDate').textContent = formatDateDMY(new Date());
+        });      
+
 </script>
 </body>
 </html>
