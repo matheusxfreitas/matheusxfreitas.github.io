@@ -1,12 +1,12 @@
     // =================== CONFIGURAÇÃO E VARIÁVEIS GLOBAIS ===================
-        const firebaseConfig = {
+    const firebaseConfig = {
         apiKey: "AIzaSyA050ckDIuD1ujjyRee81r0Vv_jygoHs1Q",
         authDomain: "meu-painel-de-estudos-v2.firebaseapp.com",
         projectId: "meu-painel-de-estudos-v2",
         storageBucket: "meu-painel-de-estudos-v2.firebasestorage.app",
         messagingSenderId: "889152606734",
         appId: "1:889152606734:web:09457849b695f3f1d4625f"
-        };
+    };
 
     const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -28,7 +28,7 @@
     const passwordForm = document.getElementById('password-form');
     const passwordInput = document.getElementById('password-input');
     const passwordError = document.getElementById('password-error');
-    
+
     if (sessionStorage.getItem('isAuthenticated') === 'true') {
         isAuthenticated = true;
         passwordWall.classList.add('hidden');
@@ -43,17 +43,18 @@
             sessionStorage.setItem('isAuthenticated', 'true');
             passwordWall.classList.add('hidden');
             appContainer.classList.remove('blurred');
+            startApp();
         } else {
             passwordError.textContent = 'Senha incorreta.';
             passwordInput.value = '';
             setTimeout(() => { passwordError.textContent = ''; }, 2000);
         }
     });
-    
+
     // =================== LÓGICA DE TEMAS ===================
     const themeSelector = document.getElementById('theme-selector');
     const applyTheme = (theme) => {
-        document.documentElement.className = ''; // Limpa classes antigas
+        document.documentElement.className = '';
         document.documentElement.classList.add(theme);
         localStorage.setItem('study-theme', theme);
         if (progressChart) {
@@ -62,9 +63,8 @@
             updateProgress();
         }
     };
-
     themeSelector.addEventListener('change', (e) => applyTheme(e.target.value));
-    
+
     // =================== FUNÇÕES AUXILIARES DE DATA ===================
     function formatDateYMD(date) {
         const d = new Date(date);
@@ -88,22 +88,20 @@
 
     function isSameDay(date1, date2) {
         return date1.getFullYear() === date2.getFullYear() &&
-               date1.getMonth() === date2.getMonth() &&
-               date1.getDate() === date2.getDate();
+            date1.getMonth() === date2.getMonth() &&
+            date1.getDate() === date2.getDate();
     }
 
     // =================== FUNÇÕES AUXILIARES GERAIS ===================
     function generateUniqueId(task) {
-         return `${task.subject.replace(/[^a-zA-Z0-9]/g, '')}-${task.lesson.replace(/[^a-zA-Z0-9]/g, '')}-${task.type}-${new Date().getTime()}`;
+        return `${task.subject.replace(/[^a-zA-Z0-9]/g, '')}-${task.lesson.replace(/[^a-zA-Z0-9]/g, '')}-${task.type}-${new Date().getTime()}`;
     }
 
     function showConfirmation(message, onConfirm) {
         const messageEl = document.getElementById('confirmation-message');
         const okBtn = document.getElementById('confirm-ok-btn');
         const cancelBtn = document.getElementById('confirm-cancel-btn');
-
         messageEl.textContent = message;
-
         const okListener = () => {
             onConfirm();
             closeModal(confirmationModal);
@@ -117,7 +115,6 @@
             okBtn.removeEventListener('click', okListener);
             cancelBtn.removeEventListener('click', cancelListener);
         };
-
         okBtn.addEventListener('click', okListener);
         cancelBtn.addEventListener('click', cancelListener);
         openModal(confirmationModal);
@@ -138,25 +135,8 @@
 
     // =================== LÓGICA PRINCIPAL DA APLICAÇÃO ===================
     function initializeStudyPlan() {
-    let plan = { tasks: {}, reviews: {}, history: [], dailyGoals: {}, deletedTasks: {} };
-
-    // A linha abaixo agora busca os dados do outro ficheiro!
-    let allTasks = allTasksData; 
-
-    // A lista de legislação municipal pode continuar aqui, pois é pequena.
-    const legislacaoMunicipalTasks = [
-            { subject: 'Administração Pública', lesson: 'L1', topic: 'Lei Orgânica do Município de Uberlândia - Art. 1º ao 15º', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L2', topic: 'Lei Orgânica do Município de Uberlândia - Art. 16º ao 30º', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L3', topic: 'Lei Orgânica - Competências do Município', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L4', topic: 'Lei Orgânica - Servidores Públicos', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L5', topic: 'Estatuto dos Servidores (LC nº 40/1992) - Disposições Preliminares', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L6', topic: 'Estatuto dos Servidores - Direitos e Vantagens', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L7', topic: 'Estatuto dos Servidores - Regime Disciplinar', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L8', topic: 'Estatuto dos Servidores - Responsabilidades', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L9', topic: 'Plano de Cargos e Carreiras (LC nº 671/2018) - Estrutura Geral', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L10', topic: 'Revisão Geral - Legislação Municipal', type: 'legis' },
-        ];
-        
+        let plan = { tasks: {}, reviews: {}, history: [], dailyGoals: {}, deletedTasks: {} };
+        let allTasks = allTasksData; // Vem do ficheiro data.js
         allTasks.forEach(task => {
             const id = generateUniqueId(task);
             const dateStr = formatDateYMD(new Date(task.date + 'T03:00:00Z'));
@@ -197,7 +177,6 @@
         if (!studyPlan.history) studyPlan.history = [];
         const historyTaskIds = new Set(studyPlan.history.map(h => h.taskId));
         const allTasks = Object.values(studyPlan.tasks).flat();
-        
         allTasks.forEach(task => {
             if (task.completed && !historyTaskIds.has(task.id)) {
                 studyPlan.history.push({
@@ -219,36 +198,12 @@
         if (isOverdue) cardClasses += ' overdue';
         card.className = cardClasses;
         const title = task.type.startsWith('review') ? `${task.reviewType}: ${task.subject} - Aula ${task.lesson}` : `${task.subject} - Aula ${task.lesson}`;
-        
         const typeIcon = task.type === 'video' 
             ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 text-gray-500"><path d="m22 8-6 4 6 4V8Z"></path><rect x="2" y="6" width="14" height="12" rx="2" ry="2"></rect></svg>` 
             : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 text-gray-500"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>`;
-
-        const notebookLinkIcon = task.notebookLink ? `
-            <a href="${task.notebookLink}" target="_blank" class="action-btn" title="Abrir caderno no NotebookLM">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
-            </a>` : '';
-
-        const actionsMenu = !task.type.startsWith('review') ? `
-            <div class="actions-menu">
-                ${notebookLinkIcon}
-                <button class="action-btn task-postpone-btn" data-id="${task.id}" data-date="${task.date}" title="Adiar em 1 dia"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="m14 14-4 4m0-4 4 4"></path></svg></button>
-                <button class="action-btn task-edit-btn" data-id="${task.id}" data-date="${task.date}" title="Editar Aula"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button>
-                <button class="action-btn task-delete-btn" data-id="${task.id}" data-date="${task.date}" data-type="${task.type}" title="Excluir Aula"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-            </div>` : '';
-
-        card.innerHTML = `
-            <div class="flex items-start space-x-4">
-                <div class="flex-shrink-0 pt-1"><input type="checkbox" id="${task.id}" data-id="${task.id}" data-date="${task.date}" data-type="${task.type}" class="task-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${task.completed ? 'checked' : ''}></div>
-                <div class="flex-1">
-                    <label for="${task.id}" class="cursor-pointer">
-                        <p class="font-semibold text-gray-800 flex items-center">${!task.type.startsWith('review') ? typeIcon : ''} ${title}</p>
-                        <p class="text-sm text-gray-600">${task.topic}</p>
-                        ${isOverdue ? `<p class="text-xs text-red-600 font-semibold">Atrasada desde: ${formatDateDMY(task.date)}</p>` : ''}
-                    </label>
-                </div>
-            </div>
-            ${actionsMenu}`;
+        const notebookLinkIcon = task.notebookLink ? `<a href="${task.notebookLink}" target="_blank" class="action-btn" title="Abrir caderno no NotebookLM"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg></a>` : '';
+        const actionsMenu = !task.type.startsWith('review') ? `<div class="actions-menu">${notebookLinkIcon}<button class="action-btn task-postpone-btn" data-id="${task.id}" data-date="${task.date}" title="Adiar em 1 dia"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="m14 14-4 4m0-4 4 4"></path></svg></button><button class="action-btn task-edit-btn" data-id="${task.id}" data-date="${task.date}" title="Editar Aula"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button><button class="action-btn task-delete-btn" data-id="${task.id}" data-date="${task.date}" data-type="${task.type}" title="Excluir Aula"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></div>` : '';
+        card.innerHTML = `<div class="flex items-start space-x-4"><div class="flex-shrink-0 pt-1"><input type="checkbox" id="${task.id}" data-id="${task.id}" data-date="${task.date}" data-type="${task.type}" class="task-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${task.completed ? 'checked' : ''}></div><div class="flex-1"><label for="${task.id}" class="cursor-pointer"><p class="font-semibold text-gray-800 flex items-center">${!task.type.startsWith('review') ? typeIcon : ''} ${title}</p><p class="text-sm text-gray-600">${task.topic}</p>${isOverdue ? `<p class="text-xs text-red-600 font-semibold">Atrasada desde: ${formatDateDMY(task.date)}</p>` : ''}</label></div></div>${actionsMenu}`;
         return card;
     }
 
@@ -798,6 +753,25 @@
 
 
     // =================== EVENT LISTENERS (PONTO DE IGNIÇÃO) ===================
+    
+    async function startApp() {
+    const savedTheme = localStorage.getItem('study-theme') || 'theme-light';
+    themeSelector.value = savedTheme;
+    applyTheme(savedTheme);
+
+    await loadState(); 
+    populateInitialHistory();
+    setupChart();
+    renderPlan(viewDate);
+    updateProgress();
+    startCountdown();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (isAuthenticated) {
+        startApp();
+    }
+    
     document.addEventListener('DOMContentLoaded', async () => {
         
         const savedTheme = localStorage.getItem('study-theme') || 'theme-light';
