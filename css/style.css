@@ -1,18 +1,8 @@
 /* =================================== */
-/* CONFIGURAÇÃO DO TAILWIND E FONTES    */
-/* =================================== */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-/* Diretivas Base do Tailwind - Essencial para funcionar */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* =================================== */
-/* TEMAS E VARIÁVEIS DE CORES GLOBAIS  */
+/* FONTES E VARIÁVEIS DE CORES GLOBAIS */
 /* =================================== */
 :root, .theme-light {
-    --bg-color: #f9fafb; /* Cinza um pouco mais claro */
+    --bg-color: #f9fafb;
     --card-bg-color: #ffffff;
     --text-color: #1f2937;
     --muted-text-color: #6b7280;
@@ -58,12 +48,10 @@ body {
     transition: background-color 0.3s, color 0.3s;
 }
 
-/* Estilo para quando um modal está aberto */
 body.modal-open {
     overflow: hidden;
 }
 
-/* Estilos dos cards principais */
 .card {
     background-color: var(--card-bg-color);
     border: 1px solid var(--border-color);
@@ -74,8 +62,6 @@ body.modal-open {
 /* =================================== */
 /* ESTILOS DE COMPONENTES ESPECÍFICOS  */
 /* =================================== */
-
-/* Botões de controle (com sombra e efeito hover) */
 .control-button {
     background-color: var(--control-button-bg);
     border: 1px solid var(--control-button-border);
@@ -87,12 +73,10 @@ body.modal-open {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-/* Estilo para as tarefas atrasadas */
 .task-card.overdue {
-    border-left: 4px solid #ef4444; /* Vermelho */
+    border-left: 4px solid #ef4444;
 }
 
-/* Estilos para o calendário */
 .calendar-day.has-task {
     background-color: var(--accent-color);
     color: white;
@@ -110,6 +94,7 @@ body.modal-open {
     align-items: center;
     justify-content: center;
     position: relative;
+    background-color: rgba(0,0,0,0.02);
 }
 .slot-name {
     position: absolute;
@@ -125,6 +110,7 @@ body.modal-open {
 }
 .item-card {
     opacity: 0.5;
+    border: 1px solid var(--border-color);
 }
 .item-card.unlocked {
     opacity: 1;
