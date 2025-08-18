@@ -90,7 +90,7 @@
         .task-card.overdue { border-left-color: #ef4444; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
         .task-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .task-card.legis { border-left-color: #38bdf8; }
+        .task-card.legis { border-left-color: #38bdf8; } /* Cor para legislação */
         
         .task-checkbox:checked + label { text-decoration: line-through; color: #9A9A9A; }
         .chart-container { position: relative; width: 100%; max-width: 250px; margin-left: auto; margin-right: auto; height: 250px; }
@@ -170,8 +170,10 @@
                             </select>
                         </div>
                         <div class="border-t">
-                            <a href="#" id="export-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Exportar Backup</a>
-                            <a href="#" id="import-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Importar Backup</a>
+                            <!-- NOVO: Botão para exportar para o data.js -->
+                            <a href="#" id="export-datajs-btn" class="block px-4 py-2 text-sm text-blue-600 hover:bg-blue-50">Exportar para data.js</a>
+                            <a href="#" id="export-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Exportar Backup (JSON)</a>
+                            <a href="#" id="import-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Importar Backup (JSON)</a>
                             <a href="#" id="reset-btn" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Resetar Progresso</a>
                             <input type="file" id="import-backup-file" class="hidden" accept=".json">
                         </div>
@@ -182,10 +184,11 @@
     </header>
 
     <!-- Cards de Informação -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white p-5 rounded-lg flex flex-col justify-center items-center">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white p-5 rounded-lg flex flex-col justify-center items-center text-center">
             <h3 class="font-semibold text-gray-500 mb-2">Contagem Regressiva</h3>
             <div id="countdown" class="text-2xl font-bold text-gray-800"></div>
+            <div id="countdown-weeks" class="text-sm font-semibold text-amber-600 mt-1"></div>
         </div>
         <div class="bg-white p-5 rounded-lg flex flex-col justify-center items-center">
             <h3 class="font-semibold text-gray-500 mb-2">Data da Prova</h3>
@@ -194,6 +197,11 @@
         <div class="bg-white p-5 rounded-lg flex flex-col justify-center items-center">
             <h3 class="font-semibold text-gray-500 mb-2">Progresso Geral</h3>
             <p id="progressText" class="text-2xl font-bold text-gray-800">0%</p>
+        </div>
+        <div id="advanced-stats-card" class="bg-white p-5 rounded-lg flex flex-col justify-center items-center text-center md:col-span-2 lg:col-span-1">
+            <h3 class="font-semibold text-gray-500 mb-2">Ritmo Necessário</h3>
+            <div id="daily-progress-stat" class="text-sm"></div>
+            <div id="monthly-progress-stat" class="text-sm mt-2"></div>
         </div>
     </div>
 
@@ -218,13 +226,12 @@
                          <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-[#D5A021]"></div><span class="text-gray-700">R3 (D+7) - Intermediária</span></div>
                          <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-[#A25B5B]"></div><span class="text-gray-700">R5 (D+30) - Longo Prazo</span></div>
                          <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-red-500"></div><span class="text-gray-700">Tarefa Atrasada</span></div>
+                         <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-[#38bdf8]"></div><span class="text-gray-700">Legislação Municipal</span></div>
                     </div>
                     <div id="subject-progress-container" class="mt-8">
                         <h3 class="text-xl font-bold mb-4 text-center">Progresso por Matéria</h3>
                         <div id="subject-progress-bars" class="space-y-4"></div>
                     </div>
-                    <!-- Novo Card: Seções Livres -->
-                    <div id="free-sections-container" class="mt-8"></div>
                 </div>
             </aside>
         </div>
@@ -240,10 +247,14 @@
         </div>
         <form id="add-task-form" class="p-6">
             <input type="hidden" id="task-id">
-            <input type="hidden" id="original-task-date">
+            <input type="hidden" id="original-task-date-input">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Coluna Esquerda -->
                 <div class="space-y-4">
+                    <div id="original-date-container" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700">Data Original</label>
+                        <p id="original-date-text" class="mt-1 text-sm text-gray-500 bg-gray-100 p-2 rounded-md"></p>
+                    </div>
                     <div>
                         <label for="task-date" class="block text-sm font-medium text-gray-700">Data (DD/MM/AAAA)</label>
                         <input type="date" id="task-date" required class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
@@ -251,7 +262,6 @@
                     <div>
                         <label for="task-subject" class="block text-sm font-medium text-gray-700">Matéria</label>
                         <select id="task-subject" required class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
-                            <!-- Options will be populated by JS -->
                         </select>
                     </div>
                     <div>
@@ -297,23 +307,17 @@
 <!-- Modal Visualizar Todas as Aulas (z-index 50) -->
 <div id="allTasksModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col">
-        <!-- Header -->
         <div class="flex justify-between items-center p-4 border-b flex-shrink-0">
             <h3 class="text-xl font-bold">Gerenciar Aulas</h3>
             <button class="close-modal text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
         </div>
-        
-        <!-- Abas -->
         <div class="flex border-b flex-shrink-0">
             <button id="tab-active" class="tab-button active">Aulas Ativas</button>
             <button id="tab-history" class="tab-button">Histórico</button>
             <button id="tab-trash" class="tab-button">Lixeira</button>
         </div>
-        
         <div class="flex-grow overflow-hidden flex flex-col">
-            <!-- Painel de Aulas Ativas -->
             <div id="tab-content-active" class="tab-pane flex flex-col h-full overflow-hidden">
-                <!-- Seção de filtros e ações -->
                 <div class="p-4 border-b flex-shrink-0">
                     <div id="manage-actions-container" class="flex justify-center flex-wrap gap-2 mb-4">
                         <button id="add-task-btn-modal" class="control-button text-sm font-semibold py-2 px-4 rounded-lg text-green-600 border-green-300">Incluir Aula(s)</button>
@@ -323,19 +327,17 @@
                         <button id="shift-all-backward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg">Adiantar não-concluídas (-1 dia)</button>
                         <input type="file" id="csv-file-input" class="hidden" accept=".csv">
                     </div>
-                    
                     <div id="all-tasks-stats" class="flex flex-wrap justify-center gap-4 mb-4 text-center"></div>
-                    
                     <div class="flex flex-wrap gap-2 items-center mb-4">
                         <input type="text" id="all-tasks-search" class="flex-grow p-2 border rounded-md" placeholder="Buscar por matéria ou tópico...">
                     </div>
-                    
                     <div id="selected-actions-container" class="hidden mt-4 flex flex-wrap gap-2 items-center p-2 bg-amber-50 border border-amber-200 rounded-md">
                         <span id="selection-count" class="text-sm font-semibold"></span>
                         <button id="shift-selected-forward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg">Adiar</button>
                         <button id="shift-selected-backward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg">Adiantar</button>
                         <button id="delete-selected-btn" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-2 px-4 rounded-lg">Excluir</button>
                     </div>
+                    <!-- NOVO: Estrutura de Filtros -->
                     <div class="mt-4 p-2 bg-gray-50 rounded-md border">
                         <div class="flex flex-wrap gap-4 items-center">
                             <div class="flex items-center gap-2">
@@ -349,6 +351,21 @@
                                     <option value="date-desc">Data (Decrescente)</option>
                                     <option value="subject-asc">Matéria (A-Z)</option>
                                     <option value="subject-desc">Matéria (Z-A)</option>
+                                </select>
+                            </div>
+                             <button id="toggle-filters-btn" class="control-button text-sm font-semibold py-1 px-3 rounded-lg flex items-center gap-2">
+                                Filtros
+                                <svg id="filter-arrow" class="w-4 h-4 transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </div>
+                        <div id="more-filters-container" class="hidden mt-4 pt-4 border-t flex flex-wrap gap-x-6 gap-y-4">
+                            <div class="flex items-center gap-2">
+                                <label for="filter-type" class="text-sm font-medium">Tipo:</label>
+                                <select id="filter-type" class="p-1 border rounded-md text-sm">
+                                    <option value="">Todos</option>
+                                    <option value="video">Vídeo</option>
+                                    <option value="pdf">PDF</option>
+                                    <option value="legis">Legislação</option>
                                 </select>
                             </div>
                             <div class="flex items-center gap-2">
@@ -376,6 +393,7 @@
                         <thead class="sticky top-0 bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left"><input type="checkbox" id="select-all-tasks-checkbox" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]"></th>
+                                <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aula</th>
@@ -388,7 +406,6 @@
                 </div>
             </div>
             
-            <!-- Painel de Histórico -->
             <div id="tab-content-history" class="tab-pane hidden flex flex-col h-full overflow-hidden">
                  <div class="p-4 border-b flex-shrink-0 flex justify-between items-center">
                     <p class="text-sm text-gray-600">Aqui estão todas as aulas que você já concluiu.</p>
@@ -416,7 +433,6 @@
                 </div>
             </div>
 
-            <!-- Painel da Lixeira -->
             <div id="tab-content-trash" class="tab-pane hidden flex flex-col h-full overflow-hidden">
                 <div class="p-4 border-b flex-shrink-0">
                     <p class="text-sm text-gray-600">Aulas excluídas são mantidas aqui. Você pode restaurá-las ou excluí-las permanentemente.</p>
@@ -444,7 +460,6 @@
     </div>
 </div>
 
-
 <!-- Modal de Confirmação (z-index 70) -->
 <div id="confirmationModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[70]">
     <div class="bg-white rounded-lg shadow-2xl w-full max-w-sm p-6">
@@ -462,14 +477,14 @@
 
 <script>
     // =================== CONFIGURAÇÃO E VARIÁVEIS GLOBAIS ===================
-        const firebaseConfig = {
+    const firebaseConfig = {
         apiKey: "AIzaSyA050ckDIuD1ujjyRee81r0Vv_jygoHs1Q",
         authDomain: "meu-painel-de-estudos-v2.firebaseapp.com",
         projectId: "meu-painel-de-estudos-v2",
         storageBucket: "meu-painel-de-estudos-v2.firebasestorage.app",
         messagingSenderId: "889152606734",
         appId: "1:889152606734:web:09457849b695f3f1d4625f"
-        };
+    };
 
     const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -516,7 +531,7 @@
     // =================== LÓGICA DE TEMAS ===================
     const themeSelector = document.getElementById('theme-selector');
     const applyTheme = (theme) => {
-        document.documentElement.className = ''; // Limpa classes antigas
+        document.documentElement.className = '';
         document.documentElement.classList.add(theme);
         localStorage.setItem('study-theme', theme);
         if (progressChart) {
@@ -602,13 +617,48 @@
     // =================== LÓGICA PRINCIPAL DA APLICAÇÃO ===================
     function initializeStudyPlan() {
         let plan = { tasks: {}, reviews: {}, history: [], dailyGoals: {}, deletedTasks: {} };
-                    
-        allTasks.forEach(task => { // << Esta linha agora funciona corretamente
+        let combinedTasks = [...allTasks]; 
+
+        const legislacaoMunicipalTasks = [
+            { subject: 'Administração Pública', lesson: 'L1', topic: 'Lei Orgânica do Município de Uberlândia - Art. 1º ao 15º', type: 'legis' },
+            { subject: 'Administração Pública', lesson: 'L2', topic: 'Lei Orgânica do Município de Uberlândia - Art. 16º ao 30º', type: 'legis' },
+            { subject: 'Administração Pública', lesson: 'L3', topic: 'Lei Orgânica - Competências do Município', type: 'legis' },
+            { subject: 'Administração Pública', lesson: 'L4', topic: 'Lei Orgânica - Servidores Públicos', type: 'legis' },
+            { subject: 'Administração Pública', lesson: 'L5', topic: 'Estatuto dos Servidores (LC nº 40/1992) - Disposições Preliminares', type: 'legis' },
+            { subject: 'Administração Pública', lesson: 'L6', topic: 'Estatuto dos Servidores - Direitos e Vantagens', type: 'legis' },
+            { subject: 'Administração Pública', lesson: 'L7', topic: 'Estatuto dos Servidores - Regime Disciplinar', type: 'legis' },
+            { subject: 'Administração Pública', lesson: 'L8', topic: 'Estatuto dos Servidores - Responsabilidades', type: 'legis' },
+            { subject: 'Administração Pública', lesson: 'L9', topic: 'Plano de Cargos e Carreiras (LC nº 671/2018) - Estrutura Geral', type: 'legis' },
+            { subject: 'Administração Pública', lesson: 'L10', topic: 'Revisão Geral - Legislação Municipal', type: 'legis' },
+        ];
+        
+        let startDate = new Date('2025-08-25T03:00:00Z');
+        legislacaoMunicipalTasks.forEach((task, index) => {
+            const week = index < 8 ? index : index - 2;
+            const taskDate = addDays(startDate, week * 7);
+            combinedTasks.push({
+                ...task,
+                date: formatDateYMD(taskDate),
+                countsTowardsProgress: false
+            });
+        });
+
+        combinedTasks.forEach(task => {
             const id = generateUniqueId(task);
             const dateStr = formatDateYMD(new Date(task.date + 'T03:00:00Z'));
             if (!plan.tasks[dateStr]) plan.tasks[dateStr] = [];
+            
             if (!plan.tasks[dateStr].some(t => t.id === id)) {
-                plan.tasks[dateStr].push({ id, ...task, date: dateStr, completed: task.completed || false, notebookLink: task.notebookLink || '', notes: task.notes || '' });
+                plan.tasks[dateStr].push({ 
+                    id, 
+                    ...task, 
+                    date: dateStr, 
+                    originalDate: task.originalDate || dateStr,
+                    completed: task.completed || false, 
+                    notebookLink: task.notebookLink || '', 
+                    notes: task.notes || '',
+                    countsTowardsProgress: task.countsTowardsProgress !== false
+                });
             }
         });
         return plan;
@@ -625,17 +675,24 @@
             const doc = await docRef.get();
             if (doc.exists && doc.data().tasks) { 
                 studyPlan = doc.data();
-                if (!studyPlan.dailyGoals) studyPlan.dailyGoals = {};
-                if (!studyPlan.deletedTasks) studyPlan.deletedTasks = {};
-                if (!studyPlan.history) studyPlan.history = [];
+                // CORREÇÃO: Garante que dados antigos tenham as novas propriedades
+                Object.values(studyPlan.tasks).flat().forEach(task => {
+                    if (task.countsTowardsProgress === undefined) {
+                        task.countsTowardsProgress = task.type !== 'legis';
+                    }
+                    if (!task.originalDate) {
+                        task.originalDate = task.date;
+                    }
+                });
             } else {
                 console.log("Nenhum plano encontrado no Firestore, inicializando um novo.");
                 studyPlan = initializeStudyPlan();
-                saveState(); 
             }
         } catch (error) {
             console.error("Erro ao carregar progresso: ", error);
             studyPlan = initializeStudyPlan();
+        } finally {
+             saveState(); // Salva o estado corrigido/inicializado
         }
     };
 
@@ -668,7 +725,7 @@
         
         const typeIcon = task.type === 'video' 
             ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 text-gray-500"><path d="m22 8-6 4 6 4V8Z"></path><rect x="2" y="6" width="14" height="12" rx="2" ry="2"></rect></svg>` 
-            : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 text-gray-500"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>`;
+            : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 text-gray-500"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`;
 
         const notebookLinkIcon = task.notebookLink ? `
             <a href="${task.notebookLink}" target="_blank" class="action-btn" title="Abrir caderno no NotebookLM">
@@ -810,27 +867,32 @@
     
     // =================== LÓGICA DE PROGRESSO E GRÁFICOS ===================
     const updateProgress = () => {
-        const allStudyTasks = Object.values(studyPlan.tasks || {}).flat();
+        // CORREÇÃO: Garante que o filtro é explícito para 'true'
+        const allStudyTasks = Object.values(studyPlan.tasks || {}).flat().filter(t => t.countsTowardsProgress === true);
+        
         const completedStudyTasks = allStudyTasks.filter(task => task.completed).length;
         const totalStudyTasks = allStudyTasks.length;
         const percentage = totalStudyTasks > 0 ? Math.round((completedStudyTasks / totalStudyTasks) * 100) : 0;
         document.getElementById('progressText').textContent = `${percentage}%`;
         
         if (progressChart) {
-            const allTasksAndReviews = allStudyTasks.concat(Object.values(studyPlan.reviews || {}).flat());
-            const totalCompleted = allTasksAndReviews.filter(t => t.completed).length;
-            const totalItems = allTasksAndReviews.length;
+            const allProgressItems = allStudyTasks.concat(Object.values(studyPlan.reviews || {}).flat());
+            const totalCompleted = allProgressItems.filter(t => t.completed).length;
+            const totalItems = allProgressItems.length;
             progressChart.data.datasets[0].data = [totalCompleted, totalItems - totalCompleted];
             progressChart.update();
         }
         renderSubjectProgress();
-        renderFreeSectionsStat();
+        renderAdvancedStats();
     };
 
     const renderSubjectProgress = () => {
         const container = document.getElementById('subject-progress-bars');
         if (!container) return;
-        const allStudyTasks = Object.values(studyPlan.tasks || {}).flat();
+        
+        // CORREÇÃO: Garante que o filtro é explícito para 'true'
+        const allStudyTasks = Object.values(studyPlan.tasks || {}).flat().filter(t => t.countsTowardsProgress === true);
+        
         if (allStudyTasks.length === 0) { container.innerHTML = ''; return; }
         const subjects = [...new Set(allStudyTasks.map(task => task.subject))];
         container.innerHTML = subjects.sort().map(subject => {
@@ -842,33 +904,28 @@
         }).join('');
     };
 
-    function renderFreeSectionsStat() {
-        const container = document.getElementById('free-sections-container');
-        if (!container) return;
-        const allTaskDates = Object.keys(studyPlan.tasks || {});
-        if (allTaskDates.length === 0) { container.innerHTML = ''; return; }
+    function renderAdvancedStats() {
+        const dailyStatEl = document.getElementById('daily-progress-stat');
+        const monthlyStatEl = document.getElementById('monthly-progress-stat');
+        const examDate = new Date('2025-10-26T11:00:00Z');
+        const startDate = new Date('2025-06-24T03:00:00Z');
 
-        const lastScheduledDateStr = allTaskDates.reduce((max, current) => current > max ? current : max);
-        const lastScheduledDate = new Date(lastScheduledDateStr + 'T03:00:00Z');
-        const examEve = new Date('2025-10-25T03:00:00Z');
+        const totalDays = Math.ceil((examDate - startDate) / (1000 * 60 * 60 * 24));
+        const totalMonths = (examDate.getFullYear() - startDate.getFullYear()) * 12 + (examDate.getMonth() - startDate.getMonth());
 
-        let content = '';
-        if (lastScheduledDate >= examEve) {
-            content = `<p class="text-2xl font-bold">0 dias</p><p class="text-sm text-gray-600">Seu cronograma está preenchido até a véspera da prova.</p>`;
-        } else {
-            let freeDays = 0;
-            let currentDate = new Date(lastScheduledDate);
-            currentDate.setDate(currentDate.getDate() + 1);
-            while(currentDate <= examEve) {
-                freeDays++;
-                currentDate.setDate(currentDate.getDate() + 1);
-            }
-            const freeHours = freeDays * 6;
-            const totalDays = Math.floor((examEve - lastScheduledDate) / (1000 * 60 * 60 * 24));
-            content = `<p class="text-2xl font-bold">${freeHours} horas</p><p class="text-sm text-gray-600">(${totalDays} dias corridos) para remanejar aulas.</p>`;
+        const totalTasks = Object.values(studyPlan.tasks || {}).flat().filter(t => t.countsTowardsProgress === true).length;
+
+        if (totalDays > 0 && totalTasks > 0) {
+            const dailyPercentage = (100 / totalDays).toFixed(2);
+            const dailyAvg = (totalTasks / totalDays).toFixed(1);
+            dailyStatEl.innerHTML = `<strong>Diário: ${dailyPercentage}%</strong> <span class="text-gray-600">(~${dailyAvg} aulas)</span>`;
         }
-        
-        container.innerHTML = `<div class="p-4 rounded-lg bg-gray-100 border text-center"><h3 class="font-bold text-lg mb-2">"Gordura" no Cronograma</h3>${content}</div>`;
+
+        if (totalMonths > 0 && totalTasks > 0) {
+            const monthlyPercentage = (100 / totalMonths).toFixed(1);
+            const monthlyAvg = (totalTasks / totalMonths).toFixed(0);
+            monthlyStatEl.innerHTML = `<strong>Mensal: ${monthlyPercentage}%</strong> <span class="text-gray-600">(~${monthlyAvg} aulas)</span>`;
+        }
     }
 
     const setupChart = () => {
@@ -897,9 +954,7 @@
                         callbacks: {
                             label: function(context) {
                                 let label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
+                                if (label) { label += ': '; }
                                 const value = context.raw;
                                 const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
                                 const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
@@ -919,32 +974,27 @@
         
         const allTasks = Object.values(studyPlan.tasks || {}).flat();
         const allReviews = Object.values(studyPlan.reviews || {}).flat();
-        let itemsToShow;
-        
-        const reviewsOnlyFilter = document.getElementById('filter-reviews').checked;
-        if (reviewsOnlyFilter) {
-            itemsToShow = allReviews;
-        } else {
-            itemsToShow = [...allTasks, ...allReviews];
-        }
-        
+        let itemsToShow = [...allTasks, ...allReviews];
         const totalItemsCount = itemsToShow.length;
 
         const subjectFilter = document.getElementById('filter-subject').value;
         if (subjectFilter) itemsToShow = itemsToShow.filter(task => task.subject === subjectFilter);
         
+        // NOVO: Aplica o filtro de tipo
+        const typeFilter = document.getElementById('filter-type').value;
+        if (typeFilter) itemsToShow = itemsToShow.filter(task => task.type === typeFilter);
+
         const notCompletedFilter = document.getElementById('filter-not-completed').checked;
         if (notCompletedFilter) itemsToShow = itemsToShow.filter(task => !task.completed);
-        
         const completedFilter = document.getElementById('filter-completed').checked;
         if (completedFilter) itemsToShow = itemsToShow.filter(task => task.completed);
-        
         const overdueFilter = document.getElementById('filter-overdue').checked;
         if (overdueFilter) {
             const todayStr = formatDateYMD(new Date());
             itemsToShow = itemsToShow.filter(task => !task.completed && task.date < todayStr);
         }
-
+        const reviewsOnlyFilter = document.getElementById('filter-reviews').checked;
+        if (reviewsOnlyFilter) itemsToShow = itemsToShow.filter(task => task.type.startsWith('review'));
         const searchText = document.getElementById('all-tasks-search').value.toLowerCase();
         if (searchText) itemsToShow = itemsToShow.filter(task => task.subject.toLowerCase().includes(searchText) || task.topic.toLowerCase().includes(searchText));
         
@@ -959,7 +1009,29 @@
                 default: return new Date(a.date) - new Date(b.date);
             }
         });
-        tableBody.innerHTML = itemsToShow.map(task => `<tr><td class="px-6 py-4"><input type="checkbox" class="task-select-checkbox h-4 w-4" data-id="${task.id}" data-date="${task.date}"></td><td class="px-6 py-4">${formatDateDMY(task.date)}</td><td class="px-6 py-4">${task.subject}</td><td class="px-6 py-4">${task.lesson}</td><td class="px-6 py-4">${task.topic}</td><td class="px-6 py-4 flex items-center gap-2"><button class="action-btn task-edit-btn-table" data-id="${task.id}" data-date="${task.date}" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button><button class="action-btn task-delete-btn-table" data-id="${task.id}" data-date="${task.date}" title="Excluir"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td></tr>`).join('');
+
+        tableBody.innerHTML = itemsToShow.map(task => {
+            const typeIcon = task.type === 'video' 
+                ? `<svg title="Videoaula" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-500"><path d="m22 8-6 4 6 4V8Z"></path><rect x="2" y="6" width="14" height="12" rx="2" ry="2"></rect></svg>` 
+                : (task.type === 'pdf' 
+                    ? `<svg title="PDF" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`
+                    : (task.type === 'legis'
+                        ? `<svg title="Legislação" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22V2"></path><path d="M5 10.5c0-1.5 1.5-3 3-3s3 1.5 3 3-1.5 3-3 3-3-1.5-3-3z"></path><path d="M19 10.5c0-1.5-1.5-3-3-3s-3 1.5-3 3 1.5 3 3 3 3-1.5 3-3z"></path></svg>`
+                        : ''));
+
+            return `<tr>
+                        <td class="px-6 py-4"><input type="checkbox" class="task-select-checkbox h-4 w-4" data-id="${task.id}" data-date="${task.date}"></td>
+                        <td class="px-2 py-4">${typeIcon}</td>
+                        <td class="px-6 py-4">${formatDateDMY(task.date)}</td>
+                        <td class="px-6 py-4">${task.subject}</td>
+                        <td class="px-6 py-4">${task.lesson}</td>
+                        <td class="px-6 py-4">${task.topic}</td>
+                        <td class="px-6 py-4 flex items-center gap-2">
+                            <button class="action-btn task-edit-btn-table" data-id="${task.id}" data-date="${task.date}" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button>
+                            <button class="action-btn task-delete-btn-table" data-id="${task.id}" data-date="${task.date}" title="Excluir"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                        </td>
+                    </tr>`;
+        }).join('');
     }
 
     function renderHistoryTable() {
@@ -1040,10 +1112,7 @@
         const totalTasks = Object.values(studyPlan.tasks || {}).flat().length;
         const overduePercentage = totalTasks > 0 ? ((overdueTasks.length / totalTasks) * 100).toFixed(1) : 0;
         
-        planContent.innerHTML = headerHTML + `<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"><div class="bg-red-50 p-4 rounded-lg text-center"><p class="text-2xl font-bold text-red-700">${overdueTasks.length}</p><p class="text-sm font-semibold text-red-600">Total de Aulas Atrasadas</p></div><div class="bg-yellow-50 p-4 rounded-lg text-center"><p class="text-2xl font-bold text-yellow-700">${overduePercentage}%</p><p class="text-sm font-semibold text-yellow-600">do Total de Aulas</p></div><div class="bg-blue-50 p-4 rounded-lg text-center md:col-span-2"><p class="text-2xl font-bold text-blue-700">${overdueHours.toFixed(1)} horas</p><p class="text-sm font-semibold text-blue-600">de Estudo Acumulado (aprox.)</p></div></div>
-        <div class="text-center mb-6">
-             <button id="reschedule-overdue-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg text-green-600 border-green-300">Encaixar Aulas Atrasadas</button>
-        </div>`;
+        planContent.innerHTML = headerHTML + `<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"><div class="bg-red-50 p-4 rounded-lg text-center"><p class="text-2xl font-bold text-red-700">${overdueTasks.length}</p><p class="text-sm font-semibold text-red-600">Total de Aulas Atrasadas</p></div><div class="bg-yellow-50 p-4 rounded-lg text-center"><p class="text-2xl font-bold text-yellow-700">${overduePercentage}%</p><p class="text-sm font-semibold text-yellow-600">do Total de Aulas</p></div><div class="bg-blue-50 p-4 rounded-lg text-center md:col-span-2"><p class="text-2xl font-bold text-blue-700">${overdueHours.toFixed(1)} horas</p><p class="text-sm font-semibold text-blue-600">de Estudo Acumulado (aprox.)</p></div></div>`;
         
         const groupedByDate = overdueTasks.reduce((acc, task) => { (acc[task.date] = acc[task.date] || []).push(task); return acc; }, {});
         Object.keys(groupedByDate).sort().forEach(dateStr => {
@@ -1057,13 +1126,23 @@
     
     const startCountdown = () => {
         const countdownEl = document.getElementById('countdown');
+        const countdownWeeksEl = document.getElementById('countdown-weeks');
         const examDate = new Date('2025-10-26T11:00:00Z').getTime();
+        
         const update = () => {
             const distance = examDate - new Date().getTime();
-            if (distance < 0) { countdownEl.innerHTML = "PROVA REALIZADA!"; clearInterval(interval); return; }
+            if (distance < 0) { 
+                countdownEl.innerHTML = "PROVA REALIZADA!"; 
+                countdownWeeksEl.innerHTML = "";
+                clearInterval(interval); 
+                return; 
+            }
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const weeks = Math.floor(days / 7);
+            
             countdownEl.innerHTML = `${days}d ${hours}h`;
+            countdownWeeksEl.innerHTML = `(Aprox. ${weeks} semanas)`;
         };
         const interval = setInterval(update, 1000 * 60 * 60);
         update();
@@ -1075,7 +1154,7 @@
             populateSubjectSelect(document.getElementById('task-subject'));
             document.getElementById('modal-title').textContent = 'Editar Aula';
             document.getElementById('task-id').value = task.id;
-            document.getElementById('original-task-date').value = task.date;
+            document.getElementById('original-task-date-input').value = task.date;
             document.getElementById('task-date').value = task.date;
             document.getElementById('task-subject').value = task.subject;
             document.getElementById('task-lesson').value = task.lesson;
@@ -1084,6 +1163,14 @@
             document.getElementById('task-notebook-link').value = task.notebookLink || '';
             document.getElementById('task-notes').value = task.notes || '';
             
+            const originalDateContainer = document.getElementById('original-date-container');
+            if (task.originalDate && task.originalDate !== task.date) {
+                document.getElementById('original-date-text').textContent = formatDateDMY(task.originalDate);
+                originalDateContainer.classList.remove('hidden');
+            } else {
+                originalDateContainer.classList.add('hidden');
+            }
+
             const completedContainer = document.getElementById('completed-checkbox-container');
             const completedCheckbox = document.getElementById('task-completed-checkbox');
             completedContainer.classList.remove('hidden');
@@ -1164,18 +1251,18 @@
         document.getElementById('trash-actions-container').classList.toggle('hidden', !anySelected);
     }
 
-    // =================== LÓGICA DE CSV ===================
+    // =================== LÓGICA DE CSV E EXPORTAÇÃO ===================
     function exportToCSV() {
         const allTasks = Object.values(studyPlan.tasks || {}).flat();
         if (allTasks.length === 0) {
             alert("Nenhuma aula para exportar.");
             return;
         }
-        const headers = ['date', 'subject', 'lesson', 'topic', 'type', 'completed', 'notebookLink', 'notes'];
+        const headers = ['date', 'subject', 'lesson', 'topic', 'type', 'completed', 'notebookLink', 'notes', 'originalDate', 'countsTowardsProgress'];
         const csvRows = [headers.join(',')];
         
         allTasks.forEach(task => {
-            const row = headers.map(header => `"${(task[header] || '').replace(/"/g, '""')}"`);
+            const row = headers.map(header => `"${(task[header] || '').toString().replace(/"/g, '""')}"`);
             csvRows.push(row.join(','));
         });
 
@@ -1191,55 +1278,46 @@
         document.body.removeChild(link);
     }
 
-    function importFromCSV(file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const csv = event.target.result;
-            const lines = csv.split('\n').filter(line => line);
-            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-            
-            const requiredHeaders = ['date', 'subject', 'lesson', 'topic', 'type'];
-            if (!requiredHeaders.every(h => headers.includes(h))) {
-                showConfirmation("O arquivo CSV é inválido ou não contém os cabeçalhos necessários (date, subject, lesson, topic, type).", () => {});
-                return;
-            }
+    /**
+     * NOVO: Função para exportar o estado atual para um formato compatível com data.js
+     */
+    function exportForDataJs() {
+        const allTasks = Object.values(studyPlan.tasks || {}).flat()
+            .filter(task => task.type !== 'legis'); // Não exporta legislação, pois é gerada dinamicamente
 
-            let newTasksCount = 0;
-            for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-                const taskData = {};
-                headers.forEach((header, index) => {
-                    taskData[header] = values[index];
-                });
+        if (allTasks.length === 0) {
+            alert("Nenhuma aula para exportar.");
+            return;
+        }
 
-                if (taskData.date && taskData.subject && taskData.lesson && taskData.topic && taskData.type) {
-                    const dateStr = formatDateYMD(new Date(taskData.date + 'T03:00:00Z'));
-                    const newTask = {
-                        id: generateUniqueId(taskData),
-                        date: dateStr,
-                        subject: taskData.subject,
-                        lesson: taskData.lesson,
-                        topic: taskData.topic,
-                        type: taskData.type,
-                        completed: taskData.completed === 'true' || false,
-                        notebookLink: taskData.notebookLink || '',
-                        notes: taskData.notes || ''
-                    };
-                    if (!studyPlan.tasks[dateStr]) studyPlan.tasks[dateStr] = [];
-                    studyPlan.tasks[dateStr].push(newTask);
-                    newTasksCount++;
-                }
-            }
-            if (newTasksCount > 0) {
-                saveState();
-                populateInitialHistory();
-                updateProgress();
-                renderAllTasksTable();
-                renderAllTasksStatistics();
-                showConfirmation(`${newTasksCount} aulas importadas com sucesso!`, () => {});
-            }
-        };
-        reader.readAsText(file);
+        // Constrói a string de código JavaScript
+        let fileContent = "const allTasks = [\n";
+        allTasks.forEach(task => {
+            fileContent += "    {\n";
+            fileContent += `        date: '${task.date}',\n`;
+            fileContent += `        subject: '${task.subject.replace(/'/g, "\\'")}',\n`;
+            fileContent += `        lesson: '${task.lesson.replace(/'/g, "\\'")}',\n`;
+            fileContent += `        topic: '${task.topic.replace(/'/g, "\\'")}',\n`;
+            fileContent += `        type: '${task.type}',\n`;
+            // Só adiciona propriedades não padrão se elas existirem/forem verdadeiras
+            if (task.completed) fileContent += `        completed: true,\n`;
+            if (task.originalDate && task.originalDate !== task.date) fileContent += `        originalDate: '${task.originalDate}',\n`;
+            if (task.notebookLink) fileContent += `        notebookLink: '${task.notebookLink}',\n`;
+            if (task.notes) fileContent += `        notes: '${task.notes.replace(/'/g, "\\'").replace(/\n/g, "\\n")}',\n`;
+            fileContent += "    },\n";
+        });
+        fileContent += "];\n";
+
+        // Cria e baixa o arquivo .js
+        const blob = new Blob([fileContent], { type: 'text/javascript;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "data_atualizado.js");
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
 
@@ -1252,7 +1330,6 @@
 
         if (isAuthenticated) {
             await loadState(); 
-            populateInitialHistory();
             setupChart();
             renderPlan(viewDate);
             updateProgress();
@@ -1262,7 +1339,6 @@
         passwordForm.addEventListener('submit', async () => {
             if (isAuthenticated) {
                 await loadState();
-                populateInitialHistory();
                 setupChart();
                 renderPlan(viewDate);
                 updateProgress();
@@ -1295,8 +1371,9 @@
              populateSubjectSelect(document.getElementById('task-subject'));
              document.getElementById('modal-title').textContent = 'Incluir Nova Aula';
              document.getElementById('task-id').value = '';
-             document.getElementById('original-task-date').value = '';
+             document.getElementById('original-task-date-input').value = '';
              document.getElementById('completed-checkbox-container').classList.add('hidden');
+             document.getElementById('original-date-container').classList.add('hidden');
              openModal(addTaskModal);
         });
 
@@ -1314,7 +1391,7 @@
         document.getElementById('add-task-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const id = document.getElementById('task-id').value;
-            const originalDate = document.getElementById('original-task-date').value;
+            const originalDateFromInput = document.getElementById('original-task-date-input').value;
             const date = document.getElementById('task-date').value;
             const subject = document.getElementById('task-subject').value;
             const lesson = document.getElementById('task-lesson').value;
@@ -1326,11 +1403,10 @@
 
             let taskData;
 
-            if (id && originalDate && studyPlan.tasks[originalDate]) {
-                const taskIndex = studyPlan.tasks[originalDate].findIndex(t => t.id === id);
+            if (id && originalDateFromInput && studyPlan.tasks[originalDateFromInput]) {
+                const taskIndex = studyPlan.tasks[originalDateFromInput].findIndex(t => t.id === id);
                 if (taskIndex > -1) {
-                    taskData = studyPlan.tasks[originalDate][taskIndex];
-                    // Update existing task data
+                    taskData = studyPlan.tasks[originalDateFromInput][taskIndex];
                     taskData.date = date;
                     taskData.subject = subject;
                     taskData.lesson = lesson;
@@ -1339,7 +1415,6 @@
                     taskData.notebookLink = notebookLink;
                     taskData.notes = notes;
                     
-                    // Handle completion status change
                     if (taskData.completed !== isCompleted) {
                         taskData.completed = isCompleted;
                         if (isCompleted) {
@@ -1351,17 +1426,21 @@
                         }
                     }
 
-                    // Move task if date changed
-                    if (originalDate !== date) {
-                        studyPlan.tasks[originalDate].splice(taskIndex, 1);
-                        if (studyPlan.tasks[originalDate].length === 0) delete studyPlan.tasks[originalDate];
+                    if (originalDateFromInput !== date) {
+                        studyPlan.tasks[originalDateFromInput].splice(taskIndex, 1);
+                        if (studyPlan.tasks[originalDateFromInput].length === 0) delete studyPlan.tasks[originalDateFromInput];
                         if (!studyPlan.tasks[date]) studyPlan.tasks[date] = [];
                         studyPlan.tasks[date].push(taskData);
                     }
                 }
             } else {
-                // Create new task
-                taskData = { id: generateUniqueId({ subject, lesson, type }), date, subject, lesson, topic, type, notebookLink, notes, completed: false };
+                taskData = { 
+                    id: generateUniqueId({ subject, lesson, type }), 
+                    date, subject, lesson, topic, type, notebookLink, notes, 
+                    completed: false, 
+                    originalDate: date,
+                    countsTowardsProgress: type !== 'legis'
+                };
                 if (!studyPlan.tasks[date]) studyPlan.tasks[date] = [];
                 studyPlan.tasks[date].push(taskData);
             }
@@ -1449,6 +1528,11 @@
 
         document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', (e) => closeModal(e.target.closest('.modal'))));
         
+        document.getElementById('export-datajs-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            exportForDataJs();
+            settingsMenu.classList.add('hidden');
+        });
         document.getElementById('export-backup-btn').addEventListener('click', (e) => {
             e.preventDefault();
             const dataStr = JSON.stringify(studyPlan, null, 2);
@@ -1490,7 +1574,14 @@
 
         document.getElementById('view-overdue-tasks-btn').addEventListener('click', renderOverdueTasks);
         
-        ['all-tasks-search', 'filter-subject', 'sort-by', 'filter-not-completed', 'filter-completed', 'filter-overdue', 'filter-reviews'].forEach(id => {
+        // NOVO: Listener para o botão de expandir filtros
+        document.getElementById('toggle-filters-btn').addEventListener('click', (e) => {
+            document.getElementById('more-filters-container').classList.toggle('hidden');
+            document.getElementById('filter-arrow').classList.toggle('rotate-180');
+        });
+
+        // NOVO: Adiciona o listener para o novo filtro de tipo
+        ['all-tasks-search', 'filter-subject', 'sort-by', 'filter-type', 'filter-not-completed', 'filter-completed', 'filter-overdue', 'filter-reviews'].forEach(id => {
             document.getElementById(id).addEventListener('input', renderAllTasksTable);
         });
         
@@ -1588,7 +1679,6 @@
         document.getElementById('shift-all-forward-btn').addEventListener('click', () => showConfirmation('Adiar todas as aulas não-concluídas em 1 dia?', () => shiftAllTasks(1)));
         document.getElementById('shift-all-backward-btn').addEventListener('click', () => showConfirmation('Adiantar todas as aulas não-concluídas em 1 dia?', () => shiftAllTasks(-1)));
 
-        // Lógica das Abas e Lixeira
         const tabs = ['active', 'history', 'trash'];
         tabs.forEach(tabId => {
             document.getElementById(`tab-${tabId}`).addEventListener('click', () => {
@@ -1636,7 +1726,7 @@
                 }
             }
             if (e.target.classList.contains('perm-delete-btn')) {
-                showConfirmation('Excluir permanentemente?', () => {
+                showConfirmation('Excluir permanentemente? Esta ação não pode ser desfeita.', () => {
                     if (studyPlan.deletedTasks[id]) {
                         delete studyPlan.deletedTasks[id];
                         saveState();
@@ -1688,7 +1778,6 @@
             });
         });
 
-        // Event Listeners para CSV
         document.getElementById('export-csv-btn').addEventListener('click', exportToCSV);
         document.getElementById('import-csv-btn').addEventListener('click', () => {
             document.getElementById('csv-file-input').click();
@@ -1701,7 +1790,6 @@
             event.target.value = '';
         });
 
-        // Adicionar nova matéria
         document.getElementById('task-subject').addEventListener('change', (e) => {
             if (e.target.value === 'new') {
                 const newSubject = prompt("Digite o nome da nova matéria:");
