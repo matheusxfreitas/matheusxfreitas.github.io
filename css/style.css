@@ -60,6 +60,20 @@ body.modal-open {
 }
 
 /* =================================== */
+/* ✨ CORREÇÃO PARA OS MODAIS (POP-UPS) ✨ */
+/* =================================== */
+.modal {
+    transition: opacity 0.25s ease;
+}
+.modal.hidden {
+    display: none;
+}
+.modal-content {
+    background-color: var(--card-bg-color);
+    color: var(--text-color);
+}
+
+/* =================================== */
 /* ESTILOS DE COMPONENTES ESPECÍFICOS  */
 /* =================================== */
 .control-button {

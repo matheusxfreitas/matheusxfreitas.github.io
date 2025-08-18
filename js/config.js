@@ -1,7 +1,6 @@
-// js/config.js - Versão Refatorada
+// js/config.js - Versão com Filtros Corrigidos
 
 // --- INICIALIZAÇÃO DO FIREBASE ---
-// Mantemos a configuração para poder salvar os itens na base de dados.
 const firebaseConfig = {
     apiKey: "AIzaSyA050ckDIuD1ujjyRee81r0Vv_jygoHs1Q",
     authDomain: "meu-painel-de-estudos-v2.firebaseapp.com",
@@ -14,7 +13,6 @@ const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // --- VARIÁVEIS GLOBAIS ---
-// Esta variável irá guardar todos os itens vindos do nosso ficheiro gamedata.js
 let allGameItems = [];
 
 /**
@@ -24,28 +22,31 @@ let allGameItems = [];
  */
 function renderGallery(filter = 'all') {
     const gallery = document.getElementById('sprite-gallery');
-    gallery.innerHTML = ''; // Limpa a galeria antes de redesenhar
+    gallery.innerHTML = ''; // Limpa a galeria
 
-    // Filtra a nossa lista de itens central (allGameItems)
+    // ✨ LÓGICA DE FILTRO CORRIGIDA E SIMPLIFICADA ✨
     const filteredItems = allGameItems.filter(item => {
-        if (filter === 'all') return true;
-        // O filtro agora é mais inteligente, ele verifica o tipo de item baseado no ID
-        if (item.id.startsWith(filter)) return true; // ex: 'helm_1' começa com 'helm' (se o filtro for 'head')
-        if (filter === 'armoire' && item.imageUrl.includes('/armoire/')) return true;
-        // Casos especiais para mapear o select para os IDs
-        if (filter === 'head' && item.id.startsWith('helm')) return true;
-        return false;
+        if (filter === 'all') {
+            return true;
+        }
+        if (filter === 'armoire') {
+            return item.imageUrl.includes('/armoire/');
+        }
+        // Extrai o tipo do item pelo início do seu ID (ex: 'head' de 'head_warrior_1')
+        const itemType = item.id.split('_')[0];
+        
+        // Compara o tipo do item com o filtro selecionado
+        return itemType === filter;
     });
 
     // Cria um card para cada item filtrado
     filteredItems.forEach(item => {
         const card = document.createElement('div');
         card.className = 'sprite-card p-2 border rounded-md flex items-center justify-center';
-        // Guardamos o ID do item para referência futura
         card.dataset.itemId = item.id;
         
         const img = document.createElement('img');
-        img.src = item.imageUrl; // Usa o caminho correto vindo do gamedata.js
+        img.src = item.imageUrl;
         img.className = 'item-sprite';
         
         card.appendChild(img);
@@ -55,18 +56,15 @@ function renderGallery(filter = 'all') {
 
 /**
  * DOCUMENTAÇÃO: openCreateModal(itemId)
- * Abre o modal de criação de item, pré-preenchendo com a imagem selecionada.
+ * Abre o modal de criação de item.
  * @param {string} itemId - O ID do item que foi clicado.
  */
 function openCreateModal(itemId) {
-    // Encontra o objeto completo do item na nossa lista central
     const item = allGameItems.find(i => i.id === itemId);
-    if (!item) return; // Se não encontrar o item, não faz nada
+    if (!item) return;
 
     document.getElementById('modal-sprite-preview').src = item.imageUrl;
     document.getElementById('item-image-url').value = item.imageUrl;
-    
-    // Sugere um nome e tier baseado no item clicado
     document.getElementById('item-name').value = item.name || '';
     document.getElementById('item-tier').value = item.tier || 1;
     document.getElementById('item-subject').value = item.subject || '';
@@ -75,12 +73,11 @@ function openCreateModal(itemId) {
 }
 
 // --- LÓGICA PRINCIPAL ---
-// Espera o HTML carregar completamente antes de executar o código.
 document.addEventListener('DOMContentLoaded', async () => {
-    // A MÁGICA ACONTECE AQUI!
-    // Em vez de usar a "fileList", nós lemos a lista de itens diretamente
-    // da nossa configuração central que foi carregada pelo gamedata.js
-    allGameItems = GAMIFICATION_CONFIG.items;
+    // Carrega os itens da nossa base de dados central
+    if (typeof GAMIFICATION_CONFIG !== 'undefined' && GAMIFICATION_CONFIG.items) {
+        allGameItems = GAMIFICATION_CONFIG.items;
+    }
 
     const docRef = db.collection("progresso").doc("meuPlano");
     
@@ -97,17 +94,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error("Erro ao buscar plano de estudos:", error);
     }
 
-    // Renderiza a galeria inicial com todos os itens
-    renderGallery();
+    renderGallery(); // Renderiza a galeria inicial
 
-    // --- EVENT LISTENERS (INTERAÇÕES DO UTILIZADOR) ---
-
-    // Filtro de tipo de equipamento
+    // --- EVENT LISTENERS ---
     document.getElementById('filter-type').addEventListener('change', (e) => {
         renderGallery(e.target.value);
     });
 
-    // Clique num sprite na galeria
     document.getElementById('sprite-gallery').addEventListener('click', (e) => {
         const card = e.target.closest('.sprite-card');
         if (card && card.dataset.itemId) {
@@ -115,16 +108,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // Botão de fechar o modal
     document.getElementById('close-modal-btn').addEventListener('click', () => {
         document.getElementById('create-item-modal').classList.add('hidden');
     });
 
-    // Submissão do formulário para criar um novo item
     document.getElementById('create-item-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const newItem = {
-            id: `item_${new Date().getTime()}`, // Gera um ID único
+            id: `item_${new Date().getTime()}`,
             name: document.getElementById('item-name').value,
             subject: document.getElementById('item-subject').value,
             tier: parseInt(document.getElementById('item-tier').value, 10),
@@ -132,11 +123,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         try {
-            // Este código para salvar no Firebase continua igual e funcional
             const doc = await docRef.get();
             if (doc.exists) {
                 const currentData = doc.data();
-                // O caminho para salvar é diretamente nos itens da configuração
                 const items = currentData.gamification.config.items || [];
                 items.push(newItem);
                 await docRef.set({ 
