@@ -1,28 +1,4 @@
-// =================== CONFIGURAÇÃO E DADOS INICIAIS ===================
-// Arquivo para armazenar a configuração do Firebase e os dados iniciais do plano de estudos.
-
-const firebaseConfig = {
-    apiKey: "AIzaSyA050ckDIuD1ujjyRee81r0Vv_jygoHs1Q",
-    authDomain: "meu-painel-de-estudos-v2.firebaseapp.com",
-    projectId: "meu-painel-de-estudos-v2",
-    storageBucket: "meu-painel-de-estudos-v2.firebasestorage.app",
-    messagingSenderId: "889152606734",
-    appId: "1:889152606734:web:09457849b695f3f1d4625f"
-};
-
-// Inicializa o Firebase
-const app = firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-/**
- * Gera a estrutura inicial do plano de estudos com todas as aulas.
- * Se nenhum plano for encontrado no banco de dados, este será o plano padrão.
- * @returns {object} O objeto inicial do plano de estudos.
- */
-function initializeStudyPlan() {
-    let plan = { tasks: {}, reviews: {}, history: [], dailyGoals: {}, deletedTasks: {} };
-
-    let allTasks = [
+const allTasks = [
 
             // Exemplo: { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '1', topic: '...', type: 'video', completed: true },
             
@@ -640,14 +616,4 @@ function initializeStudyPlan() {
             { subject: 'Administração Pública', lesson: 'L10', topic: 'Revisão Geral - Legislação Municipal', type: 'legis' },
         ];
 
-        
-    allTasks.forEach(task => {
-        const id = generateUniqueId(task);
-        const dateStr = formatDateYMD(new Date(task.date + 'T03:00:00Z'));
-        if (!plan.tasks[dateStr]) plan.tasks[dateStr] = [];
-        if (!plan.tasks[dateStr].some(t => t.id === id)) {
-            plan.tasks[dateStr].push({ id, ...task, date: dateStr, completed: task.completed || false, notebookLink: task.notebookLink || '', notes: task.notes || '' });
-        }
-    });
-    return plan;
-}
+    
