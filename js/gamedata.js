@@ -1,4 +1,4 @@
-// js/gamedata.js - VERSÃO COM CAMINHOS CORRIGIDOS
+// js/gamedata.js - VERSÃO COM CAMINHOS CORRIGIDOS (images)
 
 const GAMIFICATION_CONFIG = {
     version: 19,
@@ -9,6 +9,7 @@ const GAMIFICATION_CONFIG = {
         'Raciocínio Lógico-Matemático': 'boots'
     },
     items: [
+        // CORREÇÃO APLICADA AQUI: "images" em vez de "imagens"
         // Elmos (Língua Portuguesa)
         { id: 'helm_1', name: 'Capacete de Couro', subject: 'Língua Portuguesa', tier: 1, imageUrl: 'assets/habitica-images-main/gear/head/shop/shop_head_warrior_1.png' },
         { id: 'helm_2', name: 'Elmo de Ferro', subject: 'Língua Portuguesa', tier: 2, imageUrl: 'assets/habitica-images-main/gear/head/shop/shop_head_warrior_2.png' },
