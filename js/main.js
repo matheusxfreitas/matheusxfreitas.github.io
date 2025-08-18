@@ -34,9 +34,7 @@
         passwordWall.classList.add('hidden');
     } else {
         appContainer.classList.add('blurred');
-            }
-        
-    
+    }
 
     passwordForm.addEventListener('submit', (e) => {
         e.preventDefault();
