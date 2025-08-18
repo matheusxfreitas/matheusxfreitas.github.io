@@ -28,38 +28,6 @@ const allTasksModal = document.getElementById('allTasksModal');
 const addTaskModal = document.getElementById('addTaskModal');
 const confirmationModal = document.getElementById('confirmationModal');
 
-// =================== LÓGICA DO PASSWORD WALL ===================
-const passwordWall = document.getElementById('password-wall');
-const appContainer = document.getElementById('app-container');
-const passwordForm = document.getElementById('password-form');
-const passwordInput = document.getElementById('password-input');
-const passwordError = document.getElementById('password-error');
-
-if (sessionStorage.getItem('isAuthenticated') === 'true') {
-    isAuthenticated = true;
-    passwordWall.classList.add('hidden');
-    // Se já estiver autenticado, dispara o evento para carregar os dados
-    document.dispatchEvent(new Event('authenticated'));
-} else {
-    appContainer.classList.add('blurred');
-}
-
-passwordForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (passwordInput.value === 'passei2025') {
-        isAuthenticated = true;
-        sessionStorage.setItem('isAuthenticated', 'true');
-        passwordWall.classList.add('hidden');
-        appContainer.classList.remove('blurred');
-        // Dispara um evento customizado para notificar que a autenticação foi bem-sucedida
-        document.dispatchEvent(new Event('authenticated'));
-    } else {
-        passwordError.textContent = 'Senha incorreta.';
-        passwordInput.value = '';
-        setTimeout(() => { passwordError.textContent = ''; }, 2000);
-    }
-});
-
 // =================== LÓGICA DE TEMAS ===================
 const themeSelector = document.getElementById('theme-selector');
 const applyTheme = (theme) => {
