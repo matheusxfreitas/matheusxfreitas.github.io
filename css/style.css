@@ -1,106 +1,141 @@
- <style>
-        :root {
-            --bg-color: #FDFBF8;
-            --card-bg-color: #FFFFFF;
-            --text-color: #1f2937;
-            --muted-text-color: #6b7280;
-            --header-text-color: #1f2937;
-            --border-color: #e5e7eb;
-            --control-button-bg: #fff;
-            --control-button-border: #ddd;
-            --accent-color: #D5A021;
-            --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-        }
-        html.theme-dark {
-            --bg-color: #111827;
-            --card-bg-color: #1f2937;
-            --text-color: #d1d5db;
-            --muted-text-color: #9ca3af;
-            --header-text-color: #ffffff;
-            --border-color: #374151;
-            --control-button-bg: #374151;
-            --control-button-border: #4b5563;
-        }
-        html.theme-sepia {
-            --bg-color: #f1e7d0;
-            --card-bg-color: #fdf6e3;
-            --text-color: #586e75;
-            --muted-text-color: #839496;
-            --header-text-color: #073642;
-            --border-color: #eee8d5;
-            --control-button-bg: #eee8d5;
-            --control-button-border: #93a1a1;
-        }
+/* =================================== */
+/* CONFIGURAÇÃO DO TAILWIND E FONTES    */
+/* =================================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: var(--bg-color); 
-            color: var(--text-color);
-            transition: background-color 0.3s, color 0.3s;
-        }
-        main, .modal .bg-white, .bg-white, .bg-gray-50, .bg-red-50, .bg-yellow-50, .bg-blue-50, .bg-green-50, .bg-amber-50 { 
-            background-color: var(--card-bg-color);
-            color: var(--text-color);
-            border: 1px solid var(--border-color); 
-            box-shadow: var(--card-shadow);
-        }
-        header {
-            background-color: var(--card-bg-color);
-            border-bottom: 1px solid var(--border-color);
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        }
-        h1, h2, h3, #modal-title { color: var(--header-text-color); }
-        .text-gray-800 { color: var(--header-text-color); }
-        .text-gray-600, .text-gray-500, .text-gray-700 { color: var(--muted-text-color); }
+/* Diretivas Base do Tailwind - Essencial para funcionar */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-        .control-button {
-            background-color: var(--control-button-bg);
-            border: 1px solid var(--control-button-border);
-            color: var(--text-color);
-            box-shadow: var(--card-shadow);
-            transition: all 0.2s ease;
-        }
-        .control-button:hover { 
-            border-color: var(--accent-color);
-            transform: translateY(-1px);
-        }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
-        .calendar-day { transition: all 0.2s ease; position: relative; }
-        .calendar-day:hover { background-color: var(--control-button-bg); }
-        .calendar-day.has-task::after { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background-color: var(--accent-color); position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); }
-        .calendar-day.selected { background-color: var(--accent-color); color: white; font-weight: bold; }
-        
-        .task-card { border-left: 4px solid #D6BFAA; transition: box-shadow 0.3s ease; position: relative; box-shadow: var(--card-shadow); border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);}
-        .task-card.review-r1 { border-left-color: #6A9C89; }
-        .task-card.review-r3 { border-left-color: var(--accent-color); }
-        .task-card.review-r5 { border-left-color: #A25B5B; }
-        .task-card.overdue { border-left-color: #ef4444; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
-        .task-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .task-card.legis { border-left-color: #38bdf8; }
-        
-        .task-checkbox:checked + label { text-decoration: line-through; color: #9A9A9A; }
-        .chart-container { position: relative; width: 100%; max-width: 250px; margin-left: auto; margin-right: auto; height: 250px; }
-        .modal.hidden { display: none; }
-        body.modal-open { overflow: hidden; }
-        .blurred { filter: blur(8px); transition: filter 0.3s ease-in-out; }
-        .hidden { display: none; }
-        .task-card .actions-menu { position: absolute; top: 50%; right: 0.5rem; transform: translateY(-50%); display: none; gap: 0.5rem; align-items: center; }
-        .task-card:hover .actions-menu { display: flex; }
-        
-        .action-btn { background-color: #f0f0f0; border-radius: 9999px; padding: 0.35rem; transition: background-color 0.2s ease; cursor: pointer; }
-        .action-btn:hover { background-color: #e0e0e0; }
-        .action-btn svg { width: 1rem; height: 1rem; color: #555; }
+/* =================================== */
+/* TEMAS E VARIÁVEIS DE CORES GLOBAIS  */
+/* =================================== */
+:root, .theme-light {
+    --bg-color: #f9fafb; /* Cinza um pouco mais claro */
+    --card-bg-color: #ffffff;
+    --text-color: #1f2937;
+    --muted-text-color: #6b7280;
+    --header-text-color: #111827;
+    --border-color: #e5e7eb;
+    --accent-color: #D5A021;
+    --accent-color-hover: #b48a1c;
+    --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --control-button-bg: #ffffff;
+    --control-button-border: #d1d5db;
+    --control-button-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
 
-        .tab-button { padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; color: var(--muted-text-color); }
-        .tab-button.active { border-bottom-color: var(--accent-color); font-weight: 600; color: var(--accent-color); }
-        
-        .stat-card { cursor: pointer; transition: all 0.2s ease-in-out; border: 2px solid transparent; background-color: var(--control-button-bg); color: var(--text-color); }
-        .stat-card.selected { border-color: var(--accent-color); transform: translateY(-4px); box-shadow: 0 4px 10px rgba(213, 160, 33, 0.3); }
+html.theme-dark {
+    --bg-color: #111827;
+    --card-bg-color: #1f2937;
+    --text-color: #d1d5db;
+    --muted-text-color: #9ca3af;
+    --header-text-color: #ffffff;
+    --border-color: #374151;
+    --control-button-bg: #374151;
+    --control-button-border: #4b5563;
+}
 
-        input, select, textarea {
-            background-color: var(--control-button-bg);
-            border: 1px solid var(--control-button-border);
-            color: var(--text-color);
-        }
-    </style>
+html.theme-sepia {
+    --bg-color: #f1e7d0;
+    --card-bg-color: #fdf6e3;
+    --text-color: #586e75;
+    --muted-text-color: #839496;
+    --header-text-color: #073642;
+    --border-color: #eee8d5;
+    --control-button-bg: #eee8d5;
+    --control-button-border: #93a1a1;
+}
+
+/* =================================== */
+/* ESTILOS GERAIS E DE ELEMENTOS BASE  */
+/* =================================== */
+body { 
+    font-family: 'Inter', sans-serif; 
+    background-color: var(--bg-color); 
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Estilo para quando um modal está aberto */
+body.modal-open {
+    overflow: hidden;
+}
+
+/* Estilos dos cards principais */
+.card {
+    background-color: var(--card-bg-color);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+    transition: all 0.2s ease-in-out;
+}
+
+/* =================================== */
+/* ESTILOS DE COMPONENTES ESPECÍFICOS  */
+/* =================================== */
+
+/* Botões de controle (com sombra e efeito hover) */
+.control-button {
+    background-color: var(--control-button-bg);
+    border: 1px solid var(--control-button-border);
+    box-shadow: var(--control-button-shadow);
+    transition: all 0.15s ease-in-out;
+}
+.control-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Estilo para as tarefas atrasadas */
+.task-card.overdue {
+    border-left: 4px solid #ef4444; /* Vermelho */
+}
+
+/* Estilos para o calendário */
+.calendar-day.has-task {
+    background-color: var(--accent-color);
+    color: white;
+    font-weight: bold;
+}
+.calendar-day.selected {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+/* Estilos para a página de Gamificação */
+.slot {
+    border: 2px dashed var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+.slot-name {
+    position: absolute;
+    bottom: 4px;
+    font-size: 0.7rem;
+    color: var(--muted-text-color);
+}
+.item-sprite {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    object-fit: contain;
+}
+.item-card {
+    opacity: 0.5;
+}
+.item-card.unlocked {
+    opacity: 1;
+}
+.item-card.equipped {
+    border: 2px solid var(--accent-color);
+    box-shadow: 0 0 15px rgba(213, 160, 33, 0.5);
+}
+.progress-bar-bg {
+    background-color: var(--border-color);
+}
+.progress-bar-fill {
+    background-color: var(--accent-color);
+}
