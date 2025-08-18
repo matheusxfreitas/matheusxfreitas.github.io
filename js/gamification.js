@@ -1,0 +1,295 @@
+        // =================== CONFIGURAÇÃO E VARIÁVEIS GLOBAIS ===================
+        const firebaseConfig = {
+            apiKey: "AIzaSyA050ckDIuD1ujjyRee81r0Vv_jygoHs1Q",
+            authDomain: "meu-painel-de-estudos-v2.firebaseapp.com",
+            projectId: "meu-painel-de-estudos-v2",
+            storageBucket: "meu-painel-de-estudos-v2.firebasestorage.app",
+            messagingSenderId: "889152606734",
+            appId: "1:889152606734:web:09457849b695f3f1d4625f"
+        };
+
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        let studyPlan = {};
+        const GAMIFICATION_VERSION = 19; // Versão atual da estrutura de gamificação
+
+        // =================== DEFINIÇÕES DE FUNÇÕES ===================
+        
+        async function startApp() {
+            const docRef = db.collection("progresso").doc("meuPlano");
+
+            try {
+                const doc = await docRef.get();
+
+                if (doc.exists) {
+                    let data = doc.data();
+                    if (!data.gamification || data.gamification.version !== GAMIFICATION_VERSION) {
+                        console.log(`Atualizando estrutura de gamificação para v${GAMIFICATION_VERSION}...`);
+                        const newGamificationData = getInitialGamificationState();
+                        await docRef.set({ gamification: newGamificationData }, { merge: true });
+                    }
+                } else {
+                    console.log("Documento não encontrado. Crie-o na página principal.");
+                }
+            } catch (error) {
+                console.error("Erro na inicialização:", error);
+            }
+
+            docRef.onSnapshot((doc) => {
+                if (doc.exists) {
+                    studyPlan = doc.data();
+                    renderPage(studyPlan);
+                }
+            }, (error) => {
+                console.error("Erro no listener em tempo real:", error);
+            });
+        }
+        
+        function getInitialGamificationState() {
+            return {
+                version: GAMIFICATION_VERSION,
+                player: { equipped: { helmet: null, armor: null, pants: null, boots: null, weapon: null, shield: null } },
+                config: {
+                    slotMapping: {
+                        'Língua Portuguesa': 'helmet',
+                        'Conhecimentos Específicos': 'weapon',
+                        'Administração Pública': 'shield',
+                        'Raciocínio Lógico-Matemático': 'boots'
+                    },
+                    items: [
+                        { id: 'helm_1', name: 'Capacete de Couro', subject: 'Língua Portuguesa', tier: 1, imageUrl: '.assets/habitica-imagens-main/gear/head/shop/shop_head_warrior_1.png' },
+                        { id: 'helm_2', name: 'Elmo de Ferro', subject: 'Língua Portuguesa', tier: 2, imageUrl: '.assets/habitica-imagens-main/gear/head/shop/shop_head_warrior_2.png' },
+                        { id: 'helm_3', name: 'Elmo de Aço', subject: 'Língua Portuguesa', tier: 3, imageUrl: '.assets/habitica-imagens-main/gear/head/shop/shop_head_warrior_3.png' },
+                        { id: 'helm_4', name: 'Coroa Dourada', subject: 'Língua Portuguesa', tier: 4, imageUrl: '.assets/habitica-imagens-main/gear/armoire/shop/shop_head_armoire_crownOfHearts.png' },
+
+                        { id: 'wpn_1', name: 'Adaga Simples', subject: 'Conhecimentos Específicos', tier: 1, imageUrl: '.assets/habitica-imagens-main/gear/weapon/shop/shop_weapon_rogue_1.png' },
+                        { id: 'wpn_2', name: 'Espada de Ferro', subject: 'Conhecimentos Específicos', tier: 2, imageUrl: '.assets/habitica-imagens-main/gear/weapon/shop/shop_weapon_warrior_2.png' },
+                        { id: 'wpn_3', name: 'Machado de Aço', subject: 'Conhecimentos Específicos', tier: 3, imageUrl: '.assets/habitica-imagens-main/gear/weapon/shop/shop_weapon_warrior_3.png' },
+                        { id: 'wpn_4', name: 'Cajado Mágico', subject: 'Conhecimentos Específicos', tier: 4, imageUrl: '.assets/habitica-imagens-main/gear/armoire/shop/shop_weapon_armoire_crystalCrescentStaff.png' },
+
+                        { id: 'arm_1', name: 'Armadura de Couro', subject: 'Conhecimentos Específicos', tier: 1, imageUrl: '.assets/habitica-imagens-main/gear/armor/shop/shop_armor_rogue_1.png' },
+                        { id: 'arm_2', name: 'Peitoral de Ferro', subject: 'Conhecimentos Específicos', tier: 2, imageUrl: '.assets/habitica-imagens-main/gear/armor/shop/shop_armor_warrior_2.png' },
+                        { id: 'arm_3', name: 'Cota de Malha de Aço', subject: 'Conhecimentos Específicos', tier: 3, imageUrl: '.assets/habitica-imagens-main/gear/armor/shop/shop_armor_warrior_3.png' },
+                        { id: 'arm_4', name: 'Armadura de Placas Dourada', subject: 'Conhecimentos Específicos', tier: 4, imageUrl: '.assets/habitica-imagens-main/gear/armor/shop/shop_armor_warrior_4.png' },
+
+                        { id: 'shd_1', name: 'Broquel de Madeira', subject: 'Administração Pública', tier: 1, imageUrl: '.assets/habitica-imagens-main/gear/shield/shop/shop_shield_warrior_1.png' },
+                        { id: 'shd_2', name: 'Escudo de Ferro', subject: 'Administração Pública', tier: 2, imageUrl: '.assets/habitica-imagens-main/gear/shield/shop/shop_shield_warrior_2.png' },
+                        { id: 'shd_3', name: 'Escudo de Aço', subject: 'Administração Pública', tier: 3, imageUrl: '.assets/habitica-imagens-main/gear/shield/shop/shop_shield_warrior_3.png' },
+                        { id: 'shd_4', name: 'Baluarte Dourado', subject: 'Administração Pública', tier: 4, imageUrl: '.assets/habitica-imagens-main/gear/armoire/shop/shop_shield_armoire_royalCane.png' },
+                        
+                        { id: 'bts_1', name: 'Sapatos de Couro', subject: 'Raciocínio Lógico-Matemático', tier: 1, imageUrl: '.assets/habitica-imagens-main/gear/armoire/shop/shop_shoes_rogue_1.png' },
+                        { id: 'bts_2', name: 'Botas de Ferro', subject: 'Raciocínio Lógico-Matemático', tier: 2, imageUrl: '.assets/habitica-imagens-main/gear/armoire/shop/shop_shoes_warrior_2.png' },
+                        { id: 'bts_3', name: 'Grevas de Aço', subject: 'Raciocínio Lógico-Matemático', tier: 3, imageUrl: '.assets/habitica-imagens-main/gear/armoire/shop/shop_shoes_warrior_3.png' },
+                        { id: 'bts_4', name: 'Sabatons Dourados', subject: 'Raciocínio Lógico-Matemático', tier: 4, imageUrl: '.assets/habitica-imagens-main/gear/armoire/shop/shop_shoes_armoire_4.png' }
+                    ]
+                }
+            };
+        }
+
+        function renderPage(data) {
+            renderAvatar(data);
+            renderInventory(data);
+        }
+
+        function renderAvatar(data) {
+            if (!data.gamification || !data.gamification.player) return;
+            const { equipped } = data.gamification.player;
+            const { items } = data.gamification.config;
+
+            for (const slotName in equipped) {
+                const slotElement = document.getElementById(`slot-${slotName}`);
+                if (!slotElement) continue;
+
+                const itemId = equipped[slotName];
+                const slotNameSpan = slotElement.querySelector('.slot-name');
+                slotElement.innerHTML = '';
+                if (slotNameSpan) slotElement.appendChild(slotNameSpan);
+
+                if (itemId) {
+                    const item = items.find(i => i.id === itemId);
+                    if (item && item.imageUrl) {
+                        const itemImg = document.createElement('img');
+                        itemImg.className = 'item-sprite';
+                        itemImg.src = item.imageUrl;
+                        itemImg.alt = item.name;
+                        slotElement.insertBefore(itemImg, slotNameSpan);
+                        slotElement.title = item.name;
+                    }
+                } else {
+                    slotElement.title = slotName.charAt(0).toUpperCase() + slotName.slice(1);
+                }
+            }
+        }
+
+        function renderInventory(data) {
+            if (!data.gamification || !data.gamification.config || !data.gamification.config.slotMapping) return;
+            const { items, slotMapping } = data.gamification.config;
+            const inventoryContainer = document.getElementById('inventory-container');
+            inventoryContainer.innerHTML = '';
+            
+            const allTasks = Object.values(data.tasks || {}).flat();
+            const subjects = [...new Set(Object.values(slotMapping || {}))].map(slot => {
+                return Object.keys(slotMapping).find(key => slotMapping[key] === slot);
+            }).filter(Boolean);
+
+            subjects.forEach(subject => {
+                const slot = slotMapping[subject];
+                const itemsForSubject = items.filter(item => item.subject === subject).sort((a, b) => a.tier - b.tier);
+                
+                const totalTasksForSubject = allTasks.filter(t => t.subject === subject).length;
+                const completedTasksForSubject = allTasks.filter(t => t.subject === subject && t.completed).length;
+                const progressPercentage = totalTasksForSubject > 0 ? (completedTasksForSubject / totalTasksForSubject) * 100 : 0;
+
+                let sectionHTML = `
+                    <div>
+                        <h3 class="text-xl font-bold mb-2">${subject}</h3>
+                        <div class="w-full progress-bar-bg rounded-full h-2.5 mb-4">
+                            <div class="progress-bar-fill h-2.5 rounded-full" style="width: ${progressPercentage.toFixed(2)}%"></div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                `;
+
+                itemsForSubject.forEach(item => {
+                    const isEquipped = data.gamification.player.equipped[slot] === item.id;
+                    const isUnlocked = isItemUnlocked(item, data);
+                    
+                    sectionHTML += `
+                        <div class="item-card card rounded-lg p-3 text-center ${isEquipped ? 'equipped' : ''} ${isUnlocked ? 'unlocked' : ''}">
+                            <div class="h-24 w-full flex items-center justify-center">
+                                <img src="${item.imageUrl}" alt="${item.name}" class="item-sprite">
+                            </div>
+                            <p class="font-semibold mt-2 text-sm">${item.name}</p>
+                            <p class="text-xs text-gray-500">Nível ${item.tier}</p>
+                        </div>
+                    `;
+                });
+
+                sectionHTML += `</div></div>`;
+                inventoryContainer.innerHTML += sectionHTML;
+            });
+        }
+        
+        function isItemUnlocked(item, data) {
+            if (!data.gamification || !data.gamification.player) return false;
+            const { player, config } = data.gamification;
+            const allEquippedItems = Object.values(player.equipped).filter(Boolean);
+            
+            const hasUnlockedTier = allEquippedItems.some(equippedId => {
+                const equippedItem = config.items.find(i => i.id === equippedId);
+                return equippedItem && equippedItem.subject === item.subject && equippedItem.tier >= item.tier;
+            });
+            
+            return hasUnlockedTier;
+        }
+
+        function openDevModal() {
+            const devModal = document.getElementById('dev-modal');
+            const devControlsContainer = document.getElementById('dev-controls-container');
+            const devSimulateBtn = document.getElementById('dev-simulate-btn');
+
+            devModal.classList.remove('hidden');
+
+            if (!studyPlan.gamification || !studyPlan.gamification.config) {
+                devControlsContainer.innerHTML = `<p class="text-center text-gray-500">Aguardando dados do Firebase... Por favor, tente novamente em um instante.</p>`;
+                devSimulateBtn.disabled = true;
+                return;
+            }
+            
+            devSimulateBtn.disabled = false;
+            devControlsContainer.innerHTML = '';
+            const { slotMapping } = studyPlan.gamification.config;
+            const allTasks = Object.values(studyPlan.tasks || {}).flat();
+            
+            const subjects = [...new Set(Object.values(slotMapping))].map(slot => {
+                return Object.keys(slotMapping).find(key => slotMapping[key] === slot);
+            }).filter(Boolean);
+
+            subjects.forEach(subject => {
+                const totalTasks = allTasks.filter(t => t.subject === subject).length;
+                const completedTasks = allTasks.filter(t => t.subject === subject && t.completed).length;
+                
+                const controlHTML = `
+                    <div>
+                        <label class="block text-sm font-medium">${subject}</label>
+                        <div class="flex items-center gap-2 mt-1">
+                            <input type="number" id="dev-input-${subject.replace(/\s/g, '')}" value="${completedTasks}" min="0" max="${totalTasks}" class="w-24 border-gray-300 rounded-md shadow-sm text-sm">
+                            <span class="text-sm text-gray-500">/ ${totalTasks} aulas</span>
+                        </div>
+                    </div>
+                `;
+                devControlsContainer.innerHTML += controlHTML;
+            });
+        }
+
+        // =================== EXECUÇÃO PRINCIPAL E EVENT LISTENERS ===================
+        document.addEventListener('DOMContentLoaded', () => {
+            const devButton = document.getElementById('dev-button');
+            const devModal = document.getElementById('dev-modal');
+            const devCloseBtn = document.getElementById('dev-close-btn');
+            const devSimulateBtn = document.getElementById('dev-simulate-btn');
+            const devResetBtn = document.getElementById('dev-reset-btn');
+
+            startApp();
+
+            devButton.addEventListener('click', openDevModal);
+            devCloseBtn.addEventListener('click', () => devModal.classList.add('hidden'));
+            
+            devResetBtn.addEventListener('click', () => {
+                renderPage(studyPlan);
+                devModal.classList.add('hidden');
+            });
+
+            devSimulateBtn.addEventListener('click', () => {
+                const simulatedPlan = JSON.parse(JSON.stringify(studyPlan));
+                const allSimulatedTasks = Object.values(simulatedPlan.tasks).flat();
+                const { items, slotMapping } = simulatedPlan.gamification.config;
+
+                allSimulatedTasks.forEach(t => t.completed = false);
+                Object.keys(simulatedPlan.gamification.player.equipped).forEach(slot => {
+                    simulatedPlan.gamification.player.equipped[slot] = null;
+                });
+
+                const subjects = [...new Set(Object.values(slotMapping))].map(slot => {
+                    return Object.keys(slotMapping).find(key => slotMapping[key] === slot);
+                }).filter(Boolean);
+
+                subjects.forEach(subject => {
+                    const input = document.getElementById(`dev-input-${subject.replace(/\s/g, '')}`);
+                    const completedCount = parseInt(input.value, 10);
+                    const tasksForSubject = allSimulatedTasks.filter(t => t.subject === subject);
+                    for(let i = 0; i < completedCount && i < tasksForSubject.length; i++) {
+                        tasksForSubject[i].completed = true;
+                    }
+                });
+
+                const thresholds = { TIER_1: 0.01, TIER_2: 0.25, TIER_3: 0.50, TIER_4: 0.75 };
+                
+                subjects.forEach(subject => {
+                    const tasksForSubject = allSimulatedTasks.filter(t => t.subject === subject);
+                    const total = tasksForSubject.length;
+                    const completed = tasksForSubject.filter(t => t.completed).length;
+                    const progress = total > 0 ? completed / total : 0;
+                    
+                    let bestTierUnlocked = 0;
+                    if (progress >= thresholds.TIER_1) bestTierUnlocked = 1;
+                    if (progress >= thresholds.TIER_2) bestTierUnlocked = 2;
+                    if (progress >= thresholds.TIER_3) bestTierUnlocked = 3;
+                    if (progress >= thresholds.TIER_4) bestTierUnlocked = 4;
+                    
+                    if (bestTierUnlocked > 0) {
+                        const itemToEquip = items.find(item => item.subject === subject && item.tier === bestTierUnlocked);
+                        if (itemToEquip) {
+                            const slot = slotMapping[subject];
+                            simulatedPlan.gamification.player.equipped[slot] = itemToEquip.id;
+                            if (slot === 'weapon') {
+                               const armorToEquip = items.find(item => item.id.startsWith('arm_') && item.tier === bestTierUnlocked);
+                               if(armorToEquip) simulatedPlan.gamification.player.equipped['armor'] = armorToEquip.id;
+                            }
+                        }
+                    }
+                });
+
+                renderPage(simulatedPlan);
+                devModal.classList.add('hidden');
+            });
+        });
