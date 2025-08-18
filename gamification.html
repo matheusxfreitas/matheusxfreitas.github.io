@@ -83,8 +83,10 @@
             width: 90px;
             height: 90px;
             transform: scale(0.75);
-            image-rendering: pixelated;
-            background-repeat: no-repeat;
+        }
+        .item-sprite svg {
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
@@ -182,6 +184,7 @@
         const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         let studyPlan = {};
+        const GAMIFICATION_VERSION = 4; // Versão atual da estrutura de gamificação
 
         // =================== DEFINIÇÕES DE FUNÇÕES ===================
         
@@ -192,18 +195,22 @@
                 if (doc.exists) {
                     let data = doc.data();
                     
-                    if (!data.gamification || !data.gamification.config || !data.gamification.config.items[0].sprite) {
-                        console.log("Estrutura de gamificação desatualizada ou não encontrada. Criando/Atualizando...");
+                    // *** CORREÇÃO DO LOOP INFINITO ***
+                    // A verificação agora usa um número de versão para evitar atualizações constantes.
+                    if (!data.gamification || data.gamification.version !== GAMIFICATION_VERSION) {
+                        console.log(`Estrutura de gamificação desatualizada ou não encontrada. Criando/Atualizando para v${GAMIFICATION_VERSION}...`);
                         data.gamification = getInitialGamificationState();
                         docRef.set({ gamification: data.gamification }, { merge: true })
                             .catch(error => console.error("Erro ao salvar a gamificação inicial:", error));
+                        // Retorna para aguardar o próximo snapshot com os dados corretos, evitando erros.
+                        return; 
                     }
                     
                     studyPlan = data;
                     renderPage(studyPlan);
 
                 } else {
-                    console.log("Documento do plano de estudos não encontrado! Crie-o na página principal.");
+                    console.log("Documento do plano de estudos não encontrado! Crie-o na página principal (index.html).");
                 }
             }, (error) => {
                 console.error("Erro ao ouvir o plano de estudos:", error);
@@ -211,22 +218,43 @@
         }
         
         function getInitialGamificationState() {
-            const spriteSheets = {
-                head_warrior: 'https://cdn.jsdelivr.net/gh/HabitRPG/habitica-images@develop/public/sprites/spritesmith/gear-shop_head_warrior.png',
-                head_armoire: 'https://cdn.jsdelivr.net/gh/HabitRPG/habitica-images@develop/public/sprites/spritesmith/gear-shop_head_armoire.png',
-                weapon_warrior: 'https://cdn.jsdelivr.net/gh/HabitRPG/habitica-images@develop/public/sprites/spritesmith/gear-shop_weapon_warrior.png',
-                weapon_wizard: 'https://cdn.jsdelivr.net/gh/HabitRPG/habitica-images@develop/public/sprites/spritesmith/gear-shop_weapon_wizard.png',
-                armor_warrior: 'https://cdn.jsdelivr.net/gh/HabitRPG/habitica-images@develop/public/sprites/spritesmith/gear-shop_armor_warrior.png',
-                shield_warrior: 'https://cdn.jsdelivr.net/gh/HabitRPG/habitica-images@develop/public/sprites/spritesmith/gear-shop_shield_warrior.png',
-                shield_armoire: 'https://cdn.jsdelivr.net/gh/HabitRPG/habitica-images@develop/public/sprites/spritesmith/gear-shop_shield_armoire.png',
-                shoes_warrior: 'https://cdn.jsdelivr.net/gh/HabitRPG/habitica-images@develop/public/sprites/spritesmith/gear-shop_shoes_warrior.png',
-                shoes_armoire: 'https://cdn.jsdelivr.net/gh/HabitRPG/habitica-images@develop/public/sprites/spritesmith/gear-shop_shoes_armoire.png',
+            const sprites = {
+                helm: [
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#94a3b8" stroke-width="3"><path d="M20 34 A12 12 0 0 1 44 34 Z"/><path d="M18 32 L46 32 A6 6 0 0 1 46 44 L18 44 A6 6 0 0 1 18 32 Z"/></g></svg>`,
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-width="3"><path stroke="#a1a1aa" d="M16 30 A16 16 0 0 1 48 30 V 48 H 16 Z"/><path stroke="#e4e4e7" d="M18 32 L46 32 M24 30 V 22 L32 18 L40 22 V 30"/></g></svg>`,
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-width="3"><path stroke="#d4d4d8" d="M14 28 A18 18 0 0 1 50 28 V 50 H 14 Z"/><path stroke="#f59e0b" d="M28 28 V 18 L32 14 L36 18 V 28"/><path stroke="#e4e4e7" d="M14 50 L18 56 H 46 L 50 50"/></g></svg>`,
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-width="3"><path stroke="#f59e0b" d="M32 8 L38 24 L56 24 L42 34 L46 52 L32 42 L18 52 L22 34 L8 24 L26 24 Z"/><path stroke="#fbbf24" d="M14 28 A18 18 0 0 1 50 28"/></g></svg>`
+                ],
+                weapon: [
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-width="3"><path stroke="#94a3b8" d="M56 8 L40 24 M46 8 L40 14 L50 24 L56 18 Z"/><path stroke="#a16207" d="M40 24 L8 56 M14 50 L8 56 L14 62"/></g></svg>`,
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-width="3"><path stroke="#a1a1aa" d="M58 6 L6 58"/><path stroke="#e4e4e7" d="M46 6 L58 18 M6 46 L18 58"/><path stroke="#a16207" d="M20 38 L26 44 M12 46 L18 52"/></g></svg>`,
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-width="3"><path stroke="#d4d4d8" d="M60 4 L4 60"/><path stroke="#f59e0b" d="M32 32 L4 32 A 28 28 0 0 1 32 4 L 32 32 Z"/><path stroke="#a16207" d="M20 44 L4 60 L20 60 Z"/></g></svg>`,
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-width="3"><circle cx="32" cy="12" r="6" stroke="#fbbf24"/><path stroke="#a16207" d="M32 18 V 58"/><path stroke="#f59e0b" d="M22 24 L32 18 L42 24 M26 58 L32 52 L38 58"/></g></svg>`
+                ],
+                armor: [
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-width="3" stroke="#94a3b8"><path d="M18 14 L46 14 A 6 6 0 0 1 52 20 V 50 H 12 V 20 A 6 6 0 0 1 18 14 Z"/><path d="M12 24 H 52"/></g></svg>`,
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-width="3"><path stroke="#a1a1aa" d="M16 12 L48 12 L56 24 V 52 H 8 V 24 Z"/><path stroke="#e4e4e7" d="M16 12 A 16 16 0 0 1 32 20 A 16 16 0 0 1 48 12"/></g></svg>`,
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-width="3"><path stroke="#d4d4d8" d="M12 10 L52 10 L60 26 V 54 H 4 V 26 Z"/><path stroke="#f59e0b" d="M32 28 m -6 0 a 6 6 0 1 1 12 0 a 6 6 0 1 1 -12 0"/><path stroke="#e4e4e7" d="M12 10 A 20 20 0 0 1 52 10"/></g></svg>`,
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-width="3"><path stroke="#f59e0b" d="M10 10 L54 10 L62 28 V 56 H 2 V 28 Z"/><path stroke="#fbbf24" d="M32 20 L42 32 L32 44 L22 32 Z"/><path stroke="#d4d4d8" d="M10 10 A 22 22 0 0 1 54 10"/></g></svg>`
+                ],
+                shield: [
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="24" fill="none" stroke="#94a3b8" stroke-width="3"/></svg>`,
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-width="3"><path stroke="#a1a1aa" d="M32 4 L 56 12 V 32 C 56 48 32 58 32 58 C 32 58 8 48 8 32 V 12 Z"/><path stroke="#e4e4e7" d="M32 4 L 32 58"/></g></svg>`,
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-width="3"><path stroke="#d4d4d8" d="M32 4 L 58 14 V 32 C 58 50 32 60 32 60 C 32 60 6 50 6 32 V 14 Z"/><path stroke="#f59e0b" d="M24 24 L40 40 M40 24 L24 40"/></g></svg>`,
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-width="3"><path stroke="#f59e0b" d="M32 2 L 62 16 V 32 C 62 52 32 62 32 62 C 32 62 2 52 2 32 V 16 Z"/><path stroke="#fbbf24" d="M32 22 L38 28 L32 34 L26 28 Z"/></g></svg>`
+                ],
+                boots: [
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#94a3b8" stroke-width="3"><path d="M16 40 V 58 H 30 L 34 50 H 16"/><path d="M48 40 V 58 H 34 L 30 50 H 48"/></g></svg>`,
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-width="3"><path stroke="#a1a1aa" d="M14 38 L 20 22 H 30 V 58 H 12 Z"/><path stroke="#a1a1aa" d="M50 38 L 44 22 H 34 V 58 H 52 Z"/></g></svg>`,
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-width="3"><path stroke="#d4d4d8" d="M12 36 L 20 18 H 32 V 58 H 10 Z"/><path stroke="#d4d4d8" d="M52 36 L 44 18 H 32 V 58 H 54 Z"/><path stroke="#e4e4e7" d="M20 18 L 44 18"/></g></svg>`,
+                    `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-width="3"><path stroke="#f59e0b" d="M10 34 L 22 14 H 32 V 58 H 8 Z"/><path stroke="#f59e0b" d="M54 34 L 42 14 H 32 V 58 H 56 Z"/><path stroke="#fbbf24" d="M22 14 L 42 14"/></g></svg>`
+                ]
             };
 
             return {
+                version: GAMIFICATION_VERSION,
                 player: { equipped: { helmet: null, armor: null, pants: null, boots: null, weapon: null, shield: null } },
                 config: {
-                    spriteSheets: spriteSheets,
                     slotMapping: {
                         'Língua Portuguesa': 'helmet',
                         'Conhecimentos Específicos': 'weapon',
@@ -234,26 +262,26 @@
                         'Raciocínio Lógico-Matemático': 'boots'
                     },
                     items: [
-                        { id: 'helm_1', name: 'Viseira do Alfabeto', subject: 'Língua Portuguesa', tier: 1, sprite: { sheet: 'head_warrior', position: '0 0' } },
-                        { id: 'helm_2', name: 'Elmo da Gramática', subject: 'Língua Portuguesa', tier: 2, sprite: { sheet: 'head_warrior', position: '0 -90px' } },
-                        { id: 'helm_3', name: 'Elmo da Sintaxe Apurada', subject: 'Língua Portuguesa', tier: 3, sprite: { sheet: 'head_warrior', position: '0 -180px' } },
-                        { id: 'helm_4', name: 'Coroa da Oratória', subject: 'Língua Portuguesa', tier: 4, sprite: { sheet: 'head_armoire', position: '0 -360px' } },
-                        { id: 'wpn_1', name: 'Adaga do Behaviorismo', subject: 'Conhecimentos Específicos', tier: 1, sprite: { sheet: 'weapon_warrior', position: '0 0' } },
-                        { id: 'wpn_2', name: 'Espada da Psicanálise', subject: 'Conhecimentos Específicos', tier: 2, sprite: { sheet: 'weapon_warrior', position: '0 -90px' } },
-                        { id: 'wpn_3', name: 'Martelo da TCC', subject: 'Conhecimentos Específicos', tier: 3, sprite: { sheet: 'weapon_warrior', position: '0 -180px' } },
-                        { id: 'wpn_4', name: 'Cajado Sistêmico', subject: 'Conhecimentos Específicos', tier: 4, sprite: { sheet: 'weapon_wizard', position: '0 -360px' } },
-                        { id: 'arm_1', name: 'Gibão do Psicodiagnóstico', subject: 'Conhecimentos Específicos', tier: 1, sprite: { sheet: 'armor_warrior', position: '0 0' } },
-                        { id: 'arm_2', name: 'Peitoral do Atendimento Clínico', subject: 'Conhecimentos Específicos', tier: 2, sprite: { sheet: 'armor_warrior', position: '0 -90px' } },
-                        { id: 'arm_3', name: 'Cota de Malha das Políticas Públicas', subject: 'Conhecimentos Específicos', tier: 3, sprite: { sheet: 'armor_warrior', position: '0 -180px' } },
-                        { id: 'arm_4', name: 'Armadura de Placas do SUAS', subject: 'Conhecimentos Específicos', tier: 4, sprite: { sheet: 'armor_warrior', position: '0 -360px' } },
-                        { id: 'shd_1', name: 'Broquel da Lei Orgânica', subject: 'Administração Pública', tier: 1, sprite: { sheet: 'shield_warrior', position: '0 0' } },
-                        { id: 'shd_2', name: 'Escudo do Servidor Público', subject: 'Administração Pública', tier: 2, sprite: { sheet: 'shield_warrior', position: '0 -90px' } },
-                        { id: 'shd_3', name: 'Escudo de Torre da Constituição', subject: 'Administração Pública', tier: 3, sprite: { sheet: 'shield_warrior', position: '0 -180px' } },
-                        { id: 'shd_4', name: 'Baluarte da Probidade', subject: 'Administração Pública', tier: 4, sprite: { sheet: 'shield_armoire', position: '0 -360px' } },
-                        { id: 'bts_1', name: 'Sandálias da Aritmética', subject: 'Raciocínio Lógico-Matemático', tier: 1, sprite: { sheet: 'shoes_warrior', position: '0 0' } },
-                        { id: 'bts_2', name: 'Botas da Lógica Proposicional', subject: 'Raciocínio Lógico-Matemático', tier: 2, sprite: { sheet: 'shoes_warrior', position: '0 -90px' } },
-                        { id: 'bts_3', name: 'Grevas da Análise Combinatória', subject: 'Raciocínio Lógico-Matemático', tier: 3, sprite: { sheet: 'shoes_warrior', position: '0 -180px' } },
-                        { id: 'bts_4', name: 'Sabatons da Probabilidade', subject: 'Raciocínio Lógico-Matemático', tier: 4, sprite: { sheet: 'shoes_armoire', position: '0 -360px' } }
+                        { id: 'helm_1', name: 'Viseira do Alfabeto', subject: 'Língua Portuguesa', tier: 1, image: sprites.helm[0] },
+                        { id: 'helm_2', name: 'Elmo da Gramática', subject: 'Língua Portuguesa', tier: 2, image: sprites.helm[1] },
+                        { id: 'helm_3', name: 'Elmo da Sintaxe Apurada', subject: 'Língua Portuguesa', tier: 3, image: sprites.helm[2] },
+                        { id: 'helm_4', name: 'Coroa da Oratória', subject: 'Língua Portuguesa', tier: 4, image: sprites.helm[3] },
+                        { id: 'wpn_1', name: 'Adaga do Behaviorismo', subject: 'Conhecimentos Específicos', tier: 1, image: sprites.weapon[0] },
+                        { id: 'wpn_2', name: 'Espada da Psicanálise', subject: 'Conhecimentos Específicos', tier: 2, image: sprites.weapon[1] },
+                        { id: 'wpn_3', name: 'Martelo da TCC', subject: 'Conhecimentos Específicos', tier: 3, image: sprites.weapon[2] },
+                        { id: 'wpn_4', name: 'Cajado Sistêmico', subject: 'Conhecimentos Específicos', tier: 4, image: sprites.weapon[3] },
+                        { id: 'arm_1', name: 'Gibão do Psicodiagnóstico', subject: 'Conhecimentos Específicos', tier: 1, image: sprites.armor[0] },
+                        { id: 'arm_2', name: 'Peitoral do Atendimento Clínico', subject: 'Conhecimentos Específicos', tier: 2, image: sprites.armor[1] },
+                        { id: 'arm_3', name: 'Cota de Malha das Políticas Públicas', subject: 'Conhecimentos Específicos', tier: 3, image: sprites.armor[2] },
+                        { id: 'arm_4', name: 'Armadura de Placas do SUAS', subject: 'Conhecimentos Específicos', tier: 4, image: sprites.armor[3] },
+                        { id: 'shd_1', name: 'Broquel da Lei Orgânica', subject: 'Administração Pública', tier: 1, image: sprites.shield[0] },
+                        { id: 'shd_2', name: 'Escudo do Servidor Público', subject: 'Administração Pública', tier: 2, image: sprites.shield[1] },
+                        { id: 'shd_3', name: 'Escudo de Torre da Constituição', subject: 'Administração Pública', tier: 3, image: sprites.shield[2] },
+                        { id: 'shd_4', name: 'Baluarte da Probidade', subject: 'Administração Pública', tier: 4, image: sprites.shield[3] },
+                        { id: 'bts_1', name: 'Sandálias da Aritmética', subject: 'Raciocínio Lógico-Matemático', tier: 1, image: sprites.boots[0] },
+                        { id: 'bts_2', name: 'Botas da Lógica Proposicional', subject: 'Raciocínio Lógico-Matemático', tier: 2, image: sprites.boots[1] },
+                        { id: 'bts_3', name: 'Grevas da Análise Combinatória', subject: 'Raciocínio Lógico-Matemático', tier: 3, image: sprites.boots[2] },
+                        { id: 'bts_4', name: 'Sabatons da Probabilidade', subject: 'Raciocínio Lógico-Matemático', tier: 4, image: sprites.boots[3] }
                     ]
                 }
             };
@@ -267,7 +295,7 @@
         function renderAvatar(data) {
             if (!data.gamification || !data.gamification.player) return;
             const { equipped } = data.gamification.player;
-            const { items, spriteSheets } = data.gamification.config;
+            const { items } = data.gamification.config;
 
             for (const slotName in equipped) {
                 const slotElement = document.getElementById(`slot-${slotName}`);
@@ -283,8 +311,7 @@
                     if (item) {
                         const itemDiv = document.createElement('div');
                         itemDiv.className = 'item-sprite';
-                        itemDiv.style.backgroundImage = `url(${spriteSheets[item.sprite.sheet]})`;
-                        itemDiv.style.backgroundPosition = item.sprite.position;
+                        itemDiv.innerHTML = item.image;
                         slotElement.insertBefore(itemDiv, slotNameSpan);
                         slotElement.title = item.name;
                     }
@@ -295,8 +322,8 @@
         }
 
         function renderInventory(data) {
-            if (!data.gamification || !data.gamification.config) return;
-            const { items, slotMapping, spriteSheets } = data.gamification.config;
+            if (!data.gamification || !data.gamification.config || !data.gamification.config.slotMapping) return;
+            const { items, slotMapping } = data.gamification.config;
             const inventoryContainer = document.getElementById('inventory-container');
             inventoryContainer.innerHTML = '';
             
@@ -326,12 +353,10 @@
                     const isEquipped = data.gamification.player.equipped[slot] === item.id;
                     const isUnlocked = isItemUnlocked(item, data);
                     
-                    const style = `background-image: url(${spriteSheets[item.sprite.sheet]}); background-position: ${item.sprite.position};`;
-
                     sectionHTML += `
                         <div class="item-card card rounded-lg p-3 text-center ${isEquipped ? 'equipped' : ''} ${isUnlocked ? 'unlocked' : ''}">
-                            <div class="h-24 w-full flex items-center justify-center">
-                                <div class="item-sprite" style="${style}"></div>
+                            <div class="h-24 w-full flex items-center justify-center item-sprite">
+                                ${item.image}
                             </div>
                             <p class="font-semibold mt-2 text-sm">${item.name}</p>
                             <p class="text-xs text-gray-500">Nível ${item.tier}</p>
@@ -403,13 +428,13 @@
             const devSimulateBtn = document.getElementById('dev-simulate-btn');
             const devResetBtn = document.getElementById('dev-reset-btn');
 
-            startApp(); // Inicia o app sem a senha
+            startApp();
 
             devButton.addEventListener('click', openDevModal);
             devCloseBtn.addEventListener('click', () => devModal.classList.add('hidden'));
             
             devResetBtn.addEventListener('click', () => {
-                renderPage(studyPlan); // Renderiza com os dados reais do Firebase
+                renderPage(studyPlan);
                 devModal.classList.add('hidden');
             });
 
