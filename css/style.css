@@ -1,7 +1,53 @@
-/* Estilos personalizados que complementam o Tailwind */
-
+/* =================================== */
+/* FONTES E ESTILOS GLOBAIS            */
+/* =================================== */
 body { 
     font-family: 'Inter', sans-serif; 
+    background-color: var(--bg-color); 
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+/* =================================== */
+/* TEMAS E VARIÁVEIS DE CORES          */
+/* =================================== */
+:root, .theme-light {
+    --bg-color: #f9fafb;
+    --card-bg-color: #ffffff;
+    --text-color: #1f2937;
+    --muted-text-color: #6b7280;
+    --header-text-color: #111827;
+    --border-color: #e5e7eb;
+    --accent-color: #D5A021;
+    --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --control-button-bg: #ffffff;
+    --control-button-border: #d1d5db;
+}
+
+html.theme-dark {
+    --bg-color: #111827;
+    --card-bg-color: #1f2937;
+    --text-color: #d1d5db;
+    --muted-text-color: #9ca3af;
+    --header-text-color: #ffffff;
+    --border-color: #374151;
+    --control-button-bg: #374151;
+    --control-button-border: #4b5563;
+}
+
+html.theme-sepia {
+    --bg-color: #f1e7d0;
+    --card-bg-color: #fdf6e3;
+    --text-color: #586e75;
+    --muted-text-color: #839496;
+    --header-text-color: #073642;
+    --border-color: #eee8d5;
+    --control-button-bg: #eee8d5;
+    --control-button-border: #93a1a1;
 }
 
 /* =================================== */
@@ -10,46 +56,86 @@ body {
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.25rem; /* Espaçamento entre os dias */
 }
 
 .calendar-day {
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.calendar-day.has-task::after {
+    content: '';
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background-color: var(--accent-color);
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.calendar-day.selected {
+    background-color: var(--accent-color);
+    color: white;
+    font-weight: bold;
+}
+.calendar-day.selected.has-task::after {
+    background-color: white;
 }
 
 /* =================================== */
-/* ✨ CORREÇÃO PARA OS ÍCONES DAS TAREFAS ✨ */
+/* ✨ CORREÇÃO PARA OS CARDS E ÍCONES ✨ */
 /* =================================== */
 .task-card {
     position: relative; /* Permite posicionar os ícones dentro do card */
+    border-left: 4px solid #D6BFAA;
+    transition: box-shadow 0.3s ease;
 }
+.task-card.review-r1 { border-left-color: #6A9C89; }
+.task-card.review-r3 { border-left-color: var(--accent-color); }
+.task-card.review-r5 { border-left-color: #A25B5B; }
+.task-card.overdue { border-left-color: #ef4444; }
+.task-card.legis { border-left-color: #38bdf8; }
 
 .actions-menu {
     position: absolute;
-    top: 0.75rem; /* 12px */
+    top: 50%;
     right: 0.75rem; /* 12px */
-    display: flex;
+    transform: translateY(-50%);
+    display: none; /* Escondido por defeito */
     gap: 0.5rem; /* 8px */
     align-items: center;
+    background-color: var(--card-bg-color);
+    padding: 4px;
+    border-radius: 9999px;
+    box-shadow: var(--card-shadow);
+}
+
+.task-card:hover .actions-menu {
+    display: flex; /* Aparece ao passar o rato */
 }
 
 .action-btn svg {
     width: 1rem;   /* 16px */
     height: 1rem;  /* 16px */
+    color: var(--muted-text-color);
 }
-
+.action-btn:hover svg {
+    color: var(--text-color);
+}
 
 /* =================================== */
 /* ✨ CORREÇÃO PARA OS MODAIS (POP-UPS) ✨ */
 /* =================================== */
-.modal {
-    transition: opacity 0.25s ease;
-}
 .modal.hidden {
     display: none;
 }
-
 
 /* =================================== */
 /* ESTILOS DA PÁGINA DE GAMIFICAÇÃO    */
