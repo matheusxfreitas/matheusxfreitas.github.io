@@ -4,9 +4,56 @@ body {
     font-family: 'Inter', sans-serif; 
 }
 
-/* Estilos para a página de Gamificação */
+/* =================================== */
+/* ✨ CORREÇÃO PARA O CALENDÁRIO ✨      */
+/* =================================== */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.calendar-day {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* =================================== */
+/* ✨ CORREÇÃO PARA OS ÍCONES DAS TAREFAS ✨ */
+/* =================================== */
+.task-card {
+    position: relative; /* Permite posicionar os ícones dentro do card */
+}
+
+.actions-menu {
+    position: absolute;
+    top: 0.75rem; /* 12px */
+    right: 0.75rem; /* 12px */
+    display: flex;
+    gap: 0.5rem; /* 8px */
+    align-items: center;
+}
+
+.action-btn svg {
+    width: 1rem;   /* 16px */
+    height: 1rem;  /* 16px */
+}
+
+
+/* =================================== */
+/* ✨ CORREÇÃO PARA OS MODAIS (POP-UPS) ✨ */
+/* =================================== */
+.modal {
+    transition: opacity 0.25s ease;
+}
+.modal.hidden {
+    display: none;
+}
+
+
+/* =================================== */
+/* ESTILOS DA PÁGINA DE GAMIFICAÇÃO    */
+/* =================================== */
 .item-sprite {
     image-rendering: pixelated;
 }
-
-/* Adicione aqui outros estilos personalizados que você queira manter */
