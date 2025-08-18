@@ -1,0 +1,21 @@
+/* Estilos específicos para config.html */
+body { 
+    font-family: 'Inter', sans-serif; 
+}
+.sprite-card { 
+    transition: all 0.2s ease-in-out; 
+    cursor: pointer; 
+}
+.sprite-card:hover { 
+    transform: scale(1.05); 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+}
+.modal.hidden { 
+    display: none; 
+}
+.item-sprite {
+    width: 120px;
+    height: 120px;
+    image-rendering: pixelated;
+    object-fit: contain;
+}

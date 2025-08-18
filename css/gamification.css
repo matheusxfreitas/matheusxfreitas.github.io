@@ -1,0 +1,38 @@
+/* Estilos específicos para gamification.html */
+body { 
+    font-family: 'Inter', sans-serif; 
+    background-color: #f9fafb;
+}
+.slot {
+    border: 2px dashed #e5e7eb;
+    position: relative;
+}
+.slot-name {
+    position: absolute;
+    bottom: 4px;
+    font-size: 0.7rem;
+    color: #6b7280;
+}
+.item-sprite {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    object-fit: contain;
+}
+.item-card {
+    opacity: 0.5;
+}
+.item-card.unlocked {
+    opacity: 1;
+}
+.item-card.equipped {
+    border: 2px solid #D5A021;
+    box-shadow: 0 0 15px rgba(213, 160, 33, 0.5);
+}
+.progress-bar-bg {
+    background-color: #e5e7eb;
+}
+.progress-bar-fill {
+    background-color: #D5A021;
+}
+.modal.hidden { display: none; }
