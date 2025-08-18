@@ -15,7 +15,6 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-
 let viewDate = new Date();
 viewDate.setHours(0, 0, 0, 0);
 let studyPlan = {};
