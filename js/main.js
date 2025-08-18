@@ -34,7 +34,9 @@
         passwordWall.classList.add('hidden');
     } else {
         appContainer.classList.add('blurred');
-    }
+            }
+        
+    
 
     passwordForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -765,11 +767,6 @@
     renderPlan(viewDate);
     updateProgress();
     startCountdown();
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    if (isAuthenticated) {
-        startApp();
     }
     
     document.addEventListener('DOMContentLoaded', async () => {
@@ -787,7 +784,7 @@ document.addEventListener('DOMContentLoaded', () => {
             startCountdown();
         }
 
-        passwordForm.addEventListener('submit', async () => {
+        passwordForm.addEventListener('submit'), async () => {
             if (isAuthenticated) {
                 await loadState();
                 populateInitialHistory();
@@ -796,6 +793,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateProgress();
                 startCountdown();
             }
+        }
         });
 
         const settingsButton = document.getElementById('settings-button');
@@ -1240,6 +1238,4 @@ document.addEventListener('DOMContentLoaded', () => {
                     e.target.value = e.target.options[0].value;
                 }
             }
-        });
-
-    });
+           });
