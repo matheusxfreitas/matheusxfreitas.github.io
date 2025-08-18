@@ -84,7 +84,7 @@
             height: 90px;
             transform: scale(0.75);
             image-rendering: pixelated;
-            background-repeat: no-repeat;
+            object-fit: contain;
         }
     </style>
 </head>
@@ -181,7 +181,7 @@
         const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         let studyPlan = {};
-        const GAMIFICATION_VERSION = 10; // Versão atual da estrutura de gamificação
+        const GAMIFICATION_VERSION = 11; // Versão atual da estrutura de gamificação
 
         // =================== DEFINIÇÕES DE FUNÇÕES ===================
         
@@ -216,38 +216,19 @@
         }
         
         function getInitialGamificationState() {
-             const spriteSheets = {
-                head_warrior: './habitica-imagens-main/src/spritesmith/gear-shop_head_warrior.png',
-                head_rogue: './habitica-imagens-main/src/spritesmith/gear-shop_head_rogue.png',
-                head_armoire: './habitica-imagens-main/src/spritesmith/gear-shop_head_armoire.png',
-                weapon_warrior: './habitica-imagens-main/src/spritesmith/gear-shop_weapon_warrior.png',
-                weapon_rogue: './habitica-imagens-main/src/spritesmith/gear-shop_weapon_rogue.png',
-                weapon_wizard: './habitica-imagens-main/src/spritesmith/gear-shop_weapon_wizard.png',
-                armor_warrior: './habitica-imagens-main/src/spritesmith/gear-shop_armor_warrior.png',
-                armor_rogue: './habitica-imagens-main/src/spritesmith/gear-shop_armor_rogue.png',
-                shield_warrior: './habitica-imagens-main/src/spritesmith/gear-shop_shield_warrior.png',
-                shield_rogue: './habitica-imagens-main/src/spritesmith/gear-shop_shield_rogue.png',
-                shield_armoire: './habitica-imagens-main/src/spritesmith/gear-shop_shield_armoire.png',
-                shoes_warrior: './habitica-imagens-main/src/spritesmith/gear-shop_shoes_warrior.png',
-                shoes_rogue: './habitica-imagens-main/src/spritesmith/gear-shop_shoes_rogue.png',
-                shoes_armoire: './habitica-imagens-main/src/spritesmith/gear-shop_shoes_armoire.png',
-            };
-
             const pools = {
-                helmet: [ { sheet: 'head_warrior', position: '0 0' }, { sheet: 'head_rogue', position: '0 0' } ],
-                weapon: [ { sheet: 'weapon_warrior', position: '0 0' }, { sheet: 'weapon_rogue', position: '0 0' } ],
-                armor:  [ { sheet: 'armor_warrior', position: '0 0' }, { sheet: 'armor_rogue', position: '0 0' } ],
-                shield: [ { sheet: 'shield_warrior', position: '0 0' }, { sheet: 'shield_rogue', position: '0 0' } ],
-                boots:  [ { sheet: 'shoes_warrior', position: '0 0' }, { sheet: 'shoes_rogue', position: '0 0' } ],
+                helmet: ['./habitica-imagens-main/gear/head/shop/shop_head_warrior_1.png', './habitica-imagens-main/gear/head/shop/shop_head_rogue_1.png'],
+                weapon: ['./habitica-imagens-main/gear/weapon/shop/shop_weapon_warrior_1.png', './habitica-imagens-main/gear/weapon/shop/shop_weapon_rogue_1.png'],
+                armor:  ['./habitica-imagens-main/gear/armor/shop/shop_armor_warrior_1.png', './habitica-imagens-main/gear/armor/shop/shop_armor_rogue_1.png'],
+                shield: ['./habitica-imagens-main/gear/shield/shop/shop_shield_warrior_1.png', './habitica-imagens-main/gear/shield/shop/shop_shield_rogue_1.png'],
+                boots:  ['./habitica-imagens-main/gear/armoire/shop/shop_shoes_warrior_1.png', './habitica-imagens-main/gear/armoire/shop/shop_shoes_rogue_1.png'],
             };
-
             const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
             return {
                 version: GAMIFICATION_VERSION,
                 player: { equipped: { helmet: null, armor: null, pants: null, boots: null, weapon: null, shield: null } },
                 config: {
-                    spriteSheets: spriteSheets,
                     slotMapping: {
                         'Língua Portuguesa': 'helmet',
                         'Conhecimentos Específicos': 'weapon',
@@ -255,30 +236,30 @@
                         'Raciocínio Lógico-Matemático': 'boots'
                     },
                     items: [
-                        { id: 'helm_1', name: 'Capacete de Couro', subject: 'Língua Portuguesa', tier: 1, sprite: pickRandom(pools.helmet) },
-                        { id: 'helm_2', name: 'Elmo de Ferro', subject: 'Língua Portuguesa', tier: 2, sprite: { sheet: 'head_warrior', position: '0 -90px' } },
-                        { id: 'helm_3', name: 'Elmo de Aço', subject: 'Língua Portuguesa', tier: 3, sprite: { sheet: 'head_warrior', position: '0 -180px' } },
-                        { id: 'helm_4', name: 'Coroa Dourada', subject: 'Língua Portuguesa', tier: 4, sprite: { sheet: 'head_armoire', position: '0 -360px' } },
+                        { id: 'helm_1', name: 'Capacete de Couro', subject: 'Língua Portuguesa', tier: 1, imageUrl: pickRandom(pools.helmet) },
+                        { id: 'helm_2', name: 'Elmo de Ferro', subject: 'Língua Portuguesa', tier: 2, imageUrl: './habitica-imagens-main/gear/head/shop/shop_head_warrior_2.png' },
+                        { id: 'helm_3', name: 'Elmo de Aço', subject: 'Língua Portuguesa', tier: 3, imageUrl: './habitica-imagens-main/gear/head/shop/shop_head_warrior_3.png' },
+                        { id: 'helm_4', name: 'Coroa Dourada', subject: 'Língua Portuguesa', tier: 4, imageUrl: './habitica-imagens-main/gear/armoire/shop/shop_head_armoire_crownOfHearts.png' },
                         
-                        { id: 'wpn_1', name: 'Adaga Simples', subject: 'Conhecimentos Específicos', tier: 1, sprite: pickRandom(pools.weapon) },
-                        { id: 'wpn_2', name: 'Espada de Ferro', subject: 'Conhecimentos Específicos', tier: 2, sprite: { sheet: 'weapon_warrior', position: '0 -90px' } },
-                        { id: 'wpn_3', name: 'Machado de Aço', subject: 'Conhecimentos Específicos', tier: 3, sprite: { sheet: 'weapon_warrior', position: '0 -180px' } },
-                        { id: 'wpn_4', name: 'Cajado Mágico', subject: 'Conhecimentos Específicos', tier: 4, sprite: { sheet: 'weapon_wizard', position: '0 -360px' } },
+                        { id: 'wpn_1', name: 'Adaga Simples', subject: 'Conhecimentos Específicos', tier: 1, imageUrl: pickRandom(pools.weapon) },
+                        { id: 'wpn_2', name: 'Espada de Ferro', subject: 'Conhecimentos Específicos', tier: 2, imageUrl: './habitica-imagens-main/gear/weapon/shop/shop_weapon_warrior_2.png' },
+                        { id: 'wpn_3', name: 'Machado de Aço', subject: 'Conhecimentos Específicos', tier: 3, imageUrl: './habitica-imagens-main/gear/weapon/shop/shop_weapon_warrior_3.png' },
+                        { id: 'wpn_4', name: 'Cajado Mágico', subject: 'Conhecimentos Específicos', tier: 4, imageUrl: './habitica-imagens-main/gear/armoire/shop/shop_weapon_armoire_crystalCrescentStaff.png' },
                         
-                        { id: 'arm_1', name: 'Armadura de Couro', subject: 'Conhecimentos Específicos', tier: 1, sprite: pickRandom(pools.armor) },
-                        { id: 'arm_2', name: 'Peitoral de Ferro', subject: 'Conhecimentos Específicos', tier: 2, sprite: { sheet: 'armor_warrior', position: '0 -90px' } },
-                        { id: 'arm_3', name: 'Cota de Malha de Aço', subject: 'Conhecimentos Específicos', tier: 3, sprite: { sheet: 'armor_warrior', position: '0 -180px' } },
-                        { id: 'arm_4', name: 'Armadura de Placas Dourada', subject: 'Conhecimentos Específicos', tier: 4, sprite: { sheet: 'armor_warrior', position: '0 -360px' } },
+                        { id: 'arm_1', name: 'Armadura de Couro', subject: 'Conhecimentos Específicos', tier: 1, imageUrl: pickRandom(pools.armor) },
+                        { id: 'arm_2', name: 'Peitoral de Ferro', subject: 'Conhecimentos Específicos', tier: 2, imageUrl: './habitica-imagens-main/gear/armor/shop/shop_armor_warrior_2.png' },
+                        { id: 'arm_3', name: 'Cota de Malha de Aço', subject: 'Conhecimentos Específicos', tier: 3, imageUrl: './habitica-imagens-main/gear/armor/shop/shop_armor_warrior_3.png' },
+                        { id: 'arm_4', name: 'Armadura de Placas Dourada', subject: 'Conhecimentos Específicos', tier: 4, imageUrl: './habitica-imagens-main/gear/armor/shop/shop_armor_warrior_4.png' },
                         
-                        { id: 'shd_1', name: 'Broquel de Madeira', subject: 'Administração Pública', tier: 1, sprite: pickRandom(pools.shield) },
-                        { id: 'shd_2', name: 'Escudo de Ferro', subject: 'Administração Pública', tier: 2, sprite: { sheet: 'shield_warrior', position: '0 -90px' } },
-                        { id: 'shd_3', name: 'Escudo de Aço', subject: 'Administração Pública', tier: 3, sprite: { sheet: 'shield_warrior', position: '0 -180px' } },
-                        { id: 'shd_4', name: 'Baluarte Dourado', subject: 'Administração Pública', tier: 4, sprite: { sheet: 'shield_armoire', position: '0 -360px' } },
+                        { id: 'shd_1', name: 'Broquel de Madeira', subject: 'Administração Pública', tier: 1, imageUrl: pickRandom(pools.shield) },
+                        { id: 'shd_2', name: 'Escudo de Ferro', subject: 'Administração Pública', tier: 2, imageUrl: './habitica-imagens-main/gear/shield/shop/shop_shield_warrior_2.png' },
+                        { id: 'shd_3', name: 'Escudo de Aço', subject: 'Administração Pública', tier: 3, imageUrl: './habitica-imagens-main/gear/shield/shop/shop_shield_warrior_3.png' },
+                        { id: 'shd_4', name: 'Baluarte Dourado', subject: 'Administração Pública', tier: 4, imageUrl: './habitica-imagens-main/gear/armoire/shop/shop_shield_armoire_royalCane.png' },
                         
-                        { id: 'bts_1', name: 'Sapatos de Couro', subject: 'Raciocínio Lógico-Matemático', tier: 1, sprite: pickRandom(pools.boots) },
-                        { id: 'bts_2', name: 'Botas de Ferro', subject: 'Raciocínio Lógico-Matemático', tier: 2, sprite: { sheet: 'shoes_warrior', position: '0 -90px' } },
-                        { id: 'bts_3', name: 'Grevas de Aço', subject: 'Raciocínio Lógico-Matemático', tier: 3, sprite: { sheet: 'shoes_warrior', position: '0 -180px' } },
-                        { id: 'bts_4', name: 'Sabatons Dourados', subject: 'Raciocínio Lógico-Matemático', tier: 4, sprite: { sheet: 'shoes_armoire', position: '0 -360px' } }
+                        { id: 'bts_1', name: 'Sapatos de Couro', subject: 'Raciocínio Lógico-Matemático', tier: 1, imageUrl: pickRandom(pools.boots) },
+                        { id: 'bts_2', name: 'Botas de Ferro', subject: 'Raciocínio Lógico-Matemático', tier: 2, imageUrl: './habitica-imagens-main/gear/armoire/shop/shop_shoes_warrior_2.png' },
+                        { id: 'bts_3', name: 'Grevas de Aço', subject: 'Raciocínio Lógico-Matemático', tier: 3, imageUrl: './habitica-imagens-main/gear/armoire/shop/shop_shoes_warrior_3.png' },
+                        { id: 'bts_4', name: 'Sabatons Dourados', subject: 'Raciocínio Lógico-Matemático', tier: 4, imageUrl: './habitica-imagens-main/gear/armoire/shop/shop_shoes_armoire_4.png' }
                     ]
                 }
             };
@@ -292,7 +273,7 @@
         function renderAvatar(data) {
             if (!data.gamification || !data.gamification.player) return;
             const { equipped } = data.gamification.player;
-            const { items, spriteSheets } = data.gamification.config;
+            const { items } = data.gamification.config;
 
             for (const slotName in equipped) {
                 const slotElement = document.getElementById(`slot-${slotName}`);
@@ -305,12 +286,12 @@
 
                 if (itemId) {
                     const item = items.find(i => i.id === itemId);
-                    if (item && item.sprite && spriteSheets[item.sprite.sheet]) {
-                        const itemDiv = document.createElement('div');
-                        itemDiv.className = 'item-sprite';
-                        itemDiv.style.backgroundImage = `url('${spriteSheets[item.sprite.sheet]}')`;
-                        itemDiv.style.backgroundPosition = item.sprite.position;
-                        slotElement.insertBefore(itemDiv, slotNameSpan);
+                    if (item && item.imageUrl) {
+                        const itemImg = document.createElement('img');
+                        itemImg.className = 'item-sprite';
+                        itemImg.src = item.imageUrl;
+                        itemImg.alt = item.name;
+                        slotElement.insertBefore(itemImg, slotNameSpan);
                         slotElement.title = item.name;
                     }
                 } else {
@@ -321,7 +302,7 @@
 
         function renderInventory(data) {
             if (!data.gamification || !data.gamification.config || !data.gamification.config.slotMapping) return;
-            const { items, slotMapping, spriteSheets } = data.gamification.config;
+            const { items, slotMapping } = data.gamification.config;
             const inventoryContainer = document.getElementById('inventory-container');
             inventoryContainer.innerHTML = '';
             
@@ -351,15 +332,10 @@
                     const isEquipped = data.gamification.player.equipped[slot] === item.id;
                     const isUnlocked = isItemUnlocked(item, data);
                     
-                    let style = '';
-                    if (item.sprite && spriteSheets[item.sprite.sheet]) {
-                        style = `background-image: url('${spriteSheets[item.sprite.sheet]}'); background-position: ${item.sprite.position};`;
-                    }
-
                     sectionHTML += `
                         <div class="item-card card rounded-lg p-3 text-center ${isEquipped ? 'equipped' : ''} ${isUnlocked ? 'unlocked' : ''}">
                             <div class="h-24 w-full flex items-center justify-center">
-                                <div class="item-sprite" style="${style}"></div>
+                                <img src="${item.imageUrl}" alt="${item.name}" class="item-sprite">
                             </div>
                             <p class="font-semibold mt-2 text-sm">${item.name}</p>
                             <p class="text-xs text-gray-500">Nível ${item.tier}</p>
