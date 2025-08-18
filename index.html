@@ -170,7 +170,6 @@
                             </select>
                         </div>
                         <div class="border-t">
-                            <!-- NOVO: Botão para exportar para o data.js -->
                             <a href="#" id="export-datajs-btn" class="block px-4 py-2 text-sm text-blue-600 hover:bg-blue-50">Exportar para data.js</a>
                             <a href="#" id="export-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Exportar Backup (JSON)</a>
                             <a href="#" id="import-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Importar Backup (JSON)</a>
@@ -198,10 +197,20 @@
             <h3 class="font-semibold text-gray-500 mb-2">Progresso Geral</h3>
             <p id="progressText" class="text-2xl font-bold text-gray-800">0%</p>
         </div>
-        <div id="advanced-stats-card" class="bg-white p-5 rounded-lg flex flex-col justify-center items-center text-center md:col-span-2 lg:col-span-1">
-            <h3 class="font-semibold text-gray-500 mb-2">Ritmo Necessário</h3>
-            <div id="daily-progress-stat" class="text-sm"></div>
-            <div id="monthly-progress-stat" class="text-sm mt-2"></div>
+        <!-- CARD DE ESTATÍSTICAS ATUALIZADO -->
+        <div id="advanced-stats-card" class="bg-white p-5 rounded-lg flex flex-col justify-center md:col-span-2 lg:col-span-1">
+             <div class="grid grid-cols-2 gap-4 w-full text-center">
+                <div>
+                    <h3 class="font-semibold text-gray-500 mb-2">Ritmo Necessário</h3>
+                    <div id="daily-progress-stat" class="text-sm"></div>
+                    <div id="weekly-progress-stat" class="text-sm mt-2"></div>
+                </div>
+                <div class="border-l pl-4">
+                    <h3 class="font-semibold text-gray-500 mb-2">Seu Ritmo Real</h3>
+                    <div id="real-daily-progress-stat" class="text-sm"></div>
+                    <div id="real-weekly-progress-stat" class="text-sm mt-2"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -337,7 +346,6 @@
                         <button id="shift-selected-backward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg">Adiantar</button>
                         <button id="delete-selected-btn" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-2 px-4 rounded-lg">Excluir</button>
                     </div>
-                    <!-- NOVO: Estrutura de Filtros -->
                     <div class="mt-4 p-2 bg-gray-50 rounded-md border">
                         <div class="flex flex-wrap gap-4 items-center">
                             <div class="flex items-center gap-2">
@@ -867,7 +875,6 @@
     
     // =================== LÓGICA DE PROGRESSO E GRÁFICOS ===================
     const updateProgress = () => {
-        // CORREÇÃO: Garante que o filtro é explícito para 'true'
         const allStudyTasks = Object.values(studyPlan.tasks || {}).flat().filter(t => t.countsTowardsProgress === true);
         
         const completedStudyTasks = allStudyTasks.filter(task => task.completed).length;
@@ -890,7 +897,6 @@
         const container = document.getElementById('subject-progress-bars');
         if (!container) return;
         
-        // CORREÇÃO: Garante que o filtro é explícito para 'true'
         const allStudyTasks = Object.values(studyPlan.tasks || {}).flat().filter(t => t.countsTowardsProgress === true);
         
         if (allStudyTasks.length === 0) { container.innerHTML = ''; return; }
@@ -904,15 +910,21 @@
         }).join('');
     };
 
+    /**
+     * ATUALIZADO: Renderiza as estatísticas de ritmo necessário e ritmo real.
+     */
     function renderAdvancedStats() {
+        // Elementos do HTML
         const dailyStatEl = document.getElementById('daily-progress-stat');
-        const monthlyStatEl = document.getElementById('monthly-progress-stat');
+        const weeklyStatEl = document.getElementById('weekly-progress-stat');
+        const realDailyStatEl = document.getElementById('real-daily-progress-stat');
+        const realWeeklyStatEl = document.getElementById('real-weekly-progress-stat');
+
+        // --- 1. Cálculo do Ritmo Necessário ---
         const examDate = new Date('2025-10-26T11:00:00Z');
         const startDate = new Date('2025-06-24T03:00:00Z');
-
         const totalDays = Math.ceil((examDate - startDate) / (1000 * 60 * 60 * 24));
-        const totalMonths = (examDate.getFullYear() - startDate.getFullYear()) * 12 + (examDate.getMonth() - startDate.getMonth());
-
+        const totalWeeks = totalDays / 7;
         const totalTasks = Object.values(studyPlan.tasks || {}).flat().filter(t => t.countsTowardsProgress === true).length;
 
         if (totalDays > 0 && totalTasks > 0) {
@@ -920,11 +932,39 @@
             const dailyAvg = (totalTasks / totalDays).toFixed(1);
             dailyStatEl.innerHTML = `<strong>Diário: ${dailyPercentage}%</strong> <span class="text-gray-600">(~${dailyAvg} aulas)</span>`;
         }
+        if (totalWeeks > 0 && totalTasks > 0) {
+            const weeklyPercentage = (100 / totalWeeks).toFixed(1);
+            const weeklyAvg = (totalTasks / totalWeeks).toFixed(1);
+            weeklyStatEl.innerHTML = `<strong>Semanal: ${weeklyPercentage}%</strong> <span class="text-gray-600">(~${weeklyAvg} aulas)</span>`;
+        }
 
-        if (totalMonths > 0 && totalTasks > 0) {
-            const monthlyPercentage = (100 / totalMonths).toFixed(1);
-            const monthlyAvg = (totalTasks / totalMonths).toFixed(0);
-            monthlyStatEl.innerHTML = `<strong>Mensal: ${monthlyPercentage}%</strong> <span class="text-gray-600">(~${monthlyAvg} aulas)</span>`;
+        // --- 2. Cálculo do Ritmo Real ---
+        const history = studyPlan.history || [];
+        if (history.length > 0) {
+            const completedDates = history.map(h => new Date(h.completionDate));
+            const firstStudyDay = completedDates.reduce((a, b) => a < b ? a : b);
+            const today = new Date();
+
+            // Cálculo diário
+            const uniqueStudyDays = new Set(history.map(h => new Date(h.completionDate).toDateString())).size;
+            const realDailyAvg = (history.length / uniqueStudyDays).toFixed(1);
+            realDailyStatEl.innerHTML = `<strong>Diário: ${realDailyAvg}</strong> <span class="text-gray-600">(aulas/dia)</span>`;
+
+            // Cálculo semanal
+            const getWeekNumber = (d) => {
+                d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+                d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+                var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                return d.getUTCFullYear() + '-' + weekNo;
+            };
+            const uniqueStudyWeeks = new Set(history.map(h => getWeekNumber(new Date(h.completionDate)))).size;
+            const realWeeklyAvg = (history.length / uniqueStudyWeeks).toFixed(1);
+            realWeeklyStatEl.innerHTML = `<strong>Semanal: ${realWeeklyAvg}</strong> <span class="text-gray-600">(aulas/sem)</span>`;
+
+        } else {
+            realDailyStatEl.innerHTML = `<strong>Diário: N/A</strong>`;
+            realWeeklyStatEl.innerHTML = `<strong>Semanal: N/A</strong>`;
         }
     }
 
@@ -980,7 +1020,6 @@
         const subjectFilter = document.getElementById('filter-subject').value;
         if (subjectFilter) itemsToShow = itemsToShow.filter(task => task.subject === subjectFilter);
         
-        // NOVO: Aplica o filtro de tipo
         const typeFilter = document.getElementById('filter-type').value;
         if (typeFilter) itemsToShow = itemsToShow.filter(task => task.type === typeFilter);
 
@@ -1278,19 +1317,15 @@
         document.body.removeChild(link);
     }
 
-    /**
-     * NOVO: Função para exportar o estado atual para um formato compatível com data.js
-     */
     function exportForDataJs() {
         const allTasks = Object.values(studyPlan.tasks || {}).flat()
-            .filter(task => task.type !== 'legis'); // Não exporta legislação, pois é gerada dinamicamente
+            .filter(task => task.type !== 'legis'); 
 
         if (allTasks.length === 0) {
             alert("Nenhuma aula para exportar.");
             return;
         }
 
-        // Constrói a string de código JavaScript
         let fileContent = "const allTasks = [\n";
         allTasks.forEach(task => {
             fileContent += "    {\n";
@@ -1299,7 +1334,6 @@
             fileContent += `        lesson: '${task.lesson.replace(/'/g, "\\'")}',\n`;
             fileContent += `        topic: '${task.topic.replace(/'/g, "\\'")}',\n`;
             fileContent += `        type: '${task.type}',\n`;
-            // Só adiciona propriedades não padrão se elas existirem/forem verdadeiras
             if (task.completed) fileContent += `        completed: true,\n`;
             if (task.originalDate && task.originalDate !== task.date) fileContent += `        originalDate: '${task.originalDate}',\n`;
             if (task.notebookLink) fileContent += `        notebookLink: '${task.notebookLink}',\n`;
@@ -1308,7 +1342,6 @@
         });
         fileContent += "];\n";
 
-        // Cria e baixa o arquivo .js
         const blob = new Blob([fileContent], { type: 'text/javascript;charset=utf-8;' });
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
@@ -1574,13 +1607,11 @@
 
         document.getElementById('view-overdue-tasks-btn').addEventListener('click', renderOverdueTasks);
         
-        // NOVO: Listener para o botão de expandir filtros
         document.getElementById('toggle-filters-btn').addEventListener('click', (e) => {
             document.getElementById('more-filters-container').classList.toggle('hidden');
             document.getElementById('filter-arrow').classList.toggle('rotate-180');
         });
 
-        // NOVO: Adiciona o listener para o novo filtro de tipo
         ['all-tasks-search', 'filter-subject', 'sort-by', 'filter-type', 'filter-not-completed', 'filter-completed', 'filter-overdue', 'filter-reviews'].forEach(id => {
             document.getElementById(id).addEventListener('input', renderAllTasksTable);
         });
