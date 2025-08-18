@@ -1,4 +1,28 @@
-const allTasksData = [
+// =================== CONFIGURAÇÃO E DADOS INICIAIS ===================
+// Arquivo para armazenar a configuração do Firebase e os dados iniciais do plano de estudos.
+
+const firebaseConfig = {
+    apiKey: "AIzaSyA050ckDIuD1ujjyRee81r0Vv_jygoHs1Q",
+    authDomain: "meu-painel-de-estudos-v2.firebaseapp.com",
+    projectId: "meu-painel-de-estudos-v2",
+    storageBucket: "meu-painel-de-estudos-v2.firebasestorage.app",
+    messagingSenderId: "889152606734",
+    appId: "1:889152606734:web:09457849b695f3f1d4625f"
+};
+
+// Inicializa o Firebase
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+/**
+ * Gera a estrutura inicial do plano de estudos com todas as aulas.
+ * Se nenhum plano for encontrado no banco de dados, este será o plano padrão.
+ * @returns {object} O objeto inicial do plano de estudos.
+ */
+function initializeStudyPlan() {
+    let plan = { tasks: {}, reviews: {}, history: [], dailyGoals: {}, deletedTasks: {} };
+
+    let allTasks = [
 
             // Exemplo: { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '1', topic: '...', type: 'video', completed: true },
             
@@ -601,3 +625,29 @@ const allTasksData = [
             { date: '2025-10-18', subject: 'Conhecimentos Específicos', lesson: '2', topic: 'Resolução CFP 10/2005 II - Código de Ética do Psicólogo', type: 'video' },
             { date: '2025-10-18', subject: 'Conhecimentos Específicos', lesson: '3', topic: 'Resolução CFP 10/2005 III - Código de Ética do Psicólogo', type: 'video' },
         ];
+
+        
+        const legislacaoMunicipalTasks = [
+            { subject: 'Administração Pública', lesson: 'L1', topic: 'Lei Orgânica do Município de Uberlândia - Art. 1º ao 15º', type: 'legis' },
+            { subject: 'Administração Pública', lesson: 'L2', topic: 'Lei Orgânica do Município de Uberlândia - Art. 16º ao 30º', type: 'legis' },
+            { subject: 'Administração Pública', lesson: 'L3', topic: 'Lei Orgânica - Competências do Município', type: 'legis' },
+            { subject: 'Administração Pública', lesson: 'L4', topic: 'Lei Orgânica - Servidores Públicos', type: 'legis' },
+            { subject: 'Administração Pública', lesson: 'L5', topic: 'Estatuto dos Servidores (LC nº 40/1992) - Disposições Preliminares', type: 'legis' },
+            { subject: 'Administração Pública', lesson: 'L6', topic: 'Estatuto dos Servidores - Direitos e Vantagens', type: 'legis' },
+            { subject: 'Administração Pública', lesson: 'L7', topic: 'Estatuto dos Servidores - Regime Disciplinar', type: 'legis' },
+            { subject: 'Administração Pública', lesson: 'L8', topic: 'Estatuto dos Servidores - Responsabilidades', type: 'legis' },
+            { subject: 'Administração Pública', lesson: 'L9', topic: 'Plano de Cargos e Carreiras (LC nº 671/2018) - Estrutura Geral', type: 'legis' },
+            { subject: 'Administração Pública', lesson: 'L10', topic: 'Revisão Geral - Legislação Municipal', type: 'legis' },
+        ];
+
+        
+    allTasks.forEach(task => {
+        const id = generateUniqueId(task);
+        const dateStr = formatDateYMD(new Date(task.date + 'T03:00:00Z'));
+        if (!plan.tasks[dateStr]) plan.tasks[dateStr] = [];
+        if (!plan.tasks[dateStr].some(t => t.id === id)) {
+            plan.tasks[dateStr].push({ id, ...task, date: dateStr, completed: task.completed || false, notebookLink: task.notebookLink || '', notes: task.notes || '' });
+        }
+    });
+    return plan;
+}
