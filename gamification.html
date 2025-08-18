@@ -181,7 +181,7 @@
         const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         let studyPlan = {};
-        const GAMIFICATION_VERSION = 11; // Versão atual da estrutura de gamificação
+        const GAMIFICATION_VERSION = 12; // Versão atual da estrutura de gamificação
 
         // =================== DEFINIÇÕES DE FUNÇÕES ===================
         
@@ -216,7 +216,7 @@
         }
         
         function getInitialGamificationState() {
-            const pools = {
+             const pools = {
                 helmet: ['./habitica-imagens-main/gear/head/shop/shop_head_warrior_1.png', './habitica-imagens-main/gear/head/shop/shop_head_rogue_1.png'],
                 weapon: ['./habitica-imagens-main/gear/weapon/shop/shop_weapon_warrior_1.png', './habitica-imagens-main/gear/weapon/shop/shop_weapon_rogue_1.png'],
                 armor:  ['./habitica-imagens-main/gear/armor/shop/shop_armor_warrior_1.png', './habitica-imagens-main/gear/armor/shop/shop_armor_rogue_1.png'],
