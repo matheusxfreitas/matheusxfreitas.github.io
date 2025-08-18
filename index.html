@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel de Controle de Estudos</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Link para o arquivo CSS externo -->
+    <!-- CSS Personalizado -->
     <link rel="stylesheet" href="css/main.css">
     <link id="favicon" rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23D5A021'/%3E%3Ctext x='50' y='50' font-size='50' fill='white' text-anchor='middle' dy='.3em' font-family='Inter, sans-serif' font-weight='bold'%3EPSI%3C/text%3E%3C/svg%3E">
     <meta name="theme-color" content="#D5A021">
@@ -17,349 +20,128 @@
 
 <body class="bg-gray-50 text-gray-800">
 
-<!-- Mural de Senha -->
-<div id="password-wall" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 backdrop-blur-sm">
-    <div class="w-full max-w-xs bg-white p-6 rounded-lg shadow-xl">
-        <h2 class="text-xl font-bold text-center text-gray-800 mb-4">Acessar Painel</h2>
-        <form id="password-form" class="space-y-4">
-            <input type="password" id="password-input" placeholder="Palavra-passe" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-            <button type="submit" class="w-full bg-[#D5A021] hover:bg-amber-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                Liberar Acesso
-            </button>
-            <p id="password-error" class="text-red-500 text-xs text-center italic h-4"></p>
-        </form>
-    </div>
-</div>
-
-<div id="app-container" class="container mx-auto p-4 md:p-8 max-w-7xl">
-    <header class="mb-8 bg-white p-6 rounded-lg">
-        <div class="flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <div class="bg-amber-400 text-white w-12 h-12 flex items-center justify-center rounded-lg">
-                    <span class="text-2xl font-bold">PSI</span>
-                </div>
-                <div>
-                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Meu Painel de Estudos</h1>
-                </div>
-            </div>
-            <div class="flex items-center gap-2">
-                 <button id="home-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                    Início
+    <!-- Mural de Senha -->
+    <div id="password-wall" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 backdrop-blur-sm">
+        <div class="w-full max-w-xs bg-white p-6 rounded-lg shadow-xl">
+            <h2 class="text-xl font-bold text-center text-gray-800 mb-4">Acessar Painel</h2>
+            <form id="password-form" class="space-y-4">
+                <input type="password" id="password-input" placeholder="Palavra-passe" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <button type="submit" class="w-full bg-[#D5A021] hover:bg-amber-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Liberar Acesso
                 </button>
-                <button id="view-overdue-tasks-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg text-red-600 border-red-300">Aulas Atrasadas</button>
-                <a href="./questoes.html" class="control-button text-sm font-semibold py-2 px-4 rounded-lg flex items-center gap-2 text-green-600 border-green-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 17l4 4 4-4"/><path d="M12 3v18"/><path d="M20 13v-3a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/></svg>
-                    Questões
-                </a>
-                <button id="manage-tasks-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg text-blue-600 border-blue-300">Gerenciar</button>
-                <div class="relative settings-dropdown">
-                    <button id="settings-button" class="control-button text-sm font-semibold p-2 rounded-full flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                <p id="password-error" class="text-red-500 text-xs text-center italic h-4"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal da Aplicação -->
+    <div id="app-container" class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <header class="mb-8 bg-white p-6 rounded-lg">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <div class="bg-amber-400 text-white w-12 h-12 flex items-center justify-center rounded-lg">
+                        <span class="text-2xl font-bold">PSI</span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Meu Painel de Estudos</h1>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="home-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                        Início
                     </button>
-                    <div id="settings-menu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-10 border">
-                        <div class="p-4">
-                            <label for="theme-selector" class="block text-sm font-medium text-gray-700 mb-2">Tema da Página</label>
-                            <select id="theme-selector" class="w-full p-2 border rounded-md">
-                                <option value="theme-light">Claro</option>
-                                <option value="theme-dark">Escuro</option>
-                                <option value="theme-sepia">Sépia</option>
-                            </select>
-                        </div>
-                        <div class="border-t">
-                            <a href="#" id="export-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Exportar Backup</a>
-                            <a href="#" id="import-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Importar Backup</a>
-                            <a href="#" id="reset-btn" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Resetar Progresso</a>
-                            <input type="file" id="import-backup-file" class="hidden" accept=".json">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Cards de Informação -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white p-5 rounded-lg flex flex-col justify-center items-center">
-            <h3 class="font-semibold text-gray-500 mb-2">Contagem Regressiva</h3>
-            <div id="countdown" class="text-2xl font-bold text-gray-800"></div>
-        </div>
-        <div class="bg-white p-5 rounded-lg flex flex-col justify-center items-center">
-            <h3 class="font-semibold text-gray-500 mb-2">Data da Prova</h3>
-            <p class="text-2xl font-bold text-gray-800">26/10/2025</p>
-        </div>
-        <div class="bg-white p-5 rounded-lg flex flex-col justify-center items-center">
-            <h3 class="font-semibold text-gray-500 mb-2">Progresso Geral</h3>
-            <p id="progressText" class="text-2xl font-bold text-gray-800">0%</p>
-        </div>
-    </div>
-
-    <!-- Conteúdo Principal -->
-    <main class="bg-white p-4 sm:p-6 rounded-lg">
-        <div class="flex flex-col lg:flex-row gap-8">
-            <!-- Coluna Esquerda: Calendário e Tarefas -->
-            <div class="w-full lg:w-2/3">
-                <div id="calendar-container"></div>
-                <div id="plan-content" class="space-y-4 mt-6"></div>
-            </div>
-            <!-- Coluna Direita: Gráficos e Legendas -->
-            <aside class="w-full lg:w-1/3 lg:border-l lg:pl-8 border-gray-200">
-                <div class="sticky top-8">
-                    <h2 class="text-2xl font-bold mb-4 text-center">Progresso Geral</h2>
-                    <div class="chart-container">
-                        <canvas id="progressChart"></canvas>
-                    </div>
-                    <div class="mt-8 p-4 rounded-lg bg-gray-50 border">
-                        <h3 class="font-bold text-lg mb-2">Legenda de Revisões</h3>
-                         <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-[#6A9C89]"></div><span class="text-gray-700">R1 (D+1) - Rápida</span></div>
-                         <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-[#D5A021]"></div><span class="text-gray-700">R3 (D+7) - Intermediária</span></div>
-                         <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-[#A25B5B]"></div><span class="text-gray-700">R5 (D+30) - Longo Prazo</span></div>
-                         <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-red-500"></div><span class="text-gray-700">Tarefa Atrasada</span></div>
-                    </div>
-                    <div id="subject-progress-container" class="mt-8">
-                        <h3 class="text-xl font-bold mb-4 text-center">Progresso por Matéria</h3>
-                        <div id="subject-progress-bars" class="space-y-4"></div>
-                    </div>
-                    <!-- Novo Card: Seções Livres -->
-                    <div id="free-sections-container" class="mt-8"></div>
-                </div>
-            </aside>
-        </div>
-    </main>
-</div>
-
-<!-- Modal Adicionar/Editar Aula (z-index 60) -->
-<div id="addTaskModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
-    <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl">
-        <div class="flex justify-between items-center p-4 border-b">
-            <h3 id="modal-title" class="text-xl font-bold">Incluir Nova Aula</h3>
-            <button class="close-modal text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-        </div>
-        <form id="add-task-form" class="p-6">
-            <input type="hidden" id="task-id">
-            <input type="hidden" id="original-task-date">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Coluna Esquerda -->
-                <div class="space-y-4">
-                    <div>
-                        <label for="task-date" class="block text-sm font-medium text-gray-700">Data (DD/MM/AAAA)</label>
-                        <input type="date" id="task-date" required class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
-                    </div>
-                    <div>
-                        <label for="task-subject" class="block text-sm font-medium text-gray-700">Matéria</label>
-                        <select id="task-subject" required class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
-                            <!-- Options will be populated by JS -->
-                        </select>
-                    </div>
-                    <div>
-                        <label for="task-lesson" class="block text-sm font-medium text-gray-700">Nº da Aula</label>
-                        <input type="text" id="task-lesson" required class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
-                    </div>
-                    <div>
-                        <label for="task-topic" class="block text-sm font-medium text-gray-700">Tópico</label>
-                        <input type="text" id="task-topic" required class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
-                    </div>
-                    <div>
-                        <label for="task-type" class="block text-sm font-medium text-gray-700">Tipo</label>
-                        <select id="task-type" class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
-                            <option value="video">Videoaula</option>
-                            <option value="pdf">PDF</option>
-                            <option value="legis">Legislação</option>
-                        </select>
-                    </div>
-                     <div>
-                        <label for="task-notebook-link" class="block text-sm font-medium text-gray-700">Link do Caderno (NotebookLM)</label>
-                        <input type="url" id="task-notebook-link" placeholder="https://..." class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
-                    </div>
-                </div>
-                <!-- Coluna Direita -->
-                <div class="space-y-4">
-                    <div>
-                        <label for="task-notes" class="block text-sm font-medium text-gray-700">Anotações</label>
-                        <textarea id="task-notes" rows="12" class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3"></textarea>
-                    </div>
-                    <div id="completed-checkbox-container" class="hidden items-center pt-4">
-                        <input type="checkbox" id="task-completed-checkbox" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]">
-                        <label for="task-completed-checkbox" class="ml-2 block text-sm font-medium text-gray-700">Marcar como assistida</label>
-                    </div>
-                </div>
-            </div>
-            <div class="flex justify-end pt-6 mt-6 border-t">
-                <button type="submit" class="bg-[#D5A021] hover:bg-amber-600 text-white font-bold py-2 px-4 rounded">Salvar Aula</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Modal Visualizar Todas as Aulas (z-index 50) -->
-<div id="allTasksModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col">
-        <!-- Header -->
-        <div class="flex justify-between items-center p-4 border-b flex-shrink-0">
-            <h3 class="text-xl font-bold">Gerenciar Aulas</h3>
-            <button class="close-modal text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-        </div>
-        
-        <!-- Abas -->
-        <div class="flex border-b flex-shrink-0">
-            <button id="tab-active" class="tab-button active">Aulas Ativas</button>
-            <button id="tab-history" class="tab-button">Histórico</button>
-            <button id="tab-trash" class="tab-button">Lixeira</button>
-        </div>
-        
-        <div class="flex-grow overflow-hidden flex flex-col">
-            <!-- Painel de Aulas Ativas -->
-            <div id="tab-content-active" class="tab-pane flex flex-col h-full overflow-hidden">
-                <!-- Seção de filtros e ações -->
-                <div class="p-4 border-b flex-shrink-0">
-                    <div id="manage-actions-container" class="flex justify-center flex-wrap gap-2 mb-4">
-                        <button id="add-task-btn-modal" class="control-button text-sm font-semibold py-2 px-4 rounded-lg text-green-600 border-green-300">Incluir Aula(s)</button>
-                        <button id="import-csv-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg">Importar (CSV)</button>
-                        <button id="export-csv-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg">Exportar (CSV)</button>
-                        <button id="shift-all-forward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg">Adiar não-concluídas (+1 dia)</button>
-                        <button id="shift-all-backward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg">Adiantar não-concluídas (-1 dia)</button>
-                        <input type="file" id="csv-file-input" class="hidden" accept=".csv">
-                    </div>
-                    
-                    <div id="all-tasks-stats" class="flex flex-wrap justify-center gap-4 mb-4 text-center"></div>
-                    
-                    <div class="flex flex-wrap gap-2 items-center mb-4">
-                        <input type="text" id="all-tasks-search" class="flex-grow p-2 border rounded-md" placeholder="Buscar por matéria ou tópico...">
-                    </div>
-                    
-                    <div id="selected-actions-container" class="hidden mt-4 flex flex-wrap gap-2 items-center p-2 bg-amber-50 border border-amber-200 rounded-md">
-                        <span id="selection-count" class="text-sm font-semibold"></span>
-                        <button id="shift-selected-forward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg">Adiar</button>
-                        <button id="shift-selected-backward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg">Adiantar</button>
-                        <button id="delete-selected-btn" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-2 px-4 rounded-lg">Excluir</button>
-                    </div>
-                    <div class="mt-4 p-2 bg-gray-50 rounded-md border">
-                        <div class="flex flex-wrap gap-4 items-center">
-                            <div class="flex items-center gap-2">
-                                <label for="filter-subject" class="text-sm font-medium">Matéria:</label>
-                                <select id="filter-subject" class="p-1 border rounded-md text-sm"><option value="">Todas</option></select>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <label for="sort-by" class="text-sm font-medium">Ordenar por:</label>
-                                <select id="sort-by" class="p-1 border rounded-md text-sm">
-                                    <option value="date-asc">Data (Crescente)</option>
-                                    <option value="date-desc">Data (Decrescente)</option>
-                                    <option value="subject-asc">Matéria (A-Z)</option>
-                                    <option value="subject-desc">Matéria (Z-A)</option>
+                    <button id="view-overdue-tasks-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg text-red-600 border-red-300">Aulas Atrasadas</button>
+                    <a href="./questoes.html" class="control-button text-sm font-semibold py-2 px-4 rounded-lg flex items-center gap-2 text-green-600 border-green-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 17l4 4 4-4"/><path d="M12 3v18"/><path d="M20 13v-3a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/></svg>
+                        Questões
+                    </a>
+                    <button id="manage-tasks-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg text-blue-600 border-blue-300">Gerenciar</button>
+                    <div class="relative settings-dropdown">
+                        <button id="settings-button" class="control-button text-sm font-semibold p-2 rounded-full flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                        <div id="settings-menu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-10 border">
+                            <div class="p-4">
+                                <label for="theme-selector" class="block text-sm font-medium text-gray-700 mb-2">Tema da Página</label>
+                                <select id="theme-selector" class="w-full p-2 border rounded-md">
+                                    <option value="theme-light">Claro</option>
+                                    <option value="theme-dark">Escuro</option>
+                                    <option value="theme-sepia">Sépia</option>
                                 </select>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <input type="checkbox" id="filter-not-completed" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]">
-                                <label for="filter-not-completed" class="text-sm font-medium">Não Concluídas</label>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <input type="checkbox" id="filter-completed" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]">
-                                <label for="filter-completed" class="text-sm font-medium">Concluídas</label>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <input type="checkbox" id="filter-overdue" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]">
-                                <label for="filter-overdue" class="text-sm font-medium">Atrasadas</label>
-                            </div>
-                             <div class="flex items-center gap-2">
-                                <input type="checkbox" id="filter-reviews" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]">
-                                <label for="filter-reviews" class="text-sm font-medium">Revisões</label>
+                            <div class="border-t">
+                                <a href="#" id="export-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Exportar Backup</a>
+                                <a href="#" id="import-backup-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Importar Backup</a>
+                                <a href="#" id="reset-btn" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Resetar Progresso</a>
+                                <input type="file" id="import-backup-file" class="hidden" accept=".json">
                             </div>
                         </div>
-                        <div id="results-count-container" class="mt-2 text-sm font-semibold"></div>
                     </div>
                 </div>
-                <div class="overflow-y-auto flex-grow">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="sticky top-0 bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left"><input type="checkbox" id="select-all-tasks-checkbox" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]"></th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aula</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tópico</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="all-tasks-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                    </table>
-                </div>
             </div>
-            
-            <!-- Painel de Histórico -->
-            <div id="tab-content-history" class="tab-pane hidden flex flex-col h-full overflow-hidden">
-                 <div class="p-4 border-b flex-shrink-0 flex justify-between items-center">
-                    <p class="text-sm text-gray-600">Aqui estão todas as aulas que você já concluiu.</p>
-                    <div class="flex items-center gap-2">
-                        <label for="history-sort-by" class="text-sm font-medium">Ordenar por:</label>
-                        <select id="history-sort-by" class="p-1 border rounded-md text-sm">
-                            <option value="date-desc">Data (Recentes)</option>
-                            <option value="date-asc">Data (Antigas)</option>
-                            <option value="subject-asc">Matéria (A-Z)</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="overflow-y-auto flex-grow">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="sticky top-0 bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Conclusão</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tópico</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody id="history-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                    </table>
-                </div>
-            </div>
+        </header>
 
-            <!-- Painel da Lixeira -->
-            <div id="tab-content-trash" class="tab-pane hidden flex flex-col h-full overflow-hidden">
-                <div class="p-4 border-b flex-shrink-0">
-                    <p class="text-sm text-gray-600">Aulas excluídas são mantidas aqui. Você pode restaurá-las ou excluí-las permanentemente.</p>
-                    <div id="trash-actions-container" class="hidden mt-2 flex flex-wrap gap-2 items-center">
-                         <button id="restore-all-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg text-green-600 border-green-300">Restaurar Selecionadas</button>
-                         <button id="delete-all-perm-btn" class="bg-red-700 hover:bg-red-800 text-white text-sm font-semibold py-2 px-4 rounded-lg">Excluir Selecionadas</button>
-                    </div>
-                </div>
-                <div class="overflow-y-auto flex-grow">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="sticky top-0 bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left"><input type="checkbox" id="select-all-trash-checkbox" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]"></th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matéria</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tópico</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="trash-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                    </table>
-                </div>
+        <!-- Cards de Informação -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-5 rounded-lg flex flex-col justify-center items-center">
+                <h3 class="font-semibold text-gray-500 mb-2">Contagem Regressiva</h3>
+                <div id="countdown" class="text-2xl font-bold text-gray-800"></div>
+            </div>
+            <div class="bg-white p-5 rounded-lg flex flex-col justify-center items-center">
+                <h3 class="font-semibold text-gray-500 mb-2">Data da Prova</h3>
+                <p class="text-2xl font-bold text-gray-800">26/10/2025</p>
+            </div>
+            <div class="bg-white p-5 rounded-lg flex flex-col justify-center items-center">
+                <h3 class="font-semibold text-gray-500 mb-2">Progresso Geral</h3>
+                <p id="progressText" class="text-2xl font-bold text-gray-800">0%</p>
             </div>
         </div>
+
+        <!-- Conteúdo Principal -->
+        <main class="bg-white p-4 sm:p-6 rounded-lg">
+            <div class="flex flex-col lg:flex-row gap-8">
+                <!-- Coluna Esquerda: Calendário e Tarefas -->
+                <div class="w-full lg:w-2/3">
+                    <div id="calendar-container"></div>
+                    <div id="plan-content" class="space-y-4 mt-6"></div>
+                </div>
+                <!-- Coluna Direita: Gráficos e Legendas -->
+                <aside class="w-full lg:w-1/3 lg:border-l lg:pl-8 border-gray-200">
+                    <div class="sticky top-8">
+                        <h2 class="text-2xl font-bold mb-4 text-center">Progresso Geral</h2>
+                        <div class="chart-container">
+                            <canvas id="progressChart"></canvas>
+                        </div>
+                        <div class="mt-8 p-4 rounded-lg bg-gray-50 border">
+                            <h3 class="font-bold text-lg mb-2">Legenda de Revisões</h3>
+                            <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-[#6A9C89]"></div><span class="text-gray-700">R1 (D+1) - Rápida</span></div>
+                            <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-[#D5A021]"></div><span class="text-gray-700">R3 (D+7) - Intermediária</span></div>
+                            <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-[#A25B5B]"></div><span class="text-gray-700">R5 (D+30) - Longo Prazo</span></div>
+                            <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-red-500"></div><span class="text-gray-700">Tarefa Atrasada</span></div>
+                        </div>
+                        <div id="subject-progress-container" class="mt-8">
+                            <h3 class="text-xl font-bold mb-4 text-center">Progresso por Matéria</h3>
+                            <div id="subject-progress-bars" class="space-y-4"></div>
+                        </div>
+                        <div id="free-sections-container" class="mt-8"></div>
+                    </div>
+                </aside>
+            </div>
+        </main>
     </div>
-</div>
 
+    <!-- Modais (Adicionar/Editar, Gerenciar, Confirmação) -->
+    <!-- O HTML dos modais continua o mesmo -->
+    <div id="addTaskModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">...</div>
+    <div id="allTasksModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">...</div>
+    <div id="confirmationModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[70]">...</div>
 
-<!-- Modal de Confirmação (z-index 70) -->
-<div id="confirmationModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[70]">
-    <div class="bg-white rounded-lg shadow-2xl w-full max-w-sm p-6">
-        <h3 class="text-lg font-semibold mb-4" id="confirmation-message">Tem certeza?</h3>
-        <div class="flex justify-end space-x-4">
-            <button id="confirm-cancel-btn" class="control-button py-2 px-4 rounded-lg">Cancelar</button>
-            <button id="confirm-ok-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg">Confirmar</button>
-        </div>
-    </div>
-</div>
-
-<!-- Scripts do Firebase -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
-<!-- Scripts da Aplicação (separados) -->
-<script src="js/data.js"></script>
-<script src="js/main.js"></script>
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/main.js"></script>
 
 </body>
 </html>
