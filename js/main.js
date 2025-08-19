@@ -7,33 +7,31 @@ viewDate.setHours(0, 0, 0, 0);
 let studyPlan = {};
 let systemSettings = {
     examDate: '2025-10-26',
-    subjects: {}
+    reviewCount: 5, // Padrão de 5 revisões
+    subjects: {},
+    blocks: [ // Configuração padrão dos blocos
+        { id: 'video', title: '☕ Bloco 1: Conteúdo Principal (Vídeo)', color: 'border-amber-500', types: ['video'] },
+        { id: 'pdf', title: '📖 Bloco 2: Leitura e Lógica (PDF)', color: 'border-sky-500', types: ['pdf'] },
+        { id: 'active', title: '🎯 Bloco 3: Estudo Ativo e Fixação', color: 'border-emerald-500', types: ['legis', 'goal'] }
+    ]
 };
 let progressChart;
 let isAuthenticated = false;
 
+// Referências a elementos do DOM
 const planContent = document.getElementById('plan-content');
 const allTasksModal = document.getElementById('allTasksModal');
 const addTaskModal = document.getElementById('addTaskModal');
 const confirmationModal = document.getElementById('confirmationModal');
 const systemSettingsModal = document.getElementById('systemSettingsModal');
-
-// =================== LÓGICA DO PASSWORD WALL ===================
 const passwordWall = document.getElementById('password-wall');
 const appContainer = document.getElementById('app-container');
 const passwordForm = document.getElementById('password-form');
 const passwordInput = document.getElementById('password-input');
 const passwordError = document.getElementById('password-error');
-
-if (sessionStorage.getItem('isAuthenticated') === 'true') {
-    isAuthenticated = true;
-    passwordWall.classList.add('hidden');
-} else {
-    appContainer.classList.add('blurred');
-}
+const themeSelector = document.getElementById('theme-selector');
 
 // =================== LÓGICA DE TEMAS ===================
-const themeSelector = document.getElementById('theme-selector');
 const applyTheme = (theme) => {
     document.documentElement.className = '';
     document.documentElement.classList.add(theme);
@@ -175,15 +173,20 @@ const loadState = async () => {
 
     const settingsDoc = await db.collection("progresso").doc("configuracoes").get();
     if (settingsDoc.exists) {
-        systemSettings = settingsDoc.data();
-    } else {
-        const allTasksList = Object.values(studyPlan.tasks || {}).flat();
-        const subjects = [...new Set(allTasksList.map(task => task.subject))];
-        subjects.forEach(subject => {
-            const counts = subject !== 'Legislação Municipal';
-            systemSettings.subjects[subject] = { countsTowardsProgress: counts };
-        });
+        systemSettings = {...systemSettings, ...settingsDoc.data()};
     }
+    
+    // Garante que todas as matérias existentes tenham uma entrada de configuração
+    const allTasksList = Object.values(studyPlan.tasks || {}).flat();
+    const subjects = [...new Set(allTasksList.map(task => task.subject))];
+    subjects.forEach(subject => {
+        if (!systemSettings.subjects[subject]) {
+            systemSettings.subjects[subject] = { 
+                countsTowardsProgress: true,
+                showInProgressBar: true 
+            };
+        }
+    });
     
     saveState();
 };
@@ -251,8 +254,14 @@ function createTaskCard(task, isOverdue = false) {
 
 function scheduleReviews(completedTask) {
     const completionDate = new Date(completedTask.date + 'T03:00:00Z');
-    const reviewDays = { 'review-r1': 1, 'review-r3': 7, 'review-r5': 30 };
-    for (const [reviewType, daysToAdd] of Object.entries(reviewDays)) {
+    const reviewMap = {
+        1: { 'review-r1': 1 },
+        3: { 'review-r1': 1, 'review-r3': 7 },
+        5: { 'review-r1': 1, 'review-r3': 7, 'review-r5': 30 }
+    };
+    const reviewsToSchedule = reviewMap[systemSettings.reviewCount] || reviewMap[5];
+
+    for (const [reviewType, daysToAdd] of Object.entries(reviewsToSchedule)) {
         const reviewDate = addDays(completionDate, daysToAdd);
         const reviewDateStr = formatDateYMD(reviewDate);
         if (!studyPlan.reviews) studyPlan.reviews = {};
@@ -264,10 +273,9 @@ function scheduleReviews(completedTask) {
 }
 
 function unscheduleReviews(deselectedTask) {
-    const completionDate = new Date(deselectedTask.date + 'T03:00:00Z');
     const reviewDays = { 'review-r1': 1, 'review-r3': 7, 'review-r5': 30 };
     for (const [reviewType, daysToAdd] of Object.entries(reviewDays)) {
-        const reviewDate = addDays(completionDate, daysToAdd);
+        const reviewDate = addDays(new Date(deselectedTask.date + 'T03:00:00Z'), daysToAdd);
         const reviewDateStr = formatDateYMD(reviewDate);
         const reviewId = `${deselectedTask.id}-${reviewType}`;
         if (studyPlan.reviews && studyPlan.reviews[reviewDateStr]) {
@@ -334,32 +342,33 @@ const renderPlan = (date) => {
         planContent.innerHTML = `<div class="text-center p-4 bg-gray-50 rounded-lg"><p class="text-gray-500">Nenhuma tarefa agendada para hoje. Dia de descanso!</p></div>`;
         return;
     }
-
-    const createSection = (title, tasks, colorClass) => {
-        if (tasks.length > 0) {
-            let sectionHTML = `<h3 class="text-lg font-bold mt-4 border-b-2 ${colorClass} pb-2">${title}</h3>`;
-            tasks.forEach(task => { sectionHTML += createTaskCard(task, !task.completed && task.date < todayStr && !task.type.startsWith('review')).outerHTML; });
-            return sectionHTML;
-        }
-        return '';
-    };
-
-    planContent.innerHTML += createSection('☕ Bloco 1: Conteúdo Principal (Vídeo)', tasksForDay.filter(t => t.type === 'video'), 'border-amber-500');
-    planContent.innerHTML += createSection('📖 Bloco 2: Leitura e Lógica (PDF)', tasksForDay.filter(t => t.type === 'pdf'), 'border-sky-500');
     
-    let bloco3Content = createSection('', tasksForDay.filter(t => t.type === 'legis'), '');
-    const dailyGoal = studyPlan.dailyGoals[dateStr] || { exercisesCompleted: false };
-    bloco3Content += `<div class="task-card p-4 rounded-lg bg-white border-l-4 border-gray-400"><div class="flex items-start space-x-4"><div class="flex-shrink-0 pt-1"><input type="checkbox" id="exercises-checkbox-${dateStr}" data-date="${dateStr}" class="daily-goal-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${dailyGoal.exercisesCompleted ? 'checked' : ''}></div><div class="flex-1"><label for="exercises-checkbox-${dateStr}" class="cursor-pointer"><p class="font-semibold text-gray-800">🎯 Meta de Exercícios do Dia</p><p class="text-sm text-gray-600">Focar em 2 matérias conforme o plano de rotação semanal.</p></label></div></div></div>`;
-    planContent.innerHTML += `<h3 class="text-lg font-bold mt-6 border-b-2 border-emerald-500 pb-2">🎯 Bloco 3: Estudo Ativo e Fixação</h3>` + bloco3Content;
+    systemSettings.blocks.forEach(block => {
+        const tasksForBlock = tasksForDay.filter(t => block.types.includes(t.type));
+        if (tasksForBlock.length > 0) {
+            let sectionHTML = `<h3 class="text-lg font-bold mt-4 border-b-2 ${block.color} pb-2">${block.title}</h3>`;
+            tasksForBlock.forEach(task => { sectionHTML += createTaskCard(task, !task.completed && task.date < todayStr).outerHTML; });
+            planContent.innerHTML += sectionHTML;
+        }
+    });
+
+    const activeBlock = systemSettings.blocks.find(b => b.id === 'active');
+    if (activeBlock && activeBlock.types.includes('goal')) {
+        const dailyGoal = studyPlan.dailyGoals[dateStr] || { exercisesCompleted: false };
+        const goalCard = `<div class="task-card p-4 rounded-lg bg-white border-l-4 border-gray-400"><div class="flex items-start space-x-4"><div class="flex-shrink-0 pt-1"><input type="checkbox" id="exercises-checkbox-${dateStr}" data-date="${dateStr}" class="daily-goal-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${dailyGoal.exercisesCompleted ? 'checked' : ''}></div><div class="flex-1"><label for="exercises-checkbox-${dateStr}" class="cursor-pointer"><p class="font-semibold text-gray-800">🎯 Meta de Exercícios do Dia</p><p class="text-sm text-gray-600">Focar em 2 matérias conforme o plano de rotação semanal.</p></label></div></div></div>`;
+        planContent.querySelector(`h3.${activeBlock.color}`)?.insertAdjacentHTML('afterend', goalCard);
+    }
 
     if (reviewsForDay.length > 0) {
-        planContent.innerHTML += createSection('🔁 Revisões Agendadas', reviewsForDay, 'border-red-400');
+        let reviewHTML = `<h3 class="text-lg font-bold mt-6 border-b-2 border-red-400 pb-2">🔁 Revisões Agendadas</h3>`;
+        reviewsForDay.forEach(task => { reviewHTML += createTaskCard(task, !task.completed && task.date < todayStr).outerHTML; });
+        planContent.innerHTML += reviewHTML;
     }
 };
 
 const updateProgress = () => {
     const allStudyTasks = Object.values(studyPlan.tasks || {}).flat()
-        .filter(t => systemSettings.subjects[t.subject]?.countsTowardsProgress !== false);
+        .filter(t => systemSettings.subjects[t.subject]?.countsTowardsProgress);
     
     const completedStudyTasks = allStudyTasks.filter(task => task.completed).length;
     const totalStudyTasks = allStudyTasks.length;
@@ -383,11 +392,12 @@ const renderSubjectProgress = () => {
     if (!container) return;
     
     const allStudyTasks = Object.values(studyPlan.tasks || {}).flat()
-        .filter(t => systemSettings.subjects[t.subject]?.countsTowardsProgress !== false);
+        .filter(t => systemSettings.subjects[t.subject]?.countsTowardsProgress);
     
-    if (allStudyTasks.length === 0) { container.innerHTML = ''; return; }
-    const subjects = [...new Set(allStudyTasks.map(task => task.subject))];
-    container.innerHTML = subjects.sort().map(subject => {
+    const subjectsToShow = [...new Set(allStudyTasks.map(task => task.subject))]
+        .filter(subject => systemSettings.subjects[subject]?.showInProgressBar);
+        
+    container.innerHTML = subjectsToShow.sort().map(subject => {
         const tasksForSubject = allStudyTasks.filter(task => task.subject === subject);
         const completedTasks = tasksForSubject.filter(task => task.completed).length;
         const totalTasks = tasksForSubject.length;
@@ -405,7 +415,7 @@ function renderRequiredPaceStats() {
     const totalWeeks = totalDays / 7;
     
     const remainingTasks = Object.values(studyPlan.tasks || {}).flat()
-        .filter(t => systemSettings.subjects[t.subject]?.countsTowardsProgress !== false && !t.completed).length;
+        .filter(t => systemSettings.subjects[t.subject]?.countsTowardsProgress && !t.completed).length;
 
     if (totalDays > 0 && remainingTasks > 0) {
         const dailyAvg = (remainingTasks / totalDays).toFixed(1);
@@ -445,7 +455,7 @@ function renderRealTimePaceStats() {
 
     const examDate = new Date(systemSettings.examDate + 'T11:00:00Z');
     const totalDaysRemaining = Math.ceil((examDate - new Date()) / (1000 * 60 * 60 * 24));
-    const remainingTasks = Object.values(studyPlan.tasks || {}).flat().filter(t => systemSettings.subjects[t.subject]?.countsTowardsProgress !== false && !t.completed).length;
+    const remainingTasks = Object.values(studyPlan.tasks || {}).flat().filter(t => systemSettings.subjects[t.subject]?.countsTowardsProgress && !t.completed).length;
     const requiredDailyAvg = totalDaysRemaining > 0 ? (remainingTasks / totalDaysRemaining) : 0;
 
     let dailyComparisonHTML = '';
@@ -642,38 +652,47 @@ function renderOverdueTasks() {
     document.getElementById('calendar-container').style.display = 'none';
     planContent.innerHTML = '';
     const todayStr = formatDateYMD(new Date());
+
     const allTasksList = Object.values(studyPlan.tasks || {}).flat();
     const overdueTasks = allTasksList.filter(task => !task.completed && task.date < todayStr);
     
-    let overdueHours = 0;
-    overdueTasks.forEach(task => {
-        if (task.type === 'pdf') {
-            overdueHours += 2.5;
-        } else {
-            overdueHours += 0.75;
-        }
-    });
+    const allReviewsList = Object.values(studyPlan.reviews || {}).flat();
+    const overdueReviews = allReviewsList.filter(review => !review.completed && review.date < todayStr);
 
-    let headerHTML = `<div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Aulas Atrasadas</h2></div>`;
+    let headerHTML = `<div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Itens Atrasados</h2></div>`;
+    planContent.innerHTML = headerHTML;
+
+    // Abas
+    planContent.innerHTML += `
+        <div class="flex border-b mb-4">
+            <button id="overdue-tab-tasks" class="tab-button active">Aulas (${overdueTasks.length})</button>
+            <button id="overdue-tab-reviews" class="tab-button">Revisões (${overdueReviews.length})</button>
+        </div>
+        <div id="overdue-content-tasks" class="tab-pane"></div>
+        <div id="overdue-content-reviews" class="tab-pane hidden"></div>
+    `;
+
+    const tasksContent = document.getElementById('overdue-content-tasks');
+    const reviewsContent = document.getElementById('overdue-content-reviews');
 
     if (overdueTasks.length === 0) { 
-        planContent.innerHTML = headerHTML + `<div class="text-center p-4 bg-green-50 rounded-lg border border-green-200"><p class="text-green-700 font-semibold">Parabéns! Nenhuma tarefa atrasada.</p></div>`; 
-        return; 
+        tasksContent.innerHTML = `<div class="text-center p-4 bg-green-50 rounded-lg border border-green-200"><p class="text-green-700 font-semibold">Parabéns! Nenhuma aula atrasada.</p></div>`; 
+    } else {
+        const groupedByDate = overdueTasks.reduce((acc, task) => { (acc[task.date] = acc[task.date] || []).push(task); return acc; }, {});
+        Object.keys(groupedByDate).sort().forEach(dateStr => {
+            const dateTitle = document.createElement('h3');
+            dateTitle.className = "text-lg font-bold mt-6 border-b-2 border-red-400 pb-2";
+            dateTitle.textContent = `Atrasadas de: ${formatDateDMY(dateStr)}`;
+            tasksContent.appendChild(dateTitle);
+            groupedByDate[dateStr].forEach(task => tasksContent.appendChild(createTaskCard(task, true)));
+        });
     }
-
-    const totalTasks = Object.values(studyPlan.tasks || {}).flat().length;
-    const overduePercentage = totalTasks > 0 ? ((overdueTasks.length / totalTasks) * 100).toFixed(1) : 0;
     
-    planContent.innerHTML = headerHTML + `<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"><div class="bg-red-50 p-4 rounded-lg text-center"><p class="text-2xl font-bold text-red-700">${overdueTasks.length}</p><p class="text-sm font-semibold text-red-600">Total de Aulas Atrasadas</p></div><div class="bg-yellow-50 p-4 rounded-lg text-center"><p class="text-2xl font-bold text-yellow-700">${overduePercentage}%</p><p class="text-sm font-semibold text-yellow-600">do Total de Aulas</p></div><div class="bg-blue-50 p-4 rounded-lg text-center md:col-span-2"><p class="text-2xl font-bold text-blue-700">${overdueHours.toFixed(1)} horas</p><p class="text-sm font-semibold text-blue-600">de Estudo Acumulado (aprox.)</p></div></div>`;
-    
-    const groupedByDate = overdueTasks.reduce((acc, task) => { (acc[task.date] = acc[task.date] || []).push(task); return acc; }, {});
-    Object.keys(groupedByDate).sort().forEach(dateStr => {
-        const dateTitle = document.createElement('h3');
-        dateTitle.className = "text-lg font-bold mt-6 border-b-2 border-red-400 pb-2";
-        dateTitle.textContent = `Atrasadas de: ${formatDateDMY(dateStr)}`;
-        planContent.appendChild(dateTitle);
-        groupedByDate[dateStr].forEach(task => planContent.appendChild(createTaskCard(task, true)));
-    });
+    if (overdueReviews.length === 0) { 
+        reviewsContent.innerHTML = `<div class="text-center p-4 bg-green-50 rounded-lg border border-green-200"><p class="text-green-700 font-semibold">Nenhuma revisão atrasada.</p></div>`; 
+    } else {
+         overdueReviews.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(review => reviewsContent.appendChild(createTaskCard(review, true)));
+    }
 }
 
 const startCountdown = () => {
@@ -807,6 +826,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    themeSelector.addEventListener('change', (e) => applyTheme(e.target.value));
+
     const settingsButton = document.getElementById('settings-button');
     const settingsMenu = document.getElementById('settings-menu');
 
@@ -841,10 +862,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         openModal(allTasksModal);
     });
     
-    // Listener para o botão de Aulas Atrasadas
     document.getElementById('view-overdue-tasks-btn').addEventListener('click', renderOverdueTasks);
 
-    // Listener para o calendário
     document.getElementById('calendar-container').addEventListener('click', (e) => {
         const dayElement = e.target.closest('.calendar-day');
         if (dayElement) { viewDate = new Date(dayElement.dataset.date + 'T03:00:00Z'); renderPlan(viewDate); }
@@ -852,7 +871,96 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (e.target.id === 'next-month') { viewDate.setMonth(viewDate.getMonth() + 1); renderPlan(viewDate); }
     });
 
-    // Listeners para os cards de tarefas (checkbox, editar, excluir)
+    // Event Delegation para conteúdo dinâmico
+    document.body.addEventListener('click', (e) => {
+        // Ações nos cards da página principal
+        const card = e.target.closest('.task-card');
+        if (card) {
+            if (e.target.closest('.task-edit-btn')) {
+                openEditModalFromList(card.dataset.id, card.dataset.date);
+            }
+            if (e.target.closest('.task-delete-btn')) {
+                const { id, date } = card.dataset;
+                showConfirmation('Mover esta aula para a lixeira?', () => {
+                    if (studyPlan.tasks[date]) {
+                        const taskIndex = studyPlan.tasks[date].findIndex(t => t.id === id);
+                        if (taskIndex > -1) {
+                            const [taskToDelete] = studyPlan.tasks[date].splice(taskIndex, 1);
+                            if (studyPlan.tasks[date].length === 0) delete studyPlan.tasks[date];
+                            if (!studyPlan.deletedTasks) studyPlan.deletedTasks = {};
+                            taskToDelete.deletedAt = new Date().toISOString();
+                            studyPlan.deletedTasks[taskToDelete.id] = taskToDelete;
+                            saveState();
+                            renderPlan(viewDate);
+                            updateProgress();
+                        }
+                    }
+                });
+            }
+            if (e.target.closest('.task-postpone-btn')) {
+                const { id, date } = card.dataset;
+                const taskIndex = studyPlan.tasks[date]?.findIndex(t => t.id === id);
+                if (taskIndex > -1) {
+                    const task = studyPlan.tasks[date][taskIndex];
+                    const nextDay = addDays(new Date(date + 'T03:00:00Z'), 1);
+                    const nextDayStr = formatDateYMD(nextDay);
+                    task.date = nextDayStr;
+                    task.lastModified = new Date().toISOString();
+                    if (!studyPlan.tasks[nextDayStr]) studyPlan.tasks[nextDayStr] = [];
+                    studyPlan.tasks[nextDayStr].push(task);
+                    studyPlan.tasks[date].splice(taskIndex, 1);
+                    if (studyPlan.tasks[date].length === 0) delete studyPlan.tasks[date];
+                    saveState();
+                    renderPlan(viewDate);
+                }
+            }
+        }
+        
+        // Ações na tabela de Gerenciar Aulas
+        const tableRow = e.target.closest('#all-tasks-table-body tr');
+        if (tableRow) {
+            if (e.target.closest('.task-edit-btn-table')) {
+                const checkbox = tableRow.querySelector('.task-select-checkbox');
+                openEditModalFromList(checkbox.dataset.id, checkbox.dataset.date);
+            }
+            if (e.target.closest('.task-delete-btn-table')) {
+                 const checkbox = tableRow.querySelector('.task-select-checkbox');
+                 const { id, date } = checkbox.dataset;
+                 showConfirmation('Mover este item para a lixeira?', () => {
+                    let taskList = studyPlan.tasks[date] || [];
+                    let reviewList = studyPlan.reviews[date] || [];
+                    let taskIndex = taskList.findIndex(t => t.id === id);
+                    let reviewIndex = reviewList.findIndex(r => r.id === id);
+
+                    if (taskIndex > -1) {
+                        const [taskToDelete] = taskList.splice(taskIndex, 1);
+                        if (taskList.length === 0) delete studyPlan.tasks[date];
+                         if (!studyPlan.deletedTasks) studyPlan.deletedTasks = {};
+                        taskToDelete.deletedAt = new Date().toISOString();
+                        studyPlan.deletedTasks[taskToDelete.id] = taskToDelete;
+                    } else if (reviewIndex > -1) {
+                         const [reviewToDelete] = reviewList.splice(reviewIndex, 1);
+                        if (reviewList.length === 0) delete studyPlan.reviews[date];
+                        if (!studyPlan.deletedTasks) studyPlan.deletedTasks = {};
+                        reviewToDelete.deletedAt = new Date().toISOString();
+                        studyPlan.deletedTasks[reviewToDelete.id] = reviewToDelete;
+                    }
+                    saveState();
+                    renderAllTasksTable();
+                    updateProgress();
+                });
+            }
+        }
+
+        // Abas da tela de Atrasadas
+        if(e.target.id === 'overdue-tab-tasks' || e.target.id === 'overdue-tab-reviews') {
+            document.getElementById('overdue-tab-tasks').classList.toggle('active', e.target.id === 'overdue-tab-tasks');
+            document.getElementById('overdue-content-tasks').classList.toggle('hidden', e.target.id !== 'overdue-tab-tasks');
+            document.getElementById('overdue-tab-reviews').classList.toggle('active', e.target.id === 'overdue-tab-reviews');
+            document.getElementById('overdue-content-reviews').classList.toggle('hidden', e.target.id !== 'overdue-tab-reviews');
+        }
+    });
+
     planContent.addEventListener('change', (e) => {
         if (e.target.matches('.task-checkbox')) {
             const { id, date, type } = e.target.dataset;
@@ -874,7 +982,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
     
-    // Listeners para o modal "Gerenciar Aulas"
     const tabs = ['active', 'history', 'trash'];
     tabs.forEach(tabId => {
         document.getElementById(`tab-${tabId}`).addEventListener('click', () => {
@@ -913,51 +1020,68 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('filter-arrow').classList.toggle('rotate-180');
     });
 
-    // Listener para o Modal de Sistema
     const openSystemBtn = document.getElementById('open-system-settings-btn');
     const saveSystemBtn = document.getElementById('save-system-settings-btn');
-    const subjectContainer = document.getElementById('subject-list-container');
     const examDateInput = document.getElementById('exam-date-setting');
 
     openSystemBtn.addEventListener('click', (e) => {
         e.preventDefault();
         
         const allSubjects = [...new Set(Object.values(studyPlan.tasks || {}).flat().map(t => t.subject))].sort();
-        subjectContainer.innerHTML = '';
+        const progressContainer = document.getElementById('subject-progress-toggle-container');
+        const displayContainer = document.getElementById('subject-display-toggle-container');
+        const blocksContainer = document.getElementById('block-names-container');
+        
+        progressContainer.innerHTML = '';
+        displayContainer.innerHTML = '';
+        blocksContainer.innerHTML = '';
+
         allSubjects.forEach(subject => {
-            if (systemSettings.subjects[subject] === undefined) {
-                systemSettings.subjects[subject] = { countsTowardsProgress: subject !== 'Legislação Municipal' };
-            }
-            const isChecked = systemSettings.subjects[subject].countsTowardsProgress;
-            const div = document.createElement('div');
-            div.className = 'flex items-center';
-            div.innerHTML = `
-                <input id="subject-toggle-${subject}" type="checkbox" ${isChecked ? 'checked' : ''} data-subject="${subject}" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]">
-                <label for="subject-toggle-${subject}" class="ml-2 block text-sm text-gray-900">${subject}</label>
-            `;
-            subjectContainer.appendChild(div);
+            const progChecked = systemSettings.subjects[subject]?.countsTowardsProgress ?? true;
+            const dispChecked = systemSettings.subjects[subject]?.showInProgressBar ?? true;
+
+            progressContainer.innerHTML += `<div class="flex items-center"><input id="prog-toggle-${subject}" type="checkbox" ${progChecked ? 'checked' : ''} data-subject="${subject}" class="h-4 w-4"><label for="prog-toggle-${subject}" class="ml-2">${subject}</label></div>`;
+            displayContainer.innerHTML += `<div class="flex items-center"><input id="disp-toggle-${subject}" type="checkbox" ${dispChecked ? 'checked' : ''} data-subject="${subject}" class="h-4 w-4"><label for="disp-toggle-${subject}" class="ml-2">${subject}</label></div>`;
+        });
+
+        systemSettings.blocks.forEach(block => {
+            blocksContainer.innerHTML += `<div class="flex items-center gap-2"><label for="block-name-${block.id}" class="text-sm">${block.id.toUpperCase()}:</label><input type="text" id="block-name-${block.id}" data-block-id="${block.id}" value="${block.title}" class="w-full border rounded-md p-1 text-sm"></div>`;
         });
 
         examDateInput.value = systemSettings.examDate || '2025-10-26';
+        document.getElementById('review-count-setting').value = systemSettings.reviewCount || 5;
 
         openModal(systemSettingsModal);
         settingsMenu.classList.add('hidden');
     });
 
     saveSystemBtn.addEventListener('click', () => {
-        const checkboxes = subjectContainer.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(cb => {
+        document.querySelectorAll('#subject-progress-toggle-container input').forEach(cb => {
             const subject = cb.dataset.subject;
             if(!systemSettings.subjects[subject]) systemSettings.subjects[subject] = {};
             systemSettings.subjects[subject].countsTowardsProgress = cb.checked;
         });
+        document.querySelectorAll('#subject-display-toggle-container input').forEach(cb => {
+            const subject = cb.dataset.subject;
+            if(!systemSettings.subjects[subject]) systemSettings.subjects[subject] = {};
+            systemSettings.subjects[subject].showInProgressBar = cb.checked;
+        });
+        document.querySelectorAll('#block-names-container input').forEach(input => {
+            const blockId = input.dataset.blockId;
+            const block = systemSettings.blocks.find(b => b.id === blockId);
+            if (block) {
+                block.title = input.value;
+            }
+        });
 
         systemSettings.examDate = examDateInput.value;
+        systemSettings.reviewCount = parseInt(document.getElementById('review-count-setting').value, 10);
 
         saveState();
         updateProgress();
         startCountdown();
         document.getElementById('exam-date-display').textContent = formatDateDMY(systemSettings.examDate);
+        renderPlan(viewDate); // Re-renderiza o plano para atualizar os nomes dos blocos
 
         closeModal(systemSettingsModal);
     });
