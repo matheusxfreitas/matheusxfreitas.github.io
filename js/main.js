@@ -7,13 +7,20 @@ viewDate.setHours(0, 0, 0, 0);
 let studyPlan = {};
 let systemSettings = {
     examDate: '2025-10-26',
-    reviewCount: 5, // Padrão de 5 revisões
+    reviewCount: 5,
     subjects: {},
-    blocks: [ // Configuração padrão dos blocos
+    blocks: [
         { id: 'video', title: '☕ Bloco 1: Conteúdo Principal (Vídeo)', color: 'border-amber-500', types: ['video'] },
         { id: 'pdf', title: '📖 Bloco 2: Leitura e Lógica (PDF)', color: 'border-sky-500', types: ['pdf'] },
         { id: 'active', title: '🎯 Bloco 3: Estudo Ativo e Fixação', color: 'border-emerald-500', types: ['legis', 'goal'] }
-    ]
+    ],
+    taskDurations: {
+        video: 0.75, 
+        pdf: 2.5,
+        legis: 1.5,
+        review: 0.5 
+    },
+    dailyStudyHours: 6
 };
 let progressChart;
 let isAuthenticated = false;
@@ -176,7 +183,6 @@ const loadState = async () => {
         systemSettings = {...systemSettings, ...settingsDoc.data()};
     }
     
-    // Garante que todas as matérias existentes tenham uma entrada de configuração
     const allTasksList = Object.values(studyPlan.tasks || {}).flat();
     const subjects = [...new Set(allTasksList.map(task => task.subject))];
     subjects.forEach(subject => {
@@ -201,6 +207,7 @@ function createTaskCard(task, isOverdue = false) {
     card.className = cardClasses;
     card.dataset.id = task.id;
     card.dataset.date = task.date;
+    card.dataset.type = task.type;
 
     const title = task.type.startsWith('review') ? `${task.reviewType}: ${task.subject} - Aula ${task.lesson}` : `${task.subject} - Aula ${task.lesson}`;
     
@@ -213,27 +220,18 @@ function createTaskCard(task, isOverdue = false) {
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
         </a>` : '';
 
-    const actionsMenu = !task.type.startsWith('review') ? `
+    const actionsMenu = `
         <div class="actions-menu">
-            ${notebookLinkIcon}
-            <button class="action-btn task-postpone-btn" data-id="${task.id}" data-date="${task.date}" title="Adiar em 1 dia"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="m14 14-4 4m0-4 4 4"></path></svg></button>
-            <button class="action-btn task-edit-btn" data-id="${task.id}" data-date="${task.date}" title="Editar Aula"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button>
-            <button class="action-btn task-delete-btn" data-id="${task.id}" data-date="${task.date}" data-type="${task.type}" title="Excluir Aula"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-        </div>` : '';
+            ${task.notebookLink ? notebookLinkIcon : ''}
+            <button class="action-btn task-postpone-btn" title="Adiar em 1 dia"><svg class="pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="m14 14-4 4m0-4 4 4"></path></svg></button>
+            <button class="action-btn task-edit-btn" title="Editar Aula"><svg class="pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button>
+            <button class="action-btn task-delete-btn" title="Excluir Aula"><svg class="pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+        </div>`;
     
     let pdfProgressHTML = '';
     if (task.type === 'pdf' && task.pagesRead > 0 && task.pagesTotal > 0) {
         const percentage = Math.round((task.pagesRead / task.pagesTotal) * 100);
-        pdfProgressHTML = `
-            <div class="mt-2">
-                <div class="flex justify-between text-xs text-gray-500">
-                    <span>Progresso PDF</span>
-                    <span>${percentage}%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                    <div class="bg-sky-500 h-1.5 rounded-full" style="width: ${percentage}%"></div>
-                </div>
-            </div>`;
+        pdfProgressHTML = `<div class="mt-2"><div class="flex justify-between text-xs text-gray-500"><span>Progresso PDF</span><span>${percentage}%</span></div><div class="w-full bg-gray-200 rounded-full h-1.5 mt-1"><div class="bg-sky-500 h-1.5 rounded-full" style="width: ${percentage}%"></div></div></div>`;
     }
 
     card.innerHTML = `
@@ -385,6 +383,7 @@ const updateProgress = () => {
     renderSubjectProgress();
     renderRequiredPaceStats();
     renderRealTimePaceStats();
+    calculateAndRenderBuffer();
 };
 
 const renderSubjectProgress = () => {
@@ -591,8 +590,8 @@ function renderAllTasksTable() {
                     <td class="px-6 py-4">${task.lesson}</td>
                     <td class="px-6 py-4">${task.topic}</td>
                     <td class="px-6 py-4 flex items-center gap-2">
-                        <button class="action-btn task-edit-btn-table" data-id="${task.id}" data-date="${task.date}" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button>
-                        <button class="action-btn task-delete-btn-table" data-id="${task.id}" data-date="${task.date}" title="Excluir"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                        <button class="action-btn task-edit-btn-table" data-id="${task.id}" data-date="${task.date}" title="Editar"><svg class="pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button>
+                        <button class="action-btn task-delete-btn-table" data-id="${task.id}" data-date="${task.date}" title="Excluir"><svg class="pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                     </td>
                 </tr>`;
     }).join('');
@@ -621,7 +620,7 @@ function renderHistoryTable() {
         <td class="px-6 py-4">${entry.topic}</td>
         <td class="px-6 py-4">
             <button class="history-delete-btn text-red-500 hover:text-red-700" data-task-id="${entry.taskId}" title="Excluir do Histórico">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                <svg class="pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
             </button>
         </td>
     </tr>`).join('');
@@ -647,77 +646,6 @@ function renderAllTasksStatistics() {
     });
     statsContainer.innerHTML = statsHtml;
 }
-
-function renderOverdueTasks() {
-    document.getElementById('calendar-container').style.display = 'none';
-    planContent.innerHTML = '';
-    const todayStr = formatDateYMD(new Date());
-
-    const allTasksList = Object.values(studyPlan.tasks || {}).flat();
-    const overdueTasks = allTasksList.filter(task => !task.completed && task.date < todayStr);
-    
-    const allReviewsList = Object.values(studyPlan.reviews || {}).flat();
-    const overdueReviews = allReviewsList.filter(review => !review.completed && review.date < todayStr);
-
-    let headerHTML = `<div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Itens Atrasados</h2></div>`;
-    planContent.innerHTML = headerHTML;
-
-    // Abas
-    planContent.innerHTML += `
-        <div class="flex border-b mb-4">
-            <button id="overdue-tab-tasks" class="tab-button active">Aulas (${overdueTasks.length})</button>
-            <button id="overdue-tab-reviews" class="tab-button">Revisões (${overdueReviews.length})</button>
-        </div>
-        <div id="overdue-content-tasks" class="tab-pane"></div>
-        <div id="overdue-content-reviews" class="tab-pane hidden"></div>
-    `;
-
-    const tasksContent = document.getElementById('overdue-content-tasks');
-    const reviewsContent = document.getElementById('overdue-content-reviews');
-
-    if (overdueTasks.length === 0) { 
-        tasksContent.innerHTML = `<div class="text-center p-4 bg-green-50 rounded-lg border border-green-200"><p class="text-green-700 font-semibold">Parabéns! Nenhuma aula atrasada.</p></div>`; 
-    } else {
-        const groupedByDate = overdueTasks.reduce((acc, task) => { (acc[task.date] = acc[task.date] || []).push(task); return acc; }, {});
-        Object.keys(groupedByDate).sort().forEach(dateStr => {
-            const dateTitle = document.createElement('h3');
-            dateTitle.className = "text-lg font-bold mt-6 border-b-2 border-red-400 pb-2";
-            dateTitle.textContent = `Atrasadas de: ${formatDateDMY(dateStr)}`;
-            tasksContent.appendChild(dateTitle);
-            groupedByDate[dateStr].forEach(task => tasksContent.appendChild(createTaskCard(task, true)));
-        });
-    }
-    
-    if (overdueReviews.length === 0) { 
-        reviewsContent.innerHTML = `<div class="text-center p-4 bg-green-50 rounded-lg border border-green-200"><p class="text-green-700 font-semibold">Nenhuma revisão atrasada.</p></div>`; 
-    } else {
-         overdueReviews.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(review => reviewsContent.appendChild(createTaskCard(review, true)));
-    }
-}
-
-const startCountdown = () => {
-    const countdownEl = document.getElementById('countdown');
-    const countdownWeeksEl = document.getElementById('countdown-weeks');
-    const examDate = new Date(systemSettings.examDate + 'T11:00:00Z').getTime();
-    
-    const update = () => {
-        const distance = examDate - new Date().getTime();
-        if (distance < 0) { 
-            countdownEl.innerHTML = "PROVA REALIZADA!"; 
-            countdownWeeksEl.innerHTML = "";
-            if (interval) clearInterval(interval); 
-            return; 
-        }
-        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const weeks = Math.floor(days / 7);
-        
-        countdownEl.innerHTML = `${days}d ${hours}h`;
-        countdownWeeksEl.innerHTML = `(Aprox. ${weeks} semanas)`;
-    };
-    const interval = setInterval(update, 1000 * 60 * 60);
-    update();
-};
 
 function openEditModalFromList(taskId, taskDate) {
     const task = studyPlan.tasks[taskDate]?.find(t => t.id === taskId);
@@ -794,12 +722,11 @@ function shiftAllTasks(days) {
 // =================== EVENT LISTENERS (PONTO DE IGNIÇÃO) ===================
 document.addEventListener('DOMContentLoaded', async () => {
     
-    const savedTheme = localStorage.getItem('study-theme') || 'theme-light';
-    themeSelector.value = savedTheme;
-    applyTheme(savedTheme);
-
     const initializeApp = async () => {
         await loadState(); 
+        const savedTheme = localStorage.getItem('study-theme') || 'theme-light';
+        themeSelector.value = savedTheme;
+        applyTheme(savedTheme);
         document.getElementById('exam-date-display').textContent = formatDateDMY(systemSettings.examDate);
         setupChart();
         renderPlan(viewDate);
@@ -807,8 +734,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         startCountdown();
     };
 
-    if (isAuthenticated) {
+    if (sessionStorage.getItem('isAuthenticated') === 'true') {
+        isAuthenticated = true;
+        passwordWall.classList.add('hidden');
         await initializeApp();
+    } else {
+        appContainer.classList.add('blurred');
     }
 
     passwordForm.addEventListener('submit', async (e) => {
@@ -871,61 +802,65 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (e.target.id === 'next-month') { viewDate.setMonth(viewDate.getMonth() + 1); renderPlan(viewDate); }
     });
 
-    // Event Delegation para conteúdo dinâmico
     document.body.addEventListener('click', (e) => {
-        // Ações nos cards da página principal
         const card = e.target.closest('.task-card');
         if (card) {
+            const { id, date, type } = card.dataset;
+            const isReview = type.startsWith('review');
+            const list = isReview ? studyPlan.reviews[date] : studyPlan.tasks[date];
+            const task = list?.find(t => t.id === id);
+
             if (e.target.closest('.task-edit-btn')) {
-                openEditModalFromList(card.dataset.id, card.dataset.date);
+                if (!isReview) openEditModalFromList(id, date);
             }
             if (e.target.closest('.task-delete-btn')) {
-                const { id, date } = card.dataset;
-                showConfirmation('Mover esta aula para a lixeira?', () => {
-                    if (studyPlan.tasks[date]) {
-                        const taskIndex = studyPlan.tasks[date].findIndex(t => t.id === id);
-                        if (taskIndex > -1) {
-                            const [taskToDelete] = studyPlan.tasks[date].splice(taskIndex, 1);
-                            if (studyPlan.tasks[date].length === 0) delete studyPlan.tasks[date];
-                            if (!studyPlan.deletedTasks) studyPlan.deletedTasks = {};
-                            taskToDelete.deletedAt = new Date().toISOString();
-                            studyPlan.deletedTasks[taskToDelete.id] = taskToDelete;
-                            saveState();
-                            renderPlan(viewDate);
-                            updateProgress();
+                showConfirmation('Mover este item para a lixeira?', () => {
+                    const index = list.findIndex(t => t.id === id);
+                    if (index > -1) {
+                        const [itemToDelete] = list.splice(index, 1);
+                        if (list.length === 0) {
+                            if (isReview) delete studyPlan.reviews[date];
+                            else delete studyPlan.tasks[date];
                         }
+                        if (!studyPlan.deletedTasks) studyPlan.deletedTasks = {};
+                        itemToDelete.deletedAt = new Date().toISOString();
+                        studyPlan.deletedTasks[itemToDelete.id] = itemToDelete;
+                        saveState();
+                        renderPlan(viewDate);
+                        updateProgress();
                     }
                 });
             }
             if (e.target.closest('.task-postpone-btn')) {
-                const { id, date } = card.dataset;
-                const taskIndex = studyPlan.tasks[date]?.findIndex(t => t.id === id);
-                if (taskIndex > -1) {
-                    const task = studyPlan.tasks[date][taskIndex];
+                const index = list.findIndex(t => t.id === id);
+                if (index > -1) {
+                    const [itemToMove] = list.splice(index, 1);
                     const nextDay = addDays(new Date(date + 'T03:00:00Z'), 1);
                     const nextDayStr = formatDateYMD(nextDay);
-                    task.date = nextDayStr;
-                    task.lastModified = new Date().toISOString();
-                    if (!studyPlan.tasks[nextDayStr]) studyPlan.tasks[nextDayStr] = [];
-                    studyPlan.tasks[nextDayStr].push(task);
-                    studyPlan.tasks[date].splice(taskIndex, 1);
-                    if (studyPlan.tasks[date].length === 0) delete studyPlan.tasks[date];
+                    itemToMove.date = nextDayStr;
+                    itemToMove.lastModified = new Date().toISOString();
+
+                    if (isReview) {
+                        if (!studyPlan.reviews[nextDayStr]) studyPlan.reviews[nextDayStr] = [];
+                        studyPlan.reviews[nextDayStr].push(itemToMove);
+                    } else {
+                        if (!studyPlan.tasks[nextDayStr]) studyPlan.tasks[nextDayStr] = [];
+                        studyPlan.tasks[nextDayStr].push(itemToMove);
+                    }
                     saveState();
                     renderPlan(viewDate);
                 }
             }
         }
         
-        // Ações na tabela de Gerenciar Aulas
         const tableRow = e.target.closest('#all-tasks-table-body tr');
         if (tableRow) {
+            const checkbox = tableRow.querySelector('.task-select-checkbox');
+            const { id, date } = checkbox.dataset;
             if (e.target.closest('.task-edit-btn-table')) {
-                const checkbox = tableRow.querySelector('.task-select-checkbox');
-                openEditModalFromList(checkbox.dataset.id, checkbox.dataset.date);
+                openEditModalFromList(id, date);
             }
             if (e.target.closest('.task-delete-btn-table')) {
-                 const checkbox = tableRow.querySelector('.task-select-checkbox');
-                 const { id, date } = checkbox.dataset;
                  showConfirmation('Mover este item para a lixeira?', () => {
                     let taskList = studyPlan.tasks[date] || [];
                     let reviewList = studyPlan.reviews[date] || [];
@@ -933,17 +868,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                     let reviewIndex = reviewList.findIndex(r => r.id === id);
 
                     if (taskIndex > -1) {
-                        const [taskToDelete] = taskList.splice(taskIndex, 1);
+                        const [itemToDelete] = taskList.splice(taskIndex, 1);
                         if (taskList.length === 0) delete studyPlan.tasks[date];
-                         if (!studyPlan.deletedTasks) studyPlan.deletedTasks = {};
-                        taskToDelete.deletedAt = new Date().toISOString();
-                        studyPlan.deletedTasks[taskToDelete.id] = taskToDelete;
+                        if (!studyPlan.deletedTasks) studyPlan.deletedTasks = {};
+                        itemToDelete.deletedAt = new Date().toISOString();
+                        studyPlan.deletedTasks[itemToDelete.id] = itemToDelete;
                     } else if (reviewIndex > -1) {
-                         const [reviewToDelete] = reviewList.splice(reviewIndex, 1);
+                         const [itemToDelete] = reviewList.splice(reviewIndex, 1);
                         if (reviewList.length === 0) delete studyPlan.reviews[date];
                         if (!studyPlan.deletedTasks) studyPlan.deletedTasks = {};
-                        reviewToDelete.deletedAt = new Date().toISOString();
-                        studyPlan.deletedTasks[reviewToDelete.id] = reviewToDelete;
+                        itemToDelete.deletedAt = new Date().toISOString();
+                        studyPlan.deletedTasks[itemToDelete.id] = itemToDelete;
                     }
                     saveState();
                     renderAllTasksTable();
@@ -952,7 +887,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // Abas da tela de Atrasadas
         if(e.target.id === 'overdue-tab-tasks' || e.target.id === 'overdue-tab-reviews') {
             document.getElementById('overdue-tab-tasks').classList.toggle('active', e.target.id === 'overdue-tab-tasks');
             document.getElementById('overdue-content-tasks').classList.toggle('hidden', e.target.id !== 'overdue-tab-tasks');
@@ -982,6 +916,82 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
     
+    document.getElementById('add-task-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const id = document.getElementById('task-id').value;
+        const originalDateFromInput = document.getElementById('original-task-date-input').value;
+        const date = document.getElementById('task-date').value;
+        const subject = document.getElementById('task-subject').value;
+        const lesson = document.getElementById('task-lesson').value;
+        const topic = document.getElementById('task-topic').value;
+        const type = document.getElementById('task-type').value;
+        const link = document.getElementById('task-link').value;
+        const notebookLink = document.getElementById('task-notebook-link').value;
+        const notes = document.getElementById('task-notes').value;
+        const isCompleted = document.getElementById('task-completed-checkbox').checked;
+        const pagesRead = document.getElementById('pdf-pages-read').value;
+        const pagesTotal = document.getElementById('pdf-pages-total').value;
+
+        let taskData;
+
+        if (id && originalDateFromInput && studyPlan.tasks[originalDateFromInput]) {
+            const taskIndex = studyPlan.tasks[originalDateFromInput].findIndex(t => t.id === id);
+            if (taskIndex > -1) {
+                taskData = studyPlan.tasks[originalDateFromInput][taskIndex];
+                taskData.date = date;
+                taskData.subject = subject;
+                taskData.lesson = lesson;
+                taskData.topic = topic;
+                taskData.type = type;
+                taskData.link = link;
+                taskData.notebookLink = notebookLink;
+                taskData.notes = notes;
+                if (type === 'pdf') {
+                    taskData.pagesRead = parseInt(pagesRead, 10) || null;
+                    taskData.pagesTotal = parseInt(pagesTotal, 10) || null;
+                }
+                
+                if (originalDateFromInput !== date) {
+                    taskData.lastModified = new Date().toISOString();
+                }
+
+                if (taskData.completed !== isCompleted) {
+                    taskData.completed = isCompleted;
+                    if (isCompleted) {
+                        addToHistory(taskData);
+                        if (!taskData.type.startsWith('review')) scheduleReviews(taskData);
+                    } else {
+                        removeFromHistory(taskData.id);
+                        if (!taskData.type.startsWith('review')) unscheduleReviews(taskData);
+                    }
+                }
+
+                if (originalDateFromInput !== date) {
+                    studyPlan.tasks[originalDateFromInput].splice(taskIndex, 1);
+                    if (studyPlan.tasks[originalDateFromInput].length === 0) delete studyPlan.tasks[originalDateFromInput];
+                    if (!studyPlan.tasks[date]) studyPlan.tasks[date] = [];
+                    studyPlan.tasks[date].push(taskData);
+                }
+            }
+        } else {
+            taskData = { 
+                id: generateUniqueId({ subject, lesson, type }), 
+                date, subject, lesson, topic, type, link, notebookLink, notes, 
+                pagesRead: parseInt(pagesRead, 10) || null,
+                pagesTotal: parseInt(pagesTotal, 10) || null,
+                completed: false, 
+                originalDate: date,
+            };
+            if (!studyPlan.tasks[date]) studyPlan.tasks[date] = [];
+            studyPlan.tasks[date].push(taskData);
+        }
+
+        saveState();
+        renderPlan(viewDate);
+        updateProgress();
+        closeModal(addTaskModal);
+    });
+
     const tabs = ['active', 'history', 'trash'];
     tabs.forEach(tabId => {
         document.getElementById(`tab-${tabId}`).addEventListener('click', () => {
@@ -1081,7 +1091,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateProgress();
         startCountdown();
         document.getElementById('exam-date-display').textContent = formatDateDMY(systemSettings.examDate);
-        renderPlan(viewDate); // Re-renderiza o plano para atualizar os nomes dos blocos
+        renderPlan(viewDate);
 
         closeModal(systemSettingsModal);
     });
