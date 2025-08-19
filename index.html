@@ -89,10 +89,9 @@
             <h3 class="font-semibold text-gray-500 mb-2">Progresso Geral</h3>
             <p id="progressText" class="text-2xl font-bold text-gray-800">0%</p>
         </div>
-        <div id="buffer-card" class="bg-white p-5 rounded-lg flex flex-col justify-center text-center">
-            <h3 class="font-semibold text-gray-500 mb-2">Gordura</h3>
-            <div id="buffer-hours" class="text-2xl font-bold text-green-600"></div>
-            <div id="buffer-details" class="text-xs text-gray-500 mt-1"></div>
+        <div class="bg-white p-5 rounded-lg flex flex-col justify-center items-center">
+            <h3 class="font-semibold text-gray-500 mb-2">Data da Prova</h3>
+            <p id="exam-date-display" class="text-2xl font-bold text-gray-800">26/10/2025</p>
         </div>
         <div id="advanced-stats-card" class="bg-white p-5 rounded-lg flex flex-col justify-center text-center">
             <h3 class="font-semibold text-gray-500 mb-2">Ritmo Necessário</h3>
@@ -125,6 +124,12 @@
                     <div id="subject-progress-container" class="mt-8">
                         <h3 class="text-xl font-bold mb-4 text-center">Progresso por Matéria</h3>
                         <div id="subject-progress-bars" class="space-y-4"></div>
+                    </div>
+                    <!-- Card de Gordura movido para cá -->
+                    <div id="buffer-card" class="bg-white p-5 rounded-lg flex flex-col justify-center text-center mt-8 border">
+                        <h3 class="font-semibold text-gray-500 mb-2">Gordura</h3>
+                        <div id="buffer-hours" class="text-2xl font-bold text-green-600"></div>
+                        <div id="buffer-details" class="text-xs text-gray-500 mt-1"></div>
                     </div>
                 </div>
             </aside>

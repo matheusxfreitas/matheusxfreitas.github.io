@@ -181,7 +181,11 @@
                         </div>
                         <div></div>
                     </div>
-                    <div class="mt-6">
+                    <div class="mt-6 text-center">
+                        <h3 class="font-semibold">Poder Total</h3>
+                        <p id="total-power" class="text-2xl font-bold text-amber-500">0</p>
+                    </div>
+                    <div class="mt-4">
                         <h3 class="text-center font-semibold mb-2">Experiência</h3>
                         <div class="w-full progress-bar-bg rounded-full h-4">
                             <div id="xp-bar" class="progress-bar-fill h-4 rounded-full flex items-center justify-center text-xs font-bold text-white" style="width: 0%">0/100</div>
@@ -234,6 +238,9 @@
                     <button id="item-modal-unequip-btn" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">Desequipar</button>
                     <button id="item-modal-equip-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Equipar</button>
                 </div>
+                 <div class="mt-2">
+                    <button id="item-modal-edit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Editar</button>
+                </div>
             </div>
         </div>
     </div>
@@ -267,10 +274,11 @@
     <div id="create-item-form-modal" class="modal hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[60]">
         <div class="bg-white rounded-lg shadow-2xl w-full max-w-md">
              <div class="flex justify-between items-center p-4 border-b">
-                <h3 class="text-xl font-bold">Criar Novo Equipamento</h3>
+                <h3 id="form-modal-title" class="text-xl font-bold">Criar Novo Equipamento</h3>
                 <button id="create-form-close" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
             </div>
             <form id="create-item-form" class="p-6 space-y-4">
+                <input type="hidden" id="item-id-form">
                 <div class="flex justify-center items-center p-4 bg-gray-100 rounded-md">
                     <img id="modal-sprite-preview" src="" alt="Sprite Preview" class="modal-item-sprite">
                 </div>
@@ -320,7 +328,7 @@
         const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         let studyPlan = {};
-        const GAMIFICATION_VERSION = 27; // Versão atual da estrutura de gamificação
+        const GAMIFICATION_VERSION = 28; // Versão atual da estrutura de gamificação
         const fileList = `
             assets/habitica-images-main/gear/armoire/shop/shop_armor_armoire_admiralsUniform.png
             assets/habitica-images-main/gear/armoire/shop/shop_head_armoire_admiralsBicorne.png
@@ -450,6 +458,7 @@
             renderInventory(data);
             renderProgressBars(data);
             renderXpBar(data);
+            calculateTotalPower(data);
         }
 
         function renderAvatar(data) {
@@ -564,6 +573,22 @@
             xpBar.textContent = `${xp}/${xpToNextLevel}`;
         }
         
+        function calculateTotalPower(data) {
+            if (!data.gamification || !data.gamification.player) return;
+            const { equipped } = data.gamification.player;
+            const { items } = data.gamification.config;
+            let totalPower = 0;
+            for (const slot in equipped) {
+                if (equipped[slot]) {
+                    const item = items.find(i => i.id === equipped[slot]);
+                    if (item) {
+                        totalPower += item.power;
+                    }
+                }
+            }
+            document.getElementById('total-power').textContent = totalPower;
+        }
+
         function isItemUnlocked(item, data) {
             if (!data.gamification || !data.gamification.player) return false;
             const allTasks = Object.values(data.tasks || {}).flat();
@@ -582,7 +607,7 @@
             return 'power-common';
         }
 
-        function openItemDetailsModal(item, isUnlocked) {
+        function openItemDetailsModal(item, isUnlocked, isEquipped) {
             const modal = document.getElementById('item-details-modal');
             document.getElementById('item-modal-name').textContent = item.name;
             document.getElementById('item-modal-image').src = item.imageUrl;
@@ -595,6 +620,20 @@
             const equipBtn = document.getElementById('item-modal-equip-btn');
             equipBtn.dataset.itemId = item.id;
             
+            const unequipBtn = document.getElementById('item-modal-unequip-btn');
+            unequipBtn.dataset.itemId = item.id;
+
+            const editBtn = document.getElementById('item-modal-edit-btn');
+            editBtn.dataset.itemId = item.id;
+
+            if (isEquipped) {
+                equipBtn.classList.add('hidden');
+                unequipBtn.classList.remove('hidden');
+            } else {
+                equipBtn.classList.remove('hidden');
+                unequipBtn.classList.add('hidden');
+            }
+
             if (isUnlocked) {
                 equipBtn.disabled = false;
                 equipBtn.textContent = 'Equipar';
@@ -754,8 +793,9 @@
                 if (card && card.dataset.itemId) {
                     const item = studyPlan.gamification.config.items.find(i => i.id === card.dataset.itemId);
                     const isUnlocked = card.classList.contains('unlocked');
+                    const isEquipped = card.classList.contains('equipped');
                     if (item) {
-                        openItemDetailsModal(item, isUnlocked);
+                        openItemDetailsModal(item, isUnlocked, isEquipped);
                     }
                 }
             });
@@ -767,7 +807,7 @@
                     if (equippedId) {
                         const item = studyPlan.gamification.config.items.find(i => i.id === equippedId);
                         if (item) {
-                            openItemDetailsModal(item, true);
+                            openItemDetailsModal(item, true, true);
                         }
                     }
                 }
@@ -784,10 +824,11 @@
 
                 const slotType = studyPlan.gamification.config.slotMapping[item.subject];
                 if (slotType) {
-                    studyPlan.gamification.player.equipped[slotType] = itemId;
+                    const updatedData = JSON.parse(JSON.stringify(studyPlan));
+                    updatedData.gamification.player.equipped[slotType] = itemId;
                     
                     const docRef = db.collection("progresso").doc("meuPlano");
-                    await docRef.set({ gamification: studyPlan.gamification }, { merge: true });
+                    await docRef.set({ gamification: updatedData.gamification }, { merge: true });
                     
                     document.getElementById('item-details-modal').classList.add('hidden');
                 }
@@ -800,10 +841,11 @@
 
                 const slotType = studyPlan.gamification.config.slotMapping[item.subject];
                 if (slotType) {
-                    studyPlan.gamification.player.equipped[slotType] = null;
+                    const updatedData = JSON.parse(JSON.stringify(studyPlan));
+                    updatedData.gamification.player.equipped[slotType] = null;
                     
                     const docRef = db.collection("progresso").doc("meuPlano");
-                    await docRef.set({ gamification: studyPlan.gamification }, { merge: true });
+                    await docRef.set({ gamification: updatedData.gamification }, { merge: true });
                     
                     document.getElementById('item-details-modal').classList.add('hidden');
                 }
