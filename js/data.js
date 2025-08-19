@@ -165,7 +165,6 @@ const allTasks = [
             { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '1', topic: 'Regência Verbal e Nominal', type: 'video' },
             { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '2', topic: 'Regência Verbal e Nominal II', type: 'video' },
             { date: '2025-08-12', subject: 'Língua Portuguesa', lesson: '3', topic: 'Regência Verbal e Nominal III', type: 'video' },
-            { date: '2025-08-13', subject: 'Língua Portuguesa', lesson: '3', topic: 'Regência Verbal e Nominal III', type: 'video' },
             { date: '2025-08-13', subject: 'Conhecimentos Específicos', lesson: '10', topic: 'Avaliação Psicológica - Parte I', type: 'pdf' },
             { date: '2025-08-13', subject: 'Língua Portuguesa', lesson: '7', topic: 'Concordância, Regência, Colocação, Crase e Pontuação', type: 'pdf' },
             { date: '2025-08-14', subject: 'Língua Portuguesa', lesson: '7', topic: 'Concordância, Regência, Colocação, Crase e Pontuação', type: 'pdf' },
@@ -600,20 +599,18 @@ const allTasks = [
             { date: '2025-10-17', subject: 'Conhecimentos Específicos', lesson: '2', topic: 'Resolução CFP 10/2005 II - Código de Ética do Psicólogo', type: 'video' },
             { date: '2025-10-18', subject: 'Conhecimentos Específicos', lesson: '2', topic: 'Resolução CFP 10/2005 II - Código de Ética do Psicólogo', type: 'video' },
             { date: '2025-10-18', subject: 'Conhecimentos Específicos', lesson: '3', topic: 'Resolução CFP 10/2005 III - Código de Ética do Psicólogo', type: 'video' },
-        ];
 
+  // Aulas de Legislação Municipal adicionadas com datas semanais
+            { date: '2025-08-25', subject: 'Legislação Municipal', lesson: 'L1', topic: 'Lei Orgânica do Município de Uberlândia - Art. 1º ao 15º', type: 'legis' },
+            { date: '2025-09-01', subject: 'Legislação Municipal', lesson: 'L2', topic: 'Lei Orgânica do Município de Uberlândia - Art. 16º ao 30º', type: 'legis' },
+            { date: '2025-09-08', subject: 'Legislação Municipal', lesson: 'L3', topic: 'Lei Orgânica - Competências do Município', type: 'legis' },
+            { date: '2025-09-15', subject: 'Legislação Municipal', lesson: 'L4', topic: 'Lei Orgânica - Servidores Públicos', type: 'legis' },
+            { date: '2025-09-22', subject: 'Legislação Municipal', lesson: 'L5', topic: 'Estatuto dos Servidores (LC nº 40/1992) - Disposições Preliminares', type: 'legis' },
+            { date: '2025-09-29', subject: 'Legislação Municipal', lesson: 'L6', topic: 'Estatuto dos Servidores - Direitos e Vantagens', type: 'legis' },
+            { date: '2025-10-06', subject: 'Legislação Municipal', lesson: 'L7', topic: 'Estatuto dos Servidores - Regime Disciplinar', type: 'legis' },
+            { date: '2025-10-13', subject: 'Legislação Municipal', lesson: 'L8', topic: 'Estatuto dos Servidores - Responsabilidades', type: 'legis' },
+            { date: '2025-10-20', subject: 'Legislação Municipal', lesson: 'L9', topic: 'Plano de Cargos e Carreiras (LC nº 671/2018) - Estrutura Geral', type: 'legis' },
+            { date: '2025-10-27', subject: 'Legislação Municipal', lesson: 'L10', topic: 'Revisão Geral - Legislação Municipal', type: 'legis' },
         
-        const legislacaoMunicipalTasks = [
-            { subject: 'Administração Pública', lesson: 'L1', topic: 'Lei Orgânica do Município de Uberlândia - Art. 1º ao 15º', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L2', topic: 'Lei Orgânica do Município de Uberlândia - Art. 16º ao 30º', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L3', topic: 'Lei Orgânica - Competências do Município', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L4', topic: 'Lei Orgânica - Servidores Públicos', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L5', topic: 'Estatuto dos Servidores (LC nº 40/1992) - Disposições Preliminares', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L6', topic: 'Estatuto dos Servidores - Direitos e Vantagens', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L7', topic: 'Estatuto dos Servidores - Regime Disciplinar', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L8', topic: 'Estatuto dos Servidores - Responsabilidades', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L9', topic: 'Plano de Cargos e Carreiras (LC nº 671/2018) - Estrutura Geral', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L10', topic: 'Revisão Geral - Legislação Municipal', type: 'legis' },
-        ];
-
-    
+        
+    ];
