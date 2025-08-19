@@ -197,20 +197,10 @@
             <h3 class="font-semibold text-gray-500 mb-2">Progresso Geral</h3>
             <p id="progressText" class="text-2xl font-bold text-gray-800">0%</p>
         </div>
-        <!-- CARD DE ESTATÍSTICAS ATUALIZADO -->
-        <div id="advanced-stats-card" class="bg-white p-5 rounded-lg flex flex-col justify-center md:col-span-2 lg:col-span-1">
-             <div class="grid grid-cols-2 gap-4 w-full text-center">
-                <div>
-                    <h3 class="font-semibold text-gray-500 mb-2">Ritmo Necessário</h3>
-                    <div id="daily-progress-stat" class="text-sm"></div>
-                    <div id="weekly-progress-stat" class="text-sm mt-2"></div>
-                </div>
-                <div class="border-l pl-4">
-                    <h3 class="font-semibold text-gray-500 mb-2">Seu Ritmo Real</h3>
-                    <div id="real-daily-progress-stat" class="text-sm"></div>
-                    <div id="real-weekly-progress-stat" class="text-sm mt-2"></div>
-                </div>
-            </div>
+        <div id="advanced-stats-card" class="bg-white p-5 rounded-lg flex flex-col justify-center text-center md:col-span-2 lg:col-span-1">
+            <h3 class="font-semibold text-gray-500 mb-2">Ritmo Necessário</h3>
+            <div id="daily-progress-stat" class="text-sm"></div>
+            <div id="weekly-progress-stat" class="text-sm mt-2"></div>
         </div>
     </div>
 
@@ -241,6 +231,8 @@
                         <h3 class="text-xl font-bold mb-4 text-center">Progresso por Matéria</h3>
                         <div id="subject-progress-bars" class="space-y-4"></div>
                     </div>
+                    <!-- NOVO: Container para estatísticas de ritmo real -->
+                    <div id="real-time-stats-container" class="mt-8 p-4 rounded-lg bg-gray-50 border"></div>
                 </div>
             </aside>
         </div>
@@ -346,7 +338,8 @@
                         <button id="shift-selected-backward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg">Adiantar</button>
                         <button id="delete-selected-btn" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-2 px-4 rounded-lg">Excluir</button>
                     </div>
-                    <div class="mt-4 p-2 bg-gray-50 rounded-md border">
+                    <!-- FILTROS ATUALIZADOS -->
+                    <div class="p-2 bg-gray-50 rounded-md border">
                         <div class="flex flex-wrap gap-4 items-center">
                             <div class="flex items-center gap-2">
                                 <label for="filter-subject" class="text-sm font-medium">Matéria:</label>
@@ -366,7 +359,7 @@
                                 <svg id="filter-arrow" class="w-4 h-4 transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                             </button>
                         </div>
-                        <div id="more-filters-container" class="hidden mt-4 pt-4 border-t flex flex-wrap gap-x-6 gap-y-4">
+                        <div id="more-filters-container" class="hidden mt-2 pt-2 border-t flex flex-wrap gap-x-6 gap-y-4">
                             <div class="flex items-center gap-2">
                                 <label for="filter-type" class="text-sm font-medium">Tipo:</label>
                                 <select id="filter-type" class="p-1 border rounded-md text-sm">
@@ -683,7 +676,6 @@
             const doc = await docRef.get();
             if (doc.exists && doc.data().tasks) { 
                 studyPlan = doc.data();
-                // CORREÇÃO: Garante que dados antigos tenham as novas propriedades
                 Object.values(studyPlan.tasks).flat().forEach(task => {
                     if (task.countsTowardsProgress === undefined) {
                         task.countsTowardsProgress = task.type !== 'legis';
@@ -700,7 +692,7 @@
             console.error("Erro ao carregar progresso: ", error);
             studyPlan = initializeStudyPlan();
         } finally {
-             saveState(); // Salva o estado corrigido/inicializado
+             saveState();
         }
     };
 
@@ -890,7 +882,8 @@
             progressChart.update();
         }
         renderSubjectProgress();
-        renderAdvancedStats();
+        renderRequiredPaceStats();
+        renderRealTimePaceStats();
     };
 
     const renderSubjectProgress = () => {
@@ -910,17 +903,9 @@
         }).join('');
     };
 
-    /**
-     * ATUALIZADO: Renderiza as estatísticas de ritmo necessário e ritmo real.
-     */
-    function renderAdvancedStats() {
-        // Elementos do HTML
+    function renderRequiredPaceStats() {
         const dailyStatEl = document.getElementById('daily-progress-stat');
         const weeklyStatEl = document.getElementById('weekly-progress-stat');
-        const realDailyStatEl = document.getElementById('real-daily-progress-stat');
-        const realWeeklyStatEl = document.getElementById('real-weekly-progress-stat');
-
-        // --- 1. Cálculo do Ritmo Necessário ---
         const examDate = new Date('2025-10-26T11:00:00Z');
         const startDate = new Date('2025-06-24T03:00:00Z');
         const totalDays = Math.ceil((examDate - startDate) / (1000 * 60 * 60 * 24));
@@ -937,35 +922,68 @@
             const weeklyAvg = (totalTasks / totalWeeks).toFixed(1);
             weeklyStatEl.innerHTML = `<strong>Semanal: ${weeklyPercentage}%</strong> <span class="text-gray-600">(~${weeklyAvg} aulas)</span>`;
         }
+    }
 
-        // --- 2. Cálculo do Ritmo Real ---
+    /**
+     * NOVO: Calcula e renderiza as estatísticas de ritmo real do usuário.
+     */
+    function renderRealTimePaceStats() {
+        const container = document.getElementById('real-time-stats-container');
         const history = studyPlan.history || [];
-        if (history.length > 0) {
-            const completedDates = history.map(h => new Date(h.completionDate));
-            const firstStudyDay = completedDates.reduce((a, b) => a < b ? a : b);
-            const today = new Date();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-            // Cálculo diário
-            const uniqueStudyDays = new Set(history.map(h => new Date(h.completionDate).toDateString())).size;
-            const realDailyAvg = (history.length / uniqueStudyDays).toFixed(1);
-            realDailyStatEl.innerHTML = `<strong>Diário: ${realDailyAvg}</strong> <span class="text-gray-600">(aulas/dia)</span>`;
+        // Define o início da semana atual (segunda-feira)
+        const dayOfWeek = today.getDay(); // Domingo = 0, Segunda = 1
+        const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Ajuste para segunda-feira
+        const weekStart = new Date(today.setDate(diff));
+        weekStart.setHours(0, 0, 0, 0);
 
-            // Cálculo semanal
-            const getWeekNumber = (d) => {
-                d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-                d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-                var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-                var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-                return d.getUTCFullYear() + '-' + weekNo;
-            };
-            const uniqueStudyWeeks = new Set(history.map(h => getWeekNumber(new Date(h.completionDate)))).size;
-            const realWeeklyAvg = (history.length / uniqueStudyWeeks).toFixed(1);
-            realWeeklyStatEl.innerHTML = `<strong>Semanal: ${realWeeklyAvg}</strong> <span class="text-gray-600">(aulas/sem)</span>`;
+        const lastWeekStart = addDays(weekStart, -7);
 
-        } else {
-            realDailyStatEl.innerHTML = `<strong>Diário: N/A</strong>`;
-            realWeeklyStatEl.innerHTML = `<strong>Semanal: N/A</strong>`;
+        // Filtra aulas concluídas na semana atual e anterior
+        const completedThisWeek = history.filter(h => new Date(h.completionDate) >= weekStart);
+        const completedLastWeek = history.filter(h => {
+            const d = new Date(h.completionDate);
+            return d >= lastWeekStart && d < weekStart;
+        });
+
+        // Calcula aulas planejadas para a semana atual
+        let plannedThisWeekCount = 0;
+        for (let i = 0; i < 7; i++) {
+            const day = addDays(weekStart, i);
+            const dayStr = formatDateYMD(day);
+            plannedThisWeekCount += (studyPlan.tasks[dayStr] || []).filter(t => t.countsTowardsProgress).length;
         }
+
+        const daysPassedThisWeek = (today.getDay() === 0 ? 7 : today.getDay());
+        const thisWeekPercentage = plannedThisWeekCount > 0 ? (completedThisWeek.length / plannedThisWeekCount * 100).toFixed(1) : 0;
+        const thisWeekAvg = (completedThisWeek.length / daysPassedThisWeek).toFixed(1);
+
+        // Calcula aulas remanejadas
+        const allTasks = Object.values(studyPlan.tasks || {}).flat();
+        const rescheduledThisWeek = new Set(allTasks.filter(task => {
+            const lastModified = task.lastModified ? new Date(task.lastModified) : null;
+            return task.date !== task.originalDate && lastModified && lastModified >= weekStart;
+        }).map(task => task.id)).size;
+
+        container.innerHTML = `
+            <h3 class="text-xl font-bold mb-4 text-center">Seu Desempenho</h3>
+            <div class="space-y-3 text-sm">
+                <div>
+                    <p class="font-semibold">Ritmo nesta semana:</p>
+                    <p class="text-gray-600">${thisWeekPercentage}% (${thisWeekAvg} aulas/dia)</p>
+                </div>
+                <div>
+                    <p class="font-semibold">Ritmo da semana anterior:</p>
+                    <p class="text-gray-600">${completedLastWeek.length} aulas concluídas</p>
+                </div>
+                <div>
+                    <p class="font-semibold">Aulas remanejadas nesta semana:</p>
+                    <p class="text-gray-600">${rescheduledThisWeek} aulas</p>
+                </div>
+            </div>
+        `;
     }
 
     const setupChart = () => {
@@ -1115,10 +1133,10 @@
         const totalTasks = allTasks.length;
         const subjectCounts = allTasks.reduce((acc, task) => { acc[task.subject] = (acc[task.subject] || 0) + 1; return acc; }, {});
         
-        let statsHtml = `<div class="p-2 bg-[#D5A021] text-white rounded-lg shadow stat-card" data-subject="all"><p class="font-bold text-lg">${totalTasks}</p><p class="text-sm">Total de Aulas</p></div>`;
+        let statsHtml = `<div class="p-2 bg-white rounded-lg shadow stat-card" data-subject="all"><p class="font-bold text-lg">${totalTasks}</p><p class="text-sm text-gray-600">Total de Aulas</p></div>`;
         
         Object.entries(subjectCounts).sort().forEach(([subject, count]) => { 
-            statsHtml += `<div class="p-2 bg-white rounded-lg stat-card shadow"><p class="font-bold text-lg">${count}</p><p class="text-sm text-gray-600">${subject}</p></div>`; 
+            statsHtml += `<div class="p-2 bg-white rounded-lg stat-card shadow" data-subject="${subject}"><p class="font-bold text-lg">${count}</p><p class="text-sm text-gray-600">${subject}</p></div>`; 
         });
         statsContainer.innerHTML = statsHtml;
     }
@@ -1236,6 +1254,7 @@
                 const newDate = addDays(currentDate, days);
                 const newDateStr = formatDateYMD(newDate);
                 task.date = newDateStr;
+                task.lastModified = new Date().toISOString(); // Marca como modificado
             }
             const dateStr = task.date;
             if (!newTasks[dateStr]) newTasks[dateStr] = [];
@@ -1261,6 +1280,7 @@
                 const newDate = addDays(new Date(task.date + 'T03:00:00Z'), days);
                 const newDateStr = formatDateYMD(newDate);
                 task.date = newDateStr;
+                task.lastModified = new Date().toISOString(); // Marca como modificado
                 if (!studyPlan.tasks[newDateStr]) studyPlan.tasks[newDateStr] = [];
                 studyPlan.tasks[newDateStr].push(task);
             }
@@ -1327,7 +1347,7 @@
         }
 
         let fileContent = "const allTasks = [\n";
-        allTasks.forEach(task => {
+        allTasks.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(task => {
             fileContent += "    {\n";
             fileContent += `        date: '${task.date}',\n`;
             fileContent += `        subject: '${task.subject.replace(/'/g, "\\'")}',\n`;
@@ -1448,6 +1468,10 @@
                     taskData.notebookLink = notebookLink;
                     taskData.notes = notes;
                     
+                    if (originalDateFromInput !== date) {
+                        taskData.lastModified = new Date().toISOString();
+                    }
+
                     if (taskData.completed !== isCompleted) {
                         taskData.completed = isCompleted;
                         if (isCompleted) {
@@ -1515,6 +1539,7 @@
                     const nextDay = addDays(new Date(date + 'T03:00:00Z'), 1);
                     const nextDayStr = formatDateYMD(nextDay);
                     task.date = nextDayStr;
+                    task.lastModified = new Date().toISOString();
                     if (!studyPlan.tasks[nextDayStr]) studyPlan.tasks[nextDayStr] = [];
                     studyPlan.tasks[nextDayStr].push(task);
                     studyPlan.tasks[date].splice(taskIndex, 1);
