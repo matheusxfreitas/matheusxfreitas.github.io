@@ -90,7 +90,8 @@
         .task-card.overdue { border-left-color: #ef4444; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
         .task-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .task-card.legis { border-left-color: #38bdf8; } /* Cor para legislação */
+        .task-card.legis { border-left-color: #38bdf8; }
+        .task-card.clickable { cursor: pointer; }
         
         .task-checkbox:checked + label { text-decoration: line-through; color: #9A9A9A; }
         .chart-container { position: relative; width: 100%; max-width: 250px; margin-left: auto; margin-right: auto; height: 250px; }
@@ -219,6 +220,8 @@
                     <div class="chart-container">
                         <canvas id="progressChart"></canvas>
                     </div>
+                    <!-- NOVO: Container para estatísticas de ritmo real -->
+                    <div id="real-time-stats-container" class="mt-8 p-4 rounded-lg bg-gray-50 border"></div>
                     <div class="mt-8 p-4 rounded-lg bg-gray-50 border">
                         <h3 class="font-bold text-lg mb-2">Legenda de Revisões</h3>
                          <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-[#6A9C89]"></div><span class="text-gray-700">R1 (D+1) - Rápida</span></div>
@@ -231,8 +234,6 @@
                         <h3 class="text-xl font-bold mb-4 text-center">Progresso por Matéria</h3>
                         <div id="subject-progress-bars" class="space-y-4"></div>
                     </div>
-                    <!-- NOVO: Container para estatísticas de ritmo real -->
-                    <div id="real-time-stats-container" class="mt-8 p-4 rounded-lg bg-gray-50 border"></div>
                 </div>
             </aside>
         </div>
@@ -282,15 +283,28 @@
                         </select>
                     </div>
                      <div>
+                        <label for="task-link" class="block text-sm font-medium text-gray-700">Link da Aula</label>
+                        <input type="url" id="task-link" placeholder="https://..." class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
+                    </div>
+                     <div>
                         <label for="task-notebook-link" class="block text-sm font-medium text-gray-700">Link do Caderno (NotebookLM)</label>
                         <input type="url" id="task-notebook-link" placeholder="https://..." class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
                     </div>
                 </div>
                 <!-- Coluna Direita -->
                 <div class="space-y-4">
+                    <!-- NOVO: Container para progresso de PDF -->
+                    <div id="pdf-progress-container" class="hidden space-y-4">
+                        <label class="block text-sm font-medium text-gray-700">Progresso de Leitura (PDF)</label>
+                        <div class="flex items-center gap-4">
+                           <input type="number" id="pdf-pages-read" placeholder="Págs. lidas" class="w-full border rounded-md shadow-sm py-2 px-3">
+                           <span class="text-gray-500">/</span>
+                           <input type="number" id="pdf-pages-total" placeholder="Total" class="w-full border rounded-md shadow-sm py-2 px-3">
+                        </div>
+                    </div>
                     <div>
                         <label for="task-notes" class="block text-sm font-medium text-gray-700">Anotações</label>
-                        <textarea id="task-notes" rows="12" class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3"></textarea>
+                        <textarea id="task-notes" rows="8" class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3"></textarea>
                     </div>
                     <div id="completed-checkbox-container" class="hidden items-center pt-4">
                         <input type="checkbox" id="task-completed-checkbox" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]">
@@ -338,7 +352,6 @@
                         <button id="shift-selected-backward-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg">Adiantar</button>
                         <button id="delete-selected-btn" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-2 px-4 rounded-lg">Excluir</button>
                     </div>
-                    <!-- FILTROS ATUALIZADOS -->
                     <div class="p-2 bg-gray-50 rounded-md border">
                         <div class="flex flex-wrap gap-4 items-center">
                             <div class="flex items-center gap-2">
@@ -621,16 +634,16 @@
         let combinedTasks = [...allTasks]; 
 
         const legislacaoMunicipalTasks = [
-            { subject: 'Administração Pública', lesson: 'L1', topic: 'Lei Orgânica do Município de Uberlândia - Art. 1º ao 15º', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L2', topic: 'Lei Orgânica do Município de Uberlândia - Art. 16º ao 30º', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L3', topic: 'Lei Orgânica - Competências do Município', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L4', topic: 'Lei Orgânica - Servidores Públicos', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L5', topic: 'Estatuto dos Servidores (LC nº 40/1992) - Disposições Preliminares', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L6', topic: 'Estatuto dos Servidores - Direitos e Vantagens', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L7', topic: 'Estatuto dos Servidores - Regime Disciplinar', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L8', topic: 'Estatuto dos Servidores - Responsabilidades', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L9', topic: 'Plano de Cargos e Carreiras (LC nº 671/2018) - Estrutura Geral', type: 'legis' },
-            { subject: 'Administração Pública', lesson: 'L10', topic: 'Revisão Geral - Legislação Municipal', type: 'legis' },
+            { subject: 'Legislação Municipal', lesson: 'L1', topic: 'Lei Orgânica do Município de Uberlândia - Art. 1º ao 15º', type: 'legis' },
+            { subject: 'Legislação Municipal', lesson: 'L2', topic: 'Lei Orgânica do Município de Uberlândia - Art. 16º ao 30º', type: 'legis' },
+            { subject: 'Legislação Municipal', lesson: 'L3', topic: 'Lei Orgânica - Competências do Município', type: 'legis' },
+            { subject: 'Legislação Municipal', lesson: 'L4', topic: 'Lei Orgânica - Servidores Públicos', type: 'legis' },
+            { subject: 'Legislação Municipal', lesson: 'L5', topic: 'Estatuto dos Servidores (LC nº 40/1992) - Disposições Preliminares', type: 'legis' },
+            { subject: 'Legislação Municipal', lesson: 'L6', topic: 'Estatuto dos Servidores - Direitos e Vantagens', type: 'legis' },
+            { subject: 'Legislação Municipal', lesson: 'L7', topic: 'Estatuto dos Servidores - Regime Disciplinar', type: 'legis' },
+            { subject: 'Legislação Municipal', lesson: 'L8', topic: 'Estatuto dos Servidores - Responsabilidades', type: 'legis' },
+            { subject: 'Legislação Municipal', lesson: 'L9', topic: 'Plano de Cargos e Carreiras (LC nº 671/2018) - Estrutura Geral', type: 'legis' },
+            { subject: 'Legislação Municipal', lesson: 'L10', topic: 'Revisão Geral - Legislação Municipal', type: 'legis' },
         ];
         
         let startDate = new Date('2025-08-25T03:00:00Z');
@@ -656,8 +669,11 @@
                     date: dateStr, 
                     originalDate: task.originalDate || dateStr,
                     completed: task.completed || false, 
-                    notebookLink: task.notebookLink || '', 
+                    link: task.link || '',
+                    notebookLink: task.notebookLink || '',
                     notes: task.notes || '',
+                    pagesRead: task.pagesRead || null,
+                    pagesTotal: task.pagesTotal || null,
                     countsTowardsProgress: task.countsTowardsProgress !== false
                 });
             }
@@ -720,7 +736,11 @@
         if (task.type.startsWith('review')) cardClasses += ` ${task.type}`;
         if (task.type === 'legis') cardClasses += ' legis';
         if (isOverdue) cardClasses += ' overdue';
+        if (task.link) cardClasses += ' clickable';
         card.className = cardClasses;
+        card.dataset.id = task.id;
+        card.dataset.date = task.date;
+
         const title = task.type.startsWith('review') ? `${task.reviewType}: ${task.subject} - Aula ${task.lesson}` : `${task.subject} - Aula ${task.lesson}`;
         
         const typeIcon = task.type === 'video' 
@@ -739,6 +759,21 @@
                 <button class="action-btn task-edit-btn" data-id="${task.id}" data-date="${task.date}" title="Editar Aula"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button>
                 <button class="action-btn task-delete-btn" data-id="${task.id}" data-date="${task.date}" data-type="${task.type}" title="Excluir Aula"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
             </div>` : '';
+        
+        let pdfProgressHTML = '';
+        if (task.type === 'pdf' && task.pagesRead > 0 && task.pagesTotal > 0) {
+            const percentage = Math.round((task.pagesRead / task.pagesTotal) * 100);
+            pdfProgressHTML = `
+                <div class="mt-2">
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>Progresso PDF</span>
+                        <span>${percentage}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                        <div class="bg-sky-500 h-1.5 rounded-full" style="width: ${percentage}%"></div>
+                    </div>
+                </div>`;
+        }
 
         card.innerHTML = `
             <div class="flex items-start space-x-4">
@@ -749,6 +784,7 @@
                         <p class="text-sm text-gray-600">${task.topic}</p>
                         ${isOverdue ? `<p class="text-xs text-red-600 font-semibold">Atrasada desde: ${formatDateDMY(task.date)}</p>` : ''}
                     </label>
+                    ${pdfProgressHTML}
                 </div>
             </div>
             ${actionsMenu}`;
@@ -913,54 +949,54 @@
         const totalTasks = Object.values(studyPlan.tasks || {}).flat().filter(t => t.countsTowardsProgress === true).length;
 
         if (totalDays > 0 && totalTasks > 0) {
-            const dailyPercentage = (100 / totalDays).toFixed(2);
             const dailyAvg = (totalTasks / totalDays).toFixed(1);
-            dailyStatEl.innerHTML = `<strong>Diário: ${dailyPercentage}%</strong> <span class="text-gray-600">(~${dailyAvg} aulas)</span>`;
+            dailyStatEl.innerHTML = `<strong>Diário:</strong> <span class="text-gray-600">~${dailyAvg} aulas</span>`;
         }
         if (totalWeeks > 0 && totalTasks > 0) {
-            const weeklyPercentage = (100 / totalWeeks).toFixed(1);
             const weeklyAvg = (totalTasks / totalWeeks).toFixed(1);
-            weeklyStatEl.innerHTML = `<strong>Semanal: ${weeklyPercentage}%</strong> <span class="text-gray-600">(~${weeklyAvg} aulas)</span>`;
+            weeklyStatEl.innerHTML = `<strong>Semanal:</strong> <span class="text-gray-600">~${weeklyAvg} aulas</span>`;
         }
     }
 
-    /**
-     * NOVO: Calcula e renderiza as estatísticas de ritmo real do usuário.
-     */
     function renderRealTimePaceStats() {
         const container = document.getElementById('real-time-stats-container');
         const history = studyPlan.history || [];
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Define o início da semana atual (segunda-feira)
-        const dayOfWeek = today.getDay(); // Domingo = 0, Segunda = 1
-        const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Ajuste para segunda-feira
+        const dayOfWeek = today.getDay();
+        const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
         const weekStart = new Date(today.setDate(diff));
         weekStart.setHours(0, 0, 0, 0);
 
         const lastWeekStart = addDays(weekStart, -7);
 
-        // Filtra aulas concluídas na semana atual e anterior
         const completedThisWeek = history.filter(h => new Date(h.completionDate) >= weekStart);
         const completedLastWeek = history.filter(h => {
             const d = new Date(h.completionDate);
             return d >= lastWeekStart && d < weekStart;
         });
 
-        // Calcula aulas planejadas para a semana atual
-        let plannedThisWeekCount = 0;
-        for (let i = 0; i < 7; i++) {
-            const day = addDays(weekStart, i);
-            const dayStr = formatDateYMD(day);
-            plannedThisWeekCount += (studyPlan.tasks[dayStr] || []).filter(t => t.countsTowardsProgress).length;
+        const daysPassedThisWeek = (today.getDay() === 0 ? 7 : today.getDay());
+        const realDailyAvgThisWeek = (completedThisWeek.length / daysPassedThisWeek).toFixed(1);
+
+        const examDate = new Date('2025-10-26T11:00:00Z');
+        const startDate = new Date('2025-06-24T03:00:00Z');
+        const totalDays = Math.ceil((examDate - startDate) / (1000 * 60 * 60 * 24));
+        const totalTasks = Object.values(studyPlan.tasks || {}).flat().filter(t => t.countsTowardsProgress === true).length;
+        const requiredDailyAvg = (totalTasks / totalDays);
+
+        let dailyComparisonHTML = '';
+        if (realDailyAvgThisWeek >= requiredDailyAvg) {
+            dailyComparisonHTML = `<span class="text-green-600 font-semibold ml-2">Você está no ritmo!</span>`;
+        } else {
+            const difference = (requiredDailyAvg - realDailyAvgThisWeek).toFixed(1);
+            dailyComparisonHTML = `<span class="text-red-600 font-semibold ml-2">(-${difference} aulas/dia)</span>`;
         }
 
-        const daysPassedThisWeek = (today.getDay() === 0 ? 7 : today.getDay());
-        const thisWeekPercentage = plannedThisWeekCount > 0 ? (completedThisWeek.length / plannedThisWeekCount * 100).toFixed(1) : 0;
-        const thisWeekAvg = (completedThisWeek.length / daysPassedThisWeek).toFixed(1);
-
-        // Calcula aulas remanejadas
+        const requiredWeeklyAvg = requiredDailyAvg * 7;
+        const lastWeekPercentage = requiredWeeklyAvg > 0 ? ((completedLastWeek.length / requiredWeeklyAvg) * 100).toFixed(0) : 0;
+        
         const allTasks = Object.values(studyPlan.tasks || {}).flat();
         const rescheduledThisWeek = new Set(allTasks.filter(task => {
             const lastModified = task.lastModified ? new Date(task.lastModified) : null;
@@ -971,12 +1007,12 @@
             <h3 class="text-xl font-bold mb-4 text-center">Seu Desempenho</h3>
             <div class="space-y-3 text-sm">
                 <div>
-                    <p class="font-semibold">Ritmo nesta semana:</p>
-                    <p class="text-gray-600">${thisWeekPercentage}% (${thisWeekAvg} aulas/dia)</p>
+                    <p class="font-semibold">Ritmo diário nesta semana:</p>
+                    <p class="text-gray-600">${realDailyAvgThisWeek} aulas/dia ${dailyComparisonHTML}</p>
                 </div>
                 <div>
                     <p class="font-semibold">Ritmo da semana anterior:</p>
-                    <p class="text-gray-600">${completedLastWeek.length} aulas concluídas</p>
+                    <p class="text-gray-600">${completedLastWeek.length} aulas (${lastWeekPercentage}% da meta)</p>
                 </div>
                 <div>
                     <p class="font-semibold">Aulas remanejadas nesta semana:</p>
@@ -1133,7 +1169,7 @@
         const totalTasks = allTasks.length;
         const subjectCounts = allTasks.reduce((acc, task) => { acc[task.subject] = (acc[task.subject] || 0) + 1; return acc; }, {});
         
-        let statsHtml = `<div class="p-2 bg-white rounded-lg shadow stat-card" data-subject="all"><p class="font-bold text-lg">${totalTasks}</p><p class="text-sm text-gray-600">Total de Aulas</p></div>`;
+        let statsHtml = `<div class="p-2 rounded-lg shadow stat-card bg-amber-400 text-white" data-subject="all"><p class="font-bold text-lg">${totalTasks}</p><p class="text-sm">Total de Aulas</p></div>`;
         
         Object.entries(subjectCounts).sort().forEach(([subject, count]) => { 
             statsHtml += `<div class="p-2 bg-white rounded-lg stat-card shadow" data-subject="${subject}"><p class="font-bold text-lg">${count}</p><p class="text-sm text-gray-600">${subject}</p></div>`; 
@@ -1217,6 +1253,7 @@
             document.getElementById('task-lesson').value = task.lesson;
             document.getElementById('task-topic').value = task.topic;
             document.getElementById('task-type').value = task.type;
+            document.getElementById('task-link').value = task.link || '';
             document.getElementById('task-notebook-link').value = task.notebookLink || '';
             document.getElementById('task-notes').value = task.notes || '';
             
@@ -1226,6 +1263,15 @@
                 originalDateContainer.classList.remove('hidden');
             } else {
                 originalDateContainer.classList.add('hidden');
+            }
+
+            const pdfProgressContainer = document.getElementById('pdf-progress-container');
+            if (task.type === 'pdf') {
+                document.getElementById('pdf-pages-read').value = task.pagesRead || '';
+                document.getElementById('pdf-pages-total').value = task.pagesTotal || '';
+                pdfProgressContainer.classList.remove('hidden');
+            } else {
+                pdfProgressContainer.classList.add('hidden');
             }
 
             const completedContainer = document.getElementById('completed-checkbox-container');
@@ -1254,7 +1300,7 @@
                 const newDate = addDays(currentDate, days);
                 const newDateStr = formatDateYMD(newDate);
                 task.date = newDateStr;
-                task.lastModified = new Date().toISOString(); // Marca como modificado
+                task.lastModified = new Date().toISOString();
             }
             const dateStr = task.date;
             if (!newTasks[dateStr]) newTasks[dateStr] = [];
@@ -1280,7 +1326,7 @@
                 const newDate = addDays(new Date(task.date + 'T03:00:00Z'), days);
                 const newDateStr = formatDateYMD(newDate);
                 task.date = newDateStr;
-                task.lastModified = new Date().toISOString(); // Marca como modificado
+                task.lastModified = new Date().toISOString();
                 if (!studyPlan.tasks[newDateStr]) studyPlan.tasks[newDateStr] = [];
                 studyPlan.tasks[newDateStr].push(task);
             }
@@ -1317,7 +1363,7 @@
             alert("Nenhuma aula para exportar.");
             return;
         }
-        const headers = ['date', 'subject', 'lesson', 'topic', 'type', 'completed', 'notebookLink', 'notes', 'originalDate', 'countsTowardsProgress'];
+        const headers = ['date', 'subject', 'lesson', 'topic', 'type', 'completed', 'link', 'notebookLink', 'notes', 'originalDate', 'countsTowardsProgress', 'pagesRead', 'pagesTotal'];
         const csvRows = [headers.join(',')];
         
         allTasks.forEach(task => {
@@ -1356,8 +1402,11 @@
             fileContent += `        type: '${task.type}',\n`;
             if (task.completed) fileContent += `        completed: true,\n`;
             if (task.originalDate && task.originalDate !== task.date) fileContent += `        originalDate: '${task.originalDate}',\n`;
+            if (task.link) fileContent += `        link: '${task.link}',\n`;
             if (task.notebookLink) fileContent += `        notebookLink: '${task.notebookLink}',\n`;
             if (task.notes) fileContent += `        notes: '${task.notes.replace(/'/g, "\\'").replace(/\n/g, "\\n")}',\n`;
+            if (task.pagesRead) fileContent += `        pagesRead: ${task.pagesRead},\n`;
+            if (task.pagesTotal) fileContent += `        pagesTotal: ${task.pagesTotal},\n`;
             fileContent += "    },\n";
         });
         fileContent += "];\n";
@@ -1427,6 +1476,7 @@
              document.getElementById('original-task-date-input').value = '';
              document.getElementById('completed-checkbox-container').classList.add('hidden');
              document.getElementById('original-date-container').classList.add('hidden');
+             document.getElementById('pdf-progress-container').classList.add('hidden');
              openModal(addTaskModal);
         });
 
@@ -1450,9 +1500,12 @@
             const lesson = document.getElementById('task-lesson').value;
             const topic = document.getElementById('task-topic').value;
             const type = document.getElementById('task-type').value;
+            const link = document.getElementById('task-link').value;
             const notebookLink = document.getElementById('task-notebook-link').value;
             const notes = document.getElementById('task-notes').value;
             const isCompleted = document.getElementById('task-completed-checkbox').checked;
+            const pagesRead = document.getElementById('pdf-pages-read').value;
+            const pagesTotal = document.getElementById('pdf-pages-total').value;
 
             let taskData;
 
@@ -1465,8 +1518,13 @@
                     taskData.lesson = lesson;
                     taskData.topic = topic;
                     taskData.type = type;
+                    taskData.link = link;
                     taskData.notebookLink = notebookLink;
                     taskData.notes = notes;
+                    if (type === 'pdf') {
+                        taskData.pagesRead = parseInt(pagesRead, 10) || null;
+                        taskData.pagesTotal = parseInt(pagesTotal, 10) || null;
+                    }
                     
                     if (originalDateFromInput !== date) {
                         taskData.lastModified = new Date().toISOString();
@@ -1493,7 +1551,9 @@
             } else {
                 taskData = { 
                     id: generateUniqueId({ subject, lesson, type }), 
-                    date, subject, lesson, topic, type, notebookLink, notes, 
+                    date, subject, lesson, topic, type, link, notebookLink, notes, 
+                    pagesRead: parseInt(pagesRead, 10) || null,
+                    pagesTotal: parseInt(pagesTotal, 10) || null,
                     completed: false, 
                     originalDate: date,
                     countsTowardsProgress: type !== 'legis'
@@ -1509,6 +1569,15 @@
         });
 
         planContent.addEventListener('click', (e) => {
+            const card = e.target.closest('.task-card.clickable');
+            if (card && !e.target.closest('.actions-menu, .task-checkbox, input, label')) {
+                const task = studyPlan.tasks[card.dataset.date]?.find(t => t.id === card.dataset.id);
+                if (task && task.link) {
+                    window.open(task.link, '_blank');
+                }
+                return;
+            }
+
             const editBtn = e.target.closest('.task-edit-btn');
             const deleteBtn = e.target.closest('.task-delete-btn');
             const postponeBtn = e.target.closest('.task-postpone-btn');
@@ -1855,6 +1924,16 @@
                 } else {
                     e.target.value = e.target.options[0].value;
                 }
+            }
+        });
+
+        // NOVO: Listener para mostrar/esconder campos de PDF no modal de edição
+        document.getElementById('task-type').addEventListener('change', (e) => {
+            const pdfContainer = document.getElementById('pdf-progress-container');
+            if (e.target.value === 'pdf') {
+                pdfContainer.classList.remove('hidden');
+            } else {
+                pdfContainer.classList.add('hidden');
             }
         });
 
