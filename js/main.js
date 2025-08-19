@@ -32,20 +32,6 @@ if (sessionStorage.getItem('isAuthenticated') === 'true') {
     appContainer.classList.add('blurred');
 }
 
-passwordForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (passwordInput.value === 'passei2025') {
-        isAuthenticated = true;
-        sessionStorage.setItem('isAuthenticated', 'true');
-        passwordWall.classList.add('hidden');
-        appContainer.classList.remove('blurred');
-    } else {
-        passwordError.textContent = 'Senha incorreta.';
-        passwordInput.value = '';
-        setTimeout(() => { passwordError.textContent = ''; }, 2000);
-    }
-});
-
 // =================== LÓGICA DE TEMAS ===================
 const themeSelector = document.getElementById('theme-selector');
 const applyTheme = (theme) => {
@@ -58,8 +44,6 @@ const applyTheme = (theme) => {
         updateProgress();
     }
 };
-
-themeSelector.addEventListener('change', (e) => applyTheme(e.target.value));
 
 // =================== FUNÇÕES AUXILIARES DE DATA ===================
 function formatDateYMD(date) {
@@ -137,7 +121,6 @@ function closeModal(modalElement) {
 }
 
 // =================== LÓGICA PRINCIPAL DA APLICAÇÃO ===================
-// CORREÇÃO: A função agora recebe a lista de tarefas como parâmetro.
 function initializeStudyPlan(tasks) {
     let plan = { tasks: {}, reviews: {}, history: [], dailyGoals: {}, deletedTasks: {} };
     let combinedTasks = [...tasks]; 
@@ -183,7 +166,6 @@ const loadState = async () => {
             });
         } else {
             console.log("Nenhum plano encontrado, inicializando um novo a partir de data.js.");
-            // CORREÇÃO: Passamos 'allTasks' (que já foi carregado) como parâmetro.
             studyPlan = initializeStudyPlan(allTasks);
         }
     } catch (error) {
@@ -266,9 +248,6 @@ function createTaskCard(task, isOverdue = false) {
         ${actionsMenu}`;
     return card;
 }
-
-// ... (O restante do seu código de scheduleReviews, renderCalendar, updateProgress, etc. permanece igual)
-// ... (Colei o resto do código para garantir que tudo funcione)
 
 function scheduleReviews(completedTask) {
     const completionDate = new Date(completedTask.date + 'T03:00:00Z');
@@ -421,7 +400,7 @@ function renderRequiredPaceStats() {
     const dailyStatEl = document.getElementById('daily-progress-stat');
     const weeklyStatEl = document.getElementById('weekly-progress-stat');
     const examDate = new Date(systemSettings.examDate + 'T11:00:00Z');
-    const startDate = new Date(); // Today
+    const startDate = new Date();
     const totalDays = Math.ceil((examDate - startDate) / (1000 * 60 * 60 * 24));
     const totalWeeks = totalDays / 7;
     
@@ -545,69 +524,69 @@ const setupChart = () => {
 };
 
 function renderAllTasksTable() {
-        const tableBody = document.getElementById('all-tasks-table-body');
-        const resultsContainer = document.getElementById('results-count-container');
-        
-        const allTasksList = Object.values(studyPlan.tasks || {}).flat();
-        const allReviews = Object.values(studyPlan.reviews || {}).flat();
-        let itemsToShow = [...allTasksList, ...allReviews];
-        const totalItemsCount = itemsToShow.length;
+    const tableBody = document.getElementById('all-tasks-table-body');
+    const resultsContainer = document.getElementById('results-count-container');
+    
+    const allTasksList = Object.values(studyPlan.tasks || {}).flat();
+    const allReviews = Object.values(studyPlan.reviews || {}).flat();
+    let itemsToShow = [...allTasksList, ...allReviews];
+    const totalItemsCount = itemsToShow.length;
 
-        const subjectFilter = document.getElementById('filter-subject').value;
-        if (subjectFilter) itemsToShow = itemsToShow.filter(task => task.subject === subjectFilter);
-        
-        const typeFilter = document.getElementById('filter-type').value;
-        if (typeFilter) itemsToShow = itemsToShow.filter(task => task.type === typeFilter);
+    const subjectFilter = document.getElementById('filter-subject').value;
+    if (subjectFilter) itemsToShow = itemsToShow.filter(task => task.subject === subjectFilter);
+    
+    const typeFilter = document.getElementById('filter-type').value;
+    if (typeFilter) itemsToShow = itemsToShow.filter(task => task.type === typeFilter);
 
-        const notCompletedFilter = document.getElementById('filter-not-completed').checked;
-        if (notCompletedFilter) itemsToShow = itemsToShow.filter(task => !task.completed);
-        const completedFilter = document.getElementById('filter-completed').checked;
-        if (completedFilter) itemsToShow = itemsToShow.filter(task => task.completed);
-        const overdueFilter = document.getElementById('filter-overdue').checked;
-        if (overdueFilter) {
-            const todayStr = formatDateYMD(new Date());
-            itemsToShow = itemsToShow.filter(task => !task.completed && task.date < todayStr);
-        }
-        const reviewsOnlyFilter = document.getElementById('filter-reviews').checked;
-        if (reviewsOnlyFilter) itemsToShow = itemsToShow.filter(task => task.type.startsWith('review'));
-        const searchText = document.getElementById('all-tasks-search').value.toLowerCase();
-        if (searchText) itemsToShow = itemsToShow.filter(task => task.subject.toLowerCase().includes(searchText) || task.topic.toLowerCase().includes(searchText));
-        
-        resultsContainer.textContent = `Mostrando ${itemsToShow.length} de ${totalItemsCount} itens.`;
-
-        const sortBy = document.getElementById('sort-by').value;
-        itemsToShow.sort((a, b) => {
-            switch (sortBy) {
-                case 'date-desc': return new Date(b.date) - new Date(a.date);
-                case 'subject-asc': return a.subject.localeCompare(b.subject);
-                case 'subject-desc': return b.subject.localeCompare(a.subject);
-                default: return new Date(a.date) - new Date(b.date);
-            }
-        });
-
-        tableBody.innerHTML = itemsToShow.map(task => {
-            const typeIcon = task.type === 'video' 
-                ? `<svg title="Videoaula" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-500"><path d="m22 8-6 4 6 4V8Z"></path><rect x="2" y="6" width="14" height="12" rx="2" ry="2"></rect></svg>` 
-                : (task.type === 'pdf' 
-                    ? `<svg title="PDF" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`
-                    : (task.type === 'legis'
-                        ? `<svg title="Legislação" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22V2"></path><path d="M5 10.5c0-1.5 1.5-3 3-3s3 1.5 3 3-1.5 3-3 3-3-1.5-3-3z"></path><path d="M19 10.5c0-1.5-1.5-3-3-3s-3 1.5-3 3 1.5 3 3 3 3-1.5 3-3z"></path></svg>`
-                        : ''));
-
-            return `<tr>
-                        <td class="px-6 py-4"><input type="checkbox" class="task-select-checkbox h-4 w-4" data-id="${task.id}" data-date="${task.date}"></td>
-                        <td class="px-2 py-4">${typeIcon}</td>
-                        <td class="px-6 py-4">${formatDateDMY(task.date)}</td>
-                        <td class="px-6 py-4">${task.subject}</td>
-                        <td class="px-6 py-4">${task.lesson}</td>
-                        <td class="px-6 py-4">${task.topic}</td>
-                        <td class="px-6 py-4 flex items-center gap-2">
-                            <button class="action-btn task-edit-btn-table" data-id="${task.id}" data-date="${task.date}" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button>
-                            <button class="action-btn task-delete-btn-table" data-id="${task.id}" data-date="${task.date}" title="Excluir"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                        </td>
-                    </tr>`;
-        }).join('');
+    const notCompletedFilter = document.getElementById('filter-not-completed').checked;
+    if (notCompletedFilter) itemsToShow = itemsToShow.filter(task => !task.completed);
+    const completedFilter = document.getElementById('filter-completed').checked;
+    if (completedFilter) itemsToShow = itemsToShow.filter(task => task.completed);
+    const overdueFilter = document.getElementById('filter-overdue').checked;
+    if (overdueFilter) {
+        const todayStr = formatDateYMD(new Date());
+        itemsToShow = itemsToShow.filter(task => !task.completed && task.date < todayStr);
     }
+    const reviewsOnlyFilter = document.getElementById('filter-reviews').checked;
+    if (reviewsOnlyFilter) itemsToShow = itemsToShow.filter(task => task.type.startsWith('review'));
+    const searchText = document.getElementById('all-tasks-search').value.toLowerCase();
+    if (searchText) itemsToShow = itemsToShow.filter(task => task.subject.toLowerCase().includes(searchText) || task.topic.toLowerCase().includes(searchText));
+    
+    resultsContainer.textContent = `Mostrando ${itemsToShow.length} de ${totalItemsCount} itens.`;
+
+    const sortBy = document.getElementById('sort-by').value;
+    itemsToShow.sort((a, b) => {
+        switch (sortBy) {
+            case 'date-desc': return new Date(b.date) - new Date(a.date);
+            case 'subject-asc': return a.subject.localeCompare(b.subject);
+            case 'subject-desc': return b.subject.localeCompare(a.subject);
+            default: return new Date(a.date) - new Date(b.date);
+        }
+    });
+
+    tableBody.innerHTML = itemsToShow.map(task => {
+        const typeIcon = task.type === 'video' 
+            ? `<svg title="Videoaula" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-500"><path d="m22 8-6 4 6 4V8Z"></path><rect x="2" y="6" width="14" height="12" rx="2" ry="2"></rect></svg>` 
+            : (task.type === 'pdf' 
+                ? `<svg title="PDF" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`
+                : (task.type === 'legis'
+                    ? `<svg title="Legislação" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22V2"></path><path d="M5 10.5c0-1.5 1.5-3 3-3s3 1.5 3 3-1.5 3-3 3-3-1.5-3-3z"></path><path d="M19 10.5c0-1.5-1.5-3-3-3s-3 1.5-3 3 1.5 3 3 3 3-1.5 3-3z"></path></svg>`
+                    : ''));
+
+        return `<tr>
+                    <td class="px-6 py-4"><input type="checkbox" class="task-select-checkbox h-4 w-4" data-id="${task.id}" data-date="${task.date}"></td>
+                    <td class="px-2 py-4">${typeIcon}</td>
+                    <td class="px-6 py-4">${formatDateDMY(task.date)}</td>
+                    <td class="px-6 py-4">${task.subject}</td>
+                    <td class="px-6 py-4">${task.lesson}</td>
+                    <td class="px-6 py-4">${task.topic}</td>
+                    <td class="px-6 py-4 flex items-center gap-2">
+                        <button class="action-btn task-edit-btn-table" data-id="${task.id}" data-date="${task.date}" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button>
+                        <button class="action-btn task-delete-btn-table" data-id="${task.id}" data-date="${task.date}" title="Excluir"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                    </td>
+                </tr>`;
+    }).join('');
+}
 
 function renderHistoryTable() {
     const tableBody = document.getElementById('history-table-body');
@@ -651,7 +630,7 @@ function renderAllTasksStatistics() {
     const totalTasks = allTasksList.length;
     const subjectCounts = allTasksList.reduce((acc, task) => { acc[task.subject] = (acc[task.subject] || 0) + 1; return acc; }, {});
     
-    let statsHtml = `<div class="p-2 rounded-lg shadow stat-card bg-amber-400 text-white" data-subject="all"><p class="font-bold text-lg">${totalTasks}</p><p class="text-sm">Total de Aulas</p></div>`;
+    let statsHtml = `<div class="p-2 rounded-lg shadow stat-card bg-amber-400 text-white selected" data-subject="all"><p class="font-bold text-lg">${totalTasks}</p><p class="text-sm">Total de Aulas</p></div>`;
     
     Object.entries(subjectCounts).sort().forEach(([subject, count]) => { 
         statsHtml += `<div class="p-2 bg-white rounded-lg stat-card shadow" data-subject="${subject}"><p class="font-bold text-lg">${count}</p><p class="text-sm text-gray-600">${subject}</p></div>`; 
@@ -671,13 +650,11 @@ function renderOverdueTasks() {
         if (task.type === 'pdf') {
             overdueHours += 2.5;
         } else {
-            overdueHours += 0.75; // 45 min
+            overdueHours += 0.75;
         }
     });
 
-    let headerHTML = `<div class="flex justify-between items-center mb-4">
-                        <h2 class="text-2xl font-bold">Aulas Atrasadas</h2>
-                      </div>`;
+    let headerHTML = `<div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Aulas Atrasadas</h2></div>`;
 
     if (overdueTasks.length === 0) { 
         planContent.innerHTML = headerHTML + `<div class="text-center p-4 bg-green-50 rounded-lg border border-green-200"><p class="text-green-700 font-semibold">Parabéns! Nenhuma tarefa atrasada.</p></div>`; 
@@ -709,7 +686,7 @@ const startCountdown = () => {
         if (distance < 0) { 
             countdownEl.innerHTML = "PROVA REALIZADA!"; 
             countdownWeeksEl.innerHTML = "";
-            clearInterval(interval); 
+            if (interval) clearInterval(interval); 
             return; 
         }
         const days = Math.floor(distance / (1000 * 60 * 60 * 24));
@@ -802,7 +779,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     themeSelector.value = savedTheme;
     applyTheme(savedTheme);
 
-    // Função para inicializar a aplicação
     const initializeApp = async () => {
         await loadState(); 
         document.getElementById('exam-date-display').textContent = formatDateDMY(systemSettings.examDate);
@@ -823,7 +799,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             sessionStorage.setItem('isAuthenticated', 'true');
             passwordWall.classList.add('hidden');
             appContainer.classList.remove('blurred');
-            await initializeApp(); // Inicializa o app após o login
+            await initializeApp();
         } else {
             passwordError.textContent = 'Senha incorreta.';
             passwordInput.value = '';
@@ -864,9 +840,80 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderAllTasksStatistics();
         openModal(allTasksModal);
     });
+    
+    // Listener para o botão de Aulas Atrasadas
+    document.getElementById('view-overdue-tasks-btn').addEventListener('click', renderOverdueTasks);
 
-    // ... (restante dos event listeners)
+    // Listener para o calendário
+    document.getElementById('calendar-container').addEventListener('click', (e) => {
+        const dayElement = e.target.closest('.calendar-day');
+        if (dayElement) { viewDate = new Date(dayElement.dataset.date + 'T03:00:00Z'); renderPlan(viewDate); }
+        if (e.target.id === 'prev-month') { viewDate.setMonth(viewDate.getMonth() - 1); renderPlan(viewDate); }
+        if (e.target.id === 'next-month') { viewDate.setMonth(viewDate.getMonth() + 1); renderPlan(viewDate); }
+    });
 
+    // Listeners para os cards de tarefas (checkbox, editar, excluir)
+    planContent.addEventListener('change', (e) => {
+        if (e.target.matches('.task-checkbox')) {
+            const { id, date, type } = e.target.dataset;
+            let taskList = type.startsWith('review') ? studyPlan.reviews[date] : studyPlan.tasks[date];
+            const task = taskList?.find(t => t.id === id);
+            if (task) {
+                task.completed = e.target.checked;
+                if (task.completed) {
+                    addToHistory(task);
+                    if (!type.startsWith('review')) scheduleReviews(task);
+                } else {
+                    removeFromHistory(task.id);
+                    if (!type.startsWith('review')) unscheduleReviews(task);
+                }
+                updateProgress();
+                saveState();
+                renderPlan(viewDate);
+            }
+        }
+    });
+    
+    // Listeners para o modal "Gerenciar Aulas"
+    const tabs = ['active', 'history', 'trash'];
+    tabs.forEach(tabId => {
+        document.getElementById(`tab-${tabId}`).addEventListener('click', () => {
+            tabs.forEach(id => {
+                document.getElementById(`tab-${id}`).classList.remove('active');
+                document.getElementById(`tab-content-${id}`).classList.add('hidden');
+            });
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
+
+            if(tabId === 'history') renderHistoryTable();
+            if(tabId === 'trash') renderTrashTable();
+        });
+    });
+
+    document.getElementById('all-tasks-stats').addEventListener('click', (e) => {
+        const card = e.target.closest('.stat-card');
+        if (card) {
+            const subject = card.dataset.subject;
+            document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            document.getElementById('filter-subject').value = (subject === 'all') ? '' : subject;
+            renderAllTasksTable();
+        }
+    });
+
+    ['all-tasks-search', 'filter-subject', 'sort-by', 'filter-type', 'filter-not-completed', 'filter-completed', 'filter-overdue', 'filter-reviews'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('input', renderAllTasksTable);
+        }
+    });
+
+    document.getElementById('toggle-filters-btn').addEventListener('click', (e) => {
+        document.getElementById('more-filters-container').classList.toggle('hidden');
+        document.getElementById('filter-arrow').classList.toggle('rotate-180');
+    });
+
+    // Listener para o Modal de Sistema
     const openSystemBtn = document.getElementById('open-system-settings-btn');
     const saveSystemBtn = document.getElementById('save-system-settings-btn');
     const subjectContainer = document.getElementById('subject-list-container');
