@@ -121,44 +121,26 @@ function showConfirmation(message, onConfirm) {
 
 // =================== CONTROLE DE MODAIS E SCROLL ===================
 function openModal(modalElement) {
-    modalElement.classList.remove('hidden');
-    document.body.classList.add('modal-open');
+    if (modalElement) {
+        modalElement.classList.remove('hidden');
+        document.body.classList.add('modal-open');
+    }
 }
 
 function closeModal(modalElement) {
-    modalElement.classList.add('hidden');
-    if (document.querySelectorAll('.modal:not(.hidden)').length === 0) {
-        document.body.classList.remove('modal-open');
+    if (modalElement) {
+        modalElement.classList.add('hidden');
+        if (document.querySelectorAll('.modal:not(.hidden)').length === 0) {
+            document.body.classList.remove('modal-open');
+        }
     }
 }
 
 // =================== LÓGICA PRINCIPAL DA APLICAÇÃO ===================
-function initializeStudyPlan() {
+// CORREÇÃO: A função agora recebe a lista de tarefas como parâmetro.
+function initializeStudyPlan(tasks) {
     let plan = { tasks: {}, reviews: {}, history: [], dailyGoals: {}, deletedTasks: {} };
-    let combinedTasks = [...allTasks]; 
-
-    const legislacaoMunicipalTasks = [
-        { subject: 'Legislação Municipal', lesson: 'L1', topic: 'Lei Orgânica do Município de Uberlândia - Art. 1º ao 15º', type: 'legis' },
-        { subject: 'Legislação Municipal', lesson: 'L2', topic: 'Lei Orgânica do Município de Uberlândia - Art. 16º ao 30º', type: 'legis' },
-        { subject: 'Legislação Municipal', lesson: 'L3', topic: 'Lei Orgânica - Competências do Município', type: 'legis' },
-        { subject: 'Legislação Municipal', lesson: 'L4', topic: 'Lei Orgânica - Servidores Públicos', type: 'legis' },
-        { subject: 'Legislação Municipal', lesson: 'L5', topic: 'Estatuto dos Servidores (LC nº 40/1992) - Disposições Preliminares', type: 'legis' },
-        { subject: 'Legislação Municipal', lesson: 'L6', topic: 'Estatuto dos Servidores - Direitos e Vantagens', type: 'legis' },
-        { subject: 'Legislação Municipal', lesson: 'L7', topic: 'Estatuto dos Servidores - Regime Disciplinar', type: 'legis' },
-        { subject: 'Legislação Municipal', lesson: 'L8', topic: 'Estatuto dos Servidores - Responsabilidades', type: 'legis' },
-        { subject: 'Legislação Municipal', lesson: 'L9', topic: 'Plano de Cargos e Carreiras (LC nº 671/2018) - Estrutura Geral', type: 'legis' },
-        { subject: 'Legislação Municipal', lesson: 'L10', topic: 'Revisão Geral - Legislação Municipal', type: 'legis' },
-    ];
-    
-    let startDate = new Date('2025-08-25T03:00:00Z');
-    legislacaoMunicipalTasks.forEach((task, index) => {
-        const week = index < 8 ? index : index - 2;
-        const taskDate = addDays(startDate, week * 7);
-        combinedTasks.push({
-            ...task,
-            date: formatDateYMD(taskDate)
-        });
-    });
+    let combinedTasks = [...tasks]; 
 
     combinedTasks.forEach(task => {
         const id = generateUniqueId(task);
@@ -189,11 +171,10 @@ const saveState = () => {
 };
 
 const loadState = async () => {
-    // Carregar plano de estudos
     const docRef = db.collection("progresso").doc("meuPlano");
     try {
         const doc = await docRef.get();
-        if (doc.exists && doc.data().tasks) { 
+        if (doc.exists && doc.data().tasks && Object.keys(doc.data().tasks).length > 0) { 
             studyPlan = doc.data();
             Object.values(studyPlan.tasks).flat().forEach(task => {
                 if (!task.originalDate) {
@@ -201,30 +182,27 @@ const loadState = async () => {
                 }
             });
         } else {
-            console.log("Nenhum plano encontrado, inicializando um novo.");
-            studyPlan = initializeStudyPlan();
+            console.log("Nenhum plano encontrado, inicializando um novo a partir de data.js.");
+            // CORREÇÃO: Passamos 'allTasks' (que já foi carregado) como parâmetro.
+            studyPlan = initializeStudyPlan(allTasks);
         }
     } catch (error) {
         console.error("Erro ao carregar plano: ", error);
-        studyPlan = initializeStudyPlan();
+        studyPlan = initializeStudyPlan(allTasks);
     }
 
-    // Carregar configurações do sistema
     const settingsDoc = await db.collection("progresso").doc("configuracoes").get();
     if (settingsDoc.exists) {
         systemSettings = settingsDoc.data();
     } else {
-        // Inicializar configurações pela primeira vez
         const allTasksList = Object.values(studyPlan.tasks || {}).flat();
         const subjects = [...new Set(allTasksList.map(task => task.subject))];
         subjects.forEach(subject => {
-            // Por padrão, legislação não conta para o progresso
             const counts = subject !== 'Legislação Municipal';
             systemSettings.subjects[subject] = { countsTowardsProgress: counts };
         });
     }
     
-    // Salvar estado inicial caso tenha sido criado
     saveState();
 };
 
@@ -289,7 +267,9 @@ function createTaskCard(task, isOverdue = false) {
     return card;
 }
 
-// =================== LÓGICA DE REVISÕES E HISTÓRICO ===================
+// ... (O restante do seu código de scheduleReviews, renderCalendar, updateProgress, etc. permanece igual)
+// ... (Colei o resto do código para garantir que tudo funcione)
+
 function scheduleReviews(completedTask) {
     const completionDate = new Date(completedTask.date + 'T03:00:00Z');
     const reviewDays = { 'review-r1': 1, 'review-r3': 7, 'review-r5': 30 };
@@ -335,7 +315,6 @@ function removeFromHistory(taskId) {
     studyPlan.history = studyPlan.history.filter(entry => entry.taskId !== taskId);
 }
 
-// =================== RENDERIZAÇÃO DA UI ===================
 function renderCalendar(date) {
     const calendarContainer = document.getElementById('calendar-container');
     const month = date.getMonth();
@@ -399,7 +378,6 @@ const renderPlan = (date) => {
     }
 };
 
-// =================== LÓGICA DE PROGRESSO E GRÁFICOS ===================
 const updateProgress = () => {
     const allStudyTasks = Object.values(studyPlan.tasks || {}).flat()
         .filter(t => systemSettings.subjects[t.subject]?.countsTowardsProgress !== false);
@@ -565,11 +543,6 @@ const setupChart = () => {
         }
     });
 };
-
-// =================== LÓGICA DOS MODAIS ===================
-// (Funções de renderização de tabelas, etc. - O código é longo e permanece o mesmo)
-// ... (O restante do seu código de renderAllTasksTable, renderHistoryTable, etc., vai aqui)
-// ... (Colei o resto do código para garantir que tudo funcione)
 
 function renderAllTasksTable() {
         const tableBody = document.getElementById('all-tasks-table-body');
@@ -822,9 +795,6 @@ function shiftAllTasks(days) {
     renderPlan(viewDate);
 }
 
-// ... E assim por diante para o restante das funções ...
-// O código completo está no arquivo original.
-
 // =================== EVENT LISTENERS (PONTO DE IGNIÇÃO) ===================
 document.addEventListener('DOMContentLoaded', async () => {
     
@@ -832,23 +802,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     themeSelector.value = savedTheme;
     applyTheme(savedTheme);
 
-    if (isAuthenticated) {
+    // Função para inicializar a aplicação
+    const initializeApp = async () => {
         await loadState(); 
         document.getElementById('exam-date-display').textContent = formatDateDMY(systemSettings.examDate);
         setupChart();
         renderPlan(viewDate);
         updateProgress();
         startCountdown();
+    };
+
+    if (isAuthenticated) {
+        await initializeApp();
     }
 
-    passwordForm.addEventListener('submit', async () => {
-        if (isAuthenticated) {
-            await loadState();
-            document.getElementById('exam-date-display').textContent = formatDateDMY(systemSettings.examDate);
-            setupChart();
-            renderPlan(viewDate);
-            updateProgress();
-            startCountdown();
+    passwordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (passwordInput.value === 'passei2025') {
+            isAuthenticated = true;
+            sessionStorage.setItem('isAuthenticated', 'true');
+            passwordWall.classList.add('hidden');
+            appContainer.classList.remove('blurred');
+            await initializeApp(); // Inicializa o app após o login
+        } else {
+            passwordError.textContent = 'Senha incorreta.';
+            passwordInput.value = '';
+            setTimeout(() => { passwordError.textContent = ''; }, 2000);
         }
     });
 
@@ -872,10 +851,22 @@ document.addEventListener('DOMContentLoaded', async () => {
          renderPlan(viewDate);
     });
 
-    // ... (restante dos event listeners originais)
-    document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', (e) => closeModal(e.target.closest('.modal'))));
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', (e) => closeModal(e.target.closest('.modal')))
+    });
+    
+    document.getElementById('manage-tasks-btn').addEventListener('click', () => {
+        const allTasksList = Object.values(studyPlan.tasks || {}).flat();
+        const subjects = [...new Set(allTasksList.map(task => task.subject))].sort();
+        const filterSelect = document.getElementById('filter-subject');
+        filterSelect.innerHTML = '<option value="">Todas</option>' + subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+        renderAllTasksTable();
+        renderAllTasksStatistics();
+        openModal(allTasksModal);
+    });
 
-    // NOVO: Lógica para o Modal de Sistema
+    // ... (restante dos event listeners)
+
     const openSystemBtn = document.getElementById('open-system-settings-btn');
     const saveSystemBtn = document.getElementById('save-system-settings-btn');
     const subjectContainer = document.getElementById('subject-list-container');
@@ -888,7 +879,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         subjectContainer.innerHTML = '';
         allSubjects.forEach(subject => {
             if (systemSettings.subjects[subject] === undefined) {
-                systemSettings.subjects[subject] = { countsTowardsProgress: true };
+                systemSettings.subjects[subject] = { countsTowardsProgress: subject !== 'Legislação Municipal' };
             }
             const isChecked = systemSettings.subjects[subject].countsTowardsProgress;
             const div = document.createElement('div');
@@ -923,5 +914,4 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         closeModal(systemSettingsModal);
     });
-
 });
