@@ -320,51 +320,51 @@
         const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         let studyPlan = {};
-        const GAMIFICATION_VERSION = 26; // Versão atual da estrutura de gamificação
+        const GAMIFICATION_VERSION = 27; // Versão atual da estrutura de gamificação
         const fileList = `
-            /assets/habitica-images-main/gear/armoire/shop/shop_armor_armoire_admiralsUniform.png
-            /assets/habitica-images-main/gear/armoire/shop/shop_head_armoire_admiralsBicorne.png
-            /assets/habitica-images-main/gear/armoire/shop/shop_weapon_armoire_astronomersTelescope.png
-            /assets/habitica-images-main/gear/armor/shop/shop_armor_warrior_1.png
-            /assets/habitica-images-main/gear/armor/shop/shop_armor_warrior_2.png
-            /assets/habitica-images-main/gear/armor/shop/shop_armor_warrior_3.png
-            /assets/habitica-images-main/gear/armor/shop/shop_armor_warrior_4.png
-            /assets/habitica-images-main/gear/armor/shop/shop_armor_warrior_5.png
-            /assets/habitica-images-main/gear/armor/shop/shop_armor_rogue_1.png
-            /assets/habitica-images-main/gear/armor/shop/shop_armor_rogue_2.png
-            /assets/habitica-images-main/gear/armor/shop/shop_armor_rogue_3.png
-            /assets/habitica-images-main/gear/armor/shop/shop_armor_rogue_4.png
-            /assets/habitica-images-main/gear/armor/shop/shop_armor_rogue_5.png
-            /assets/habitica-images-main/gear/head/shop/shop_head_warrior_1.png
-            /assets/habitica-images-main/gear/head/shop/shop_head_warrior_2.png
-            /assets/habitica-images-main/gear/head/shop/shop_head_warrior_3.png
-            /assets/habitica-images-main/gear/head/shop/shop_head_warrior_4.png
-            /assets/habitica-images-main/gear/head/shop/shop_head_warrior_5.png
-            /assets/habitica-images-main/gear/head/shop/shop_head_rogue_1.png
-            /assets/habitica-images-main/gear/head/shop/shop_head_rogue_2.png
-            /assets/habitica-images-main/gear/head/shop/shop_head_rogue_3.png
-            /assets/habitica-images-main/gear/head/shop/shop_head_rogue_4.png
-            /assets/habitica-images-main/gear/head/shop/shop_head_rogue_5.png
-            /assets/habitica-images-main/gear/weapon/shop/shop_weapon_warrior_1.png
-            /assets/habitica-images-main/gear/weapon/shop/shop_weapon_warrior_2.png
-            /assets/habitica-images-main/gear/weapon/shop/shop_weapon_warrior_3.png
-            /assets/habitica-images-main/gear/weapon/shop/shop_weapon_warrior_4.png
-            /assets/habitica-images-main/gear/weapon/shop/shop_weapon_warrior_5.png
-            /assets/habitica-images-main/gear/weapon/shop/shop_weapon_rogue_1.png
-            /assets/habitica-images-main/gear/weapon/shop/shop_weapon_rogue_2.png
-            /assets/habitica-images-main/gear/weapon/shop/shop_weapon_rogue_3.png
-            /assets/habitica-images-main/gear/weapon/shop/shop_weapon_rogue_4.png
-            /assets/habitica-images-main/gear/weapon/shop/shop_weapon_rogue_5.png
-            /assets/habitica-images-main/gear/shield/shop/shop_shield_warrior_1.png
-            /assets/habitica-images-main/gear/shield/shop/shop_shield_warrior_2.png
-            /assets/habitica-images-main/gear/shield/shop/shop_shield_warrior_3.png
-            /assets/habitica-images-main/gear/shield/shop/shop_shield_warrior_4.png
-            /assets/habitica-images-main/gear/shield/shop/shop_shield_warrior_5.png
-            /assets/habitica-images-main/gear/shield/shop/shop_shield_rogue_1.png
-            /assets/habitica-images-main/gear/shield/shop/shop_shield_rogue_2.png
-            /assets/habitica-images-main/gear/shield/shop/shop_shield_rogue_3.png
-            /assets/habitica-images-main/gear/shield/shop/shop_shield_rogue_4.png
-            /assets/habitica-images-main/gear/shield/shop/shop_shield_rogue_5.png
+            assets/habitica-images-main/gear/armoire/shop/shop_armor_armoire_admiralsUniform.png
+            assets/habitica-images-main/gear/armoire/shop/shop_head_armoire_admiralsBicorne.png
+            assets/habitica-images-main/gear/armoire/shop/shop_weapon_armoire_astronomersTelescope.png
+            assets/habitica-images-main/gear/armor/shop/shop_armor_warrior_1.png
+            assets/habitica-images-main/gear/armor/shop/shop_armor_warrior_2.png
+            assets/habitica-images-main/gear/armor/shop/shop_armor_warrior_3.png
+            assets/habitica-images-main/gear/armor/shop/shop_armor_warrior_4.png
+            assets/habitica-images-main/gear/armor/shop/shop_armor_warrior_5.png
+            assets/habitica-images-main/gear/armor/shop/shop_armor_rogue_1.png
+            assets/habitica-images-main/gear/armor/shop/shop_armor_rogue_2.png
+            assets/habitica-images-main/gear/armor/shop/shop_armor_rogue_3.png
+            assets/habitica-images-main/gear/armor/shop/shop_armor_rogue_4.png
+            assets/habitica-images-main/gear/armor/shop/shop_armor_rogue_5.png
+            assets/habitica-images-main/gear/head/shop/shop_head_warrior_1.png
+            assets/habitica-images-main/gear/head/shop/shop_head_warrior_2.png
+            assets/habitica-images-main/gear/head/shop/shop_head_warrior_3.png
+            assets/habitica-images-main/gear/head/shop/shop_head_warrior_4.png
+            assets/habitica-images-main/gear/head/shop/shop_head_warrior_5.png
+            assets/habitica-images-main/gear/head/shop/shop_head_rogue_1.png
+            assets/habitica-images-main/gear/head/shop/shop_head_rogue_2.png
+            assets/habitica-images-main/gear/head/shop/shop_head_rogue_3.png
+            assets/habitica-images-main/gear/head/shop/shop_head_rogue_4.png
+            assets/habitica-images-main/gear/head/shop/shop_head_rogue_5.png
+            assets/habitica-images-main/gear/weapon/shop/shop_weapon_warrior_1.png
+            assets/habitica-images-main/gear/weapon/shop/shop_weapon_warrior_2.png
+            assets/habitica-images-main/gear/weapon/shop/shop_weapon_warrior_3.png
+            assets/habitica-images-main/gear/weapon/shop/shop_weapon_warrior_4.png
+            assets/habitica-images-main/gear/weapon/shop/shop_weapon_warrior_5.png
+            assets/habitica-images-main/gear/weapon/shop/shop_weapon_rogue_1.png
+            assets/habitica-images-main/gear/weapon/shop/shop_weapon_rogue_2.png
+            assets/habitica-images-main/gear/weapon/shop/shop_weapon_rogue_3.png
+            assets/habitica-images-main/gear/weapon/shop/shop_weapon_rogue_4.png
+            assets/habitica-images-main/gear/weapon/shop/shop_weapon_rogue_5.png
+            assets/habitica-images-main/gear/shield/shop/shop_shield_warrior_1.png
+            assets/habitica-images-main/gear/shield/shop/shop_shield_warrior_2.png
+            assets/habitica-images-main/gear/shield/shop/shop_shield_warrior_3.png
+            assets/habitica-images-main/gear/shield/shop/shop_shield_warrior_4.png
+            assets/habitica-images-main/gear/shield/shop/shop_shield_warrior_5.png
+            assets/habitica-images-main/gear/shield/shop/shop_shield_rogue_1.png
+            assets/habitica-images-main/gear/shield/shop/shop_shield_rogue_2.png
+            assets/habitica-images-main/gear/shield/shop/shop_shield_rogue_3.png
+            assets/habitica-images-main/gear/shield/shop/shop_shield_rogue_4.png
+            assets/habitica-images-main/gear/shield/shop/shop_shield_rogue_5.png
         `.trim().split('\n').map(line => line.trim());
 
         // =================== DEFINIÇÕES DE FUNÇÕES ===================
@@ -438,7 +438,7 @@
                         { id: 'bts_1', name: 'Sapatos da Lógica', subject: 'Raciocínio Lógico-Matemático', tier: 1, power: 10, description: 'Permitem dar os primeiros passos firmes na resolução de problemas.', imageUrl: './assets/habitica-images-main/gear/armoire/shop/shop_shoes_rogue_1.png' },
                         { id: 'bts_2', name: 'Botas da Dedução', subject: 'Raciocínio Lógico-Matemático', tier: 2, power: 25, description: 'Aumentam a velocidade para chegar a conclusões válidas.', imageUrl: './assets/habitica-images-main/gear/armoire/shop/shop_shoes_warrior_2.png' },
                         { id: 'bts_3', name: 'Grevas da Análise Combinatória', subject: 'Raciocínio Lógico-Matemático', tier: 3, power: 50, description: 'Protegem contra as armadilhas de múltiplas possibilidades.', imageUrl: './assets/habitica-images-main/gear/armoire/shop/shop_shoes_warrior_3.png' },
-                        { id: 'bts_4', name: 'Sabatons da Probabilidade', subject: 'Raciocínio Lógico-Matemático', tier: 4, power: 80, description: 'Permitem caminhar com segurança, calculando os riscos e as chances.', imageUrl: './assets/habitica-imagens-main/gear/armoire/shop/shop_shoes_armoire_4.png' }
+                        { id: 'bts_4', name: 'Sabatons da Probabilidade', subject: 'Raciocínio Lógico-Matemático', tier: 4, power: 80, description: 'Permitem caminhar com segurança, calculando os riscos e as chances.', imageUrl: './assets/habitica-images-main/gear/armoire/shop/shop_shoes_armoire_4.png' }
                     ]
                 }
             };
