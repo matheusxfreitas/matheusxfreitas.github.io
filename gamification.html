@@ -3,79 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jornada do Herói</title>
+    <title>Missão da Aprovação - Painel de Gamificação</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/gamification.css">
+    <link id="favicon" rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='50' font-size='70' text-anchor='middle' dy='.3em'%3E🏆%3C/text%3E%3C/svg%3E">
+    <meta name="theme-color" content="#D5A021">
+
+    <style>
+        :root {
+            --bg-color: #FDFBF8;
+            --card-bg-color: #FFFFFF;
+            --text-color: #1f2937;
+            --muted-text-color: #6b7280;
+            --header-text-color: #1f2937;
+            --border-color: #e5e7eb;
+            --accent-color: #D5A021;
+            --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+        }
+        html.theme-dark {
+            --bg-color: #111827;
+            --card-bg-color: #1f2937;
+            --text-color: #d1d5db;
+            --muted-text-color: #9ca3af;
+            --header-text-color: #ffffff;
+            --border-color: #374151;
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-color);
+        }
+        .card {
+            background-color: var(--card-bg-color);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--card-shadow);
+        }
+        .slot {
+            background-color: var(--bg-color);
+            border: 2px dashed var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .slot:hover {
+            border-color: var(--accent-color);
+        }
+        .slot .slot-name {
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: var(--muted-text-color);
+            font-weight: 500;
+        }
+        .item-card {
+            transition: all 0.2s ease-in-out;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+        .item-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .item-card.equipped {
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 10px rgba(213, 160, 33, 0.3);
+        }
+        .item-card:not(.unlocked) {
+            opacity: 0.5;
+            filter: grayscale(80%);
+            cursor: not-allowed;
+        }
+        .progress-bar-bg {
+            background-color: var(--border-color);
+        }
+        .progress-bar-fill {
+            background-color: var(--accent-color);
+            transition: width 0.5s ease-in-out;
+        }
+        .modal.hidden { display: none; }
+
+        .item-sprite {
+            width: 90px;
+            height: 90px;
+            transform: scale(0.75);
+            image-rendering: pixelated;
+            object-fit: contain;
+        }
+        .modal-item-sprite {
+            width: 120px;
+            height: 120px;
+            image-rendering: pixelated;
+            object-fit: contain;
+        }
+        .power-common { color: var(--text-color); }
+        .power-uncommon { color: #16a34a; } /* green-600 */
+        .power-rare { color: #2563eb; } /* blue-600 */
+        .power-legendary { color: #9333ea; } /* purple-600 */
+
+        .control-button {
+            background-color: var(--card-bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            box-shadow: var(--card-shadow);
+            transition: all 0.2s ease;
+        }
+        .control-button:hover { 
+            border-color: var(--accent-color);
+            transform: translateY(-1px);
+        }
+    </style>
 </head>
 <body class="antialiased">
 
-    <div id="app-container" class="min-h-screen flex flex-col items-center justify-center p-4 relative">
-        <!-- Botão de Desenvolvedor -->
-        <button id="dev-button" class="absolute top-4 right-4 p-2 rounded-full card hover:bg-gray-100 z-20">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"></path></svg>
-        </button>
+    <div id="app-container" class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <header class="mb-8 bg-white p-6 rounded-lg card">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <div class="bg-amber-400 text-white w-12 h-12 flex items-center justify-center rounded-lg">
+                        <span class="text-2xl">🏆</span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold">Missão da Aprovação</h1>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                     <a href="./index.html" class="control-button text-sm font-semibold py-2 px-4 rounded-lg flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                        Painel de Estudos
+                    </a>
+                    <a href="./questoes.html" class="control-button text-sm font-semibold py-2 px-4 rounded-lg flex items-center gap-2 text-green-600 border-green-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 17l4 4 4-4"/><path d="M12 3v18"/><path d="M20 13v-3a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/></svg>
+                        Questões
+                    </a>
+                    <button id="create-item-btn" class="control-button text-sm font-semibold py-2 px-4 rounded-lg text-blue-600 border-blue-300">Criar Itens</button>
+                    <button id="dev-button" class="control-button p-2 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </header>
 
-        <div class="w-full max-w-5xl mx-auto">
-            <header class="text-center mb-8">
-                <h1 class="text-4xl font-bold" style="color: var(--header-text-color);">Jornada do Herói Psicólogo</h1>
-                <p class="text-lg" style="color: var(--muted-text-color);">Sua evolução nos estudos, refletida em seu poder.</p>
-                 <a href="./index.html" class="inline-block mt-4 text-sm font-semibold py-2 px-4 rounded-lg" style="color: var(--accent-color); border: 1px solid var(--accent-color);">Voltar ao Painel de Estudos</a>
-            </header>
-
-            <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Coluna Esquerda: Avatar -->
-                <section class="lg:col-span-1 card rounded-lg p-6">
-                    <h2 class="text-2xl font-bold mb-4 text-center">Seu Herói</h2>
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Coluna Esquerda: Avatar e Progresso -->
+            <aside class="lg:col-span-1 space-y-8">
+                <section class="card rounded-lg p-6">
+                    <h2 class="text-2xl font-bold mb-4 text-center">Seu Personagem</h2>
                     <div class="grid grid-cols-3 gap-4">
                         <div></div>
-                        <div id="slot-helmet" class="aspect-square slot rounded-md">
+                        <div id="slot-helmet" data-slot="helmet" class="aspect-square slot rounded-md">
                             <span class="slot-name">Elmo</span>
                         </div>
                         <div></div>
-                        <div id="slot-weapon" class="aspect-square slot rounded-md">
+                        <div id="slot-weapon" data-slot="weapon" class="aspect-square slot rounded-md">
                              <span class="slot-name">Arma</span>
                         </div>
-                        <div id="slot-armor" class="aspect-square slot rounded-md">
+                        <div id="slot-armor" data-slot="armor" class="aspect-square slot rounded-md">
                              <span class="slot-name">Armadura</span>
                         </div>
-                        <div id="slot-shield" class="aspect-square slot rounded-md">
+                        <div id="slot-shield" data-slot="shield" class="aspect-square slot rounded-md">
                              <span class="slot-name">Escudo</span>
                         </div>
                         <div></div>
-                        <div id="slot-pants" class="aspect-square slot rounded-md">
+                        <div id="slot-pants" data-slot="pants" class="aspect-square slot rounded-md">
                              <span class="slot-name">Calças</span>
                         </div>
                         <div></div>
                         <div></div>
-                        <div id="slot-boots" class="aspect-square slot rounded-md">
+                        <div id="slot-boots" data-slot="boots" class="aspect-square slot rounded-md">
                              <span class="slot-name">Botas</span>
                         </div>
                         <div></div>
                     </div>
-                </section>
-
-                <!-- Coluna Direita: Itens e Progresso -->
-                <section class="lg:col-span-2 card rounded-lg p-6">
-                    <h2 class="text-2xl font-bold mb-4">Arsenal do Conhecimento</h2>
-                    <div id="inventory-container" class="space-y-6">
-                        <!-- Itens serão populados pelo JS -->
+                    <div class="mt-6">
+                        <h3 class="text-center font-semibold mb-2">Experiência</h3>
+                        <div class="w-full progress-bar-bg rounded-full h-4">
+                            <div id="xp-bar" class="progress-bar-fill h-4 rounded-full flex items-center justify-center text-xs font-bold text-white" style="width: 0%">0/100</div>
+                        </div>
                     </div>
                 </section>
-            </main>
-        </div>
+                 <section id="subject-progress-container" class="card rounded-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 text-center">Progresso por Matéria</h3>
+                    <div id="subject-progress-bars" class="space-y-4"></div>
+                </section>
+            </aside>
+
+            <!-- Coluna Direita: Inventário -->
+            <section class="lg:col-span-2 card rounded-lg p-6">
+                <h2 class="text-2xl font-bold mb-4">Inventário</h2>
+                <div id="inventory-container" class="space-y-6">
+                    <!-- Itens serão populados pelo JS -->
+                </div>
+            </section>
+        </main>
     </div>
 
-    <!-- Modal de Desenvolvedor -->
+    <!-- Modals -->
     <div id="dev-modal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-40 p-4">
         <div class="w-full max-w-md card rounded-lg p-6">
             <h2 class="text-xl font-bold mb-4">Ferramentas de Desenvolvedor</h2>
             <p class="text-sm text-gray-500 mb-4">Simule o progresso para testar a aquisição de itens. Isso <strong>não</strong> salvará os dados.</p>
-            <div id="dev-controls-container" class="space-y-4 max-h-64 overflow-y-auto pr-2">
-                <!-- Controles de simulação aqui -->
-            </div>
+            <div id="dev-controls-container" class="space-y-4 max-h-64 overflow-y-auto pr-2"></div>
             <div class="flex justify-between items-center mt-6">
                 <button id="dev-reset-btn" class="text-sm font-semibold py-2 px-4 rounded-lg text-red-600">Resetar</button>
                 <div class="flex gap-4">
@@ -86,12 +220,650 @@
         </div>
     </div>
 
+    <div id="item-details-modal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+        <div class="w-full max-w-md card rounded-lg">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 id="item-modal-name" class="text-xl font-bold">Detalhes do Item</h3>
+                <button id="item-modal-close" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+            </div>
+            <div class="p-6 text-center">
+                <img id="item-modal-image" src="" alt="Item" class="mx-auto modal-item-sprite">
+                <p class="mt-4 font-semibold">Poder: <span id="item-modal-power" class="font-bold"></span></p>
+                <p id="item-modal-description" class="mt-2 text-sm text-gray-600"></p>
+                <div class="mt-6">
+                    <button id="item-modal-equip-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Equipar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="create-item-modal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="text-xl font-bold">Arsenal do Herói - Criar Item</h3>
+                <button id="create-modal-close" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+            </div>
+            <div class="flex-grow p-6 overflow-y-auto">
+                 <div class="flex flex-wrap gap-4 mb-6 pb-6 border-b">
+                    <h2 class="w-full text-xl font-bold mb-2">Filtros de Sprites</h2>
+                    <div>
+                        <label for="filter-type" class="block text-sm font-medium text-gray-700">Tipo de Equipamento</label>
+                        <select id="filter-type" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm rounded-md">
+                            <option value="all">Todos</option>
+                            <option value="head">Elmo</option>
+                            <option value="weapon">Arma</option>
+                            <option value="armor">Armadura</option>
+                            <option value="shield">Escudo</option>
+                            <option value="armoire">Especiais (Armoire)</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="sprite-gallery" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="create-item-form-modal" class="modal hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[60]">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-md">
+             <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="text-xl font-bold">Criar Novo Equipamento</h3>
+                <button id="create-form-close" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+            </div>
+            <form id="create-item-form" class="p-6 space-y-4">
+                <div class="flex justify-center items-center p-4 bg-gray-100 rounded-md">
+                    <img id="modal-sprite-preview" src="" alt="Sprite Preview" class="modal-item-sprite">
+                </div>
+                <input type="hidden" id="item-image-url">
+                <div>
+                    <label for="item-name" class="block text-sm font-medium text-gray-700">Nome do Equipamento</label>
+                    <input type="text" id="item-name" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-2 px-3">
+                </div>
+                 <div>
+                    <label for="item-description-form" class="block text-sm font-medium text-gray-700">Descrição</label>
+                    <textarea id="item-description-form" rows="2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-2 px-3"></textarea>
+                </div>
+                <div>
+                    <label for="item-subject" class="block text-sm font-medium text-gray-700">Matéria Associada</label>
+                    <select id="item-subject" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-2 px-3"></select>
+                </div>
+                <div>
+                    <label for="item-tier" class="block text-sm font-medium text-gray-700">Nível (Tier)</label>
+                    <input type="number" id="item-tier" min="1" max="10" value="1" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-2 px-3">
+                </div>
+                 <div>
+                    <label for="item-power" class="block text-sm font-medium text-gray-700">Poder (1-100)</label>
+                    <input type="number" id="item-power" min="1" max="100" value="10" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-2 px-3">
+                </div>
+                <div class="flex justify-end pt-4">
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded">Salvar Equipamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-    <script src="js/gamedata.js"></script>
+    <script>
+        // =================== CONFIGURAÇÃO E VARIÁVEIS GLOBAIS ===================
+        const firebaseConfig = {
+            apiKey: "AIzaSyA050ckDIuD1ujjyRee81r0Vv_jygoHs1Q",
+            authDomain: "meu-painel-de-estudos-v2.firebaseapp.com",
+            projectId: "meu-painel-de-estudos-v2",
+            storageBucket: "meu-painel-de-estudos-v2.firebasestorage.app",
+            messagingSenderId: "889152606734",
+            appId: "1:889152606734:web:09457849b695f3f1d4625f"
+        };
 
-    <script src="js/gamification.js"></script>
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        let studyPlan = {};
+        const GAMIFICATION_VERSION = 24; // Versão atual da estrutura de gamificação
+        const fileList = `
+            habitica-images-main/gear/armoire/shop/shop_armor_armoire_admiralsUniform.png
+            habitica-images-main/gear/armoire/shop/shop_head_armoire_admiralsBicorne.png
+            habitica-images-main/gear/armoire/shop/shop_weapon_armoire_astronomersTelescope.png
+            habitica-images-main/gear/armor/shop/shop_armor_warrior_1.png
+            habitica-images-main/gear/armor/shop/shop_armor_warrior_2.png
+            habitica-images-main/gear/armor/shop/shop_armor_warrior_3.png
+            habitica-images-main/gear/armor/shop/shop_armor_warrior_4.png
+            habitica-images-main/gear/armor/shop/shop_armor_warrior_5.png
+            habitica-images-main/gear/armor/shop/shop_armor_rogue_1.png
+            habitica-images-main/gear/armor/shop/shop_armor_rogue_2.png
+            habitica-images-main/gear/armor/shop/shop_armor_rogue_3.png
+            habitica-images-main/gear/armor/shop/shop_armor_rogue_4.png
+            habitica-images-main/gear/armor/shop/shop_armor_rogue_5.png
+            habitica-images-main/gear/head/shop/shop_head_warrior_1.png
+            habitica-images-main/gear/head/shop/shop_head_warrior_2.png
+            habitica-images-main/gear/head/shop/shop_head_warrior_3.png
+            habitica-images-main/gear/head/shop/shop_head_warrior_4.png
+            habitica-images-main/gear/head/shop/shop_head_warrior_5.png
+            habitica-images-main/gear/head/shop/shop_head_rogue_1.png
+            habitica-images-main/gear/head/shop/shop_head_rogue_2.png
+            habitica-images-main/gear/head/shop/shop_head_rogue_3.png
+            habitica-images-main/gear/head/shop/shop_head_rogue_4.png
+            habitica-images-main/gear/head/shop/shop_head_rogue_5.png
+            habitica-images-main/gear/weapon/shop/shop_weapon_warrior_1.png
+            habitica-images-main/gear/weapon/shop/shop_weapon_warrior_2.png
+            habitica-images-main/gear/weapon/shop/shop_weapon_warrior_3.png
+            habitica-images-main/gear/weapon/shop/shop_weapon_warrior_4.png
+            habitica-images-main/gear/weapon/shop/shop_weapon_warrior_5.png
+            habitica-images-main/gear/weapon/shop/shop_weapon_rogue_1.png
+            habitica-images-main/gear/weapon/shop/shop_weapon_rogue_2.png
+            habitica-images-main/gear/weapon/shop/shop_weapon_rogue_3.png
+            habitica-images-main/gear/weapon/shop/shop_weapon_rogue_4.png
+            habitica-images-main/gear/weapon/shop/shop_weapon_rogue_5.png
+            habitica-images-main/gear/shield/shop/shop_shield_warrior_1.png
+            habitica-images-main/gear/shield/shop/shop_shield_warrior_2.png
+            habitica-images-main/gear/shield/shop/shop_shield_warrior_3.png
+            habitica-images-main/gear/shield/shop/shop_shield_warrior_4.png
+            habitica-images-main/gear/shield/shop/shop_shield_warrior_5.png
+            habitica-images-main/gear/shield/shop/shop_shield_rogue_1.png
+            habitica-images-main/gear/shield/shop/shop_shield_rogue_2.png
+            habitica-images-main/gear/shield/shop/shop_shield_rogue_3.png
+            habitica-images-main/gear/shield/shop/shop_shield_rogue_4.png
+            habitica-images-main/gear/shield/shop/shop_shield_rogue_5.png
+        `.trim().split('\n').map(line => line.trim());
+
+        // =================== DEFINIÇÕES DE FUNÇÕES ===================
+        
+        async function startApp() {
+            const docRef = db.collection("progresso").doc("meuPlano");
+
+            try {
+                const doc = await docRef.get();
+
+                if (doc.exists) {
+                    let data = doc.data();
+                    if (!data.gamification || data.gamification.version !== GAMIFICATION_VERSION) {
+                        console.log(`Atualizando estrutura de gamificação para v${GAMIFICATION_VERSION}...`);
+                        const newGamificationData = getInitialGamificationState();
+                        await docRef.set({ gamification: newGamificationData }, { merge: true });
+                    }
+                } else {
+                    console.log("Documento não encontrado. Crie-o na página principal.");
+                }
+            } catch (error) {
+                console.error("Erro na inicialização:", error);
+            }
+
+            docRef.onSnapshot((doc) => {
+                if (doc.exists) {
+                    studyPlan = doc.data();
+                    renderPage(studyPlan);
+                }
+            }, (error) => {
+                console.error("Erro no listener em tempo real:", error);
+            });
+        }
+        
+        function getInitialGamificationState() {
+            return {
+                version: GAMIFICATION_VERSION,
+                player: { 
+                    xp: 0,
+                    level: 1,
+                    equipped: { helmet: null, armor: null, pants: null, boots: null, weapon: null, shield: null } 
+                },
+                config: {
+                    slotMapping: {
+                        'Língua Portuguesa': 'helmet',
+                        'Conhecimentos Específicos': 'weapon',
+                        'Administração Pública': 'shield',
+                        'Raciocínio Lógico-Matemático': 'boots'
+                    },
+                    items: [
+                        { id: 'helm_1', name: 'Elmo da Escuta Ativa', subject: 'Língua Portuguesa', tier: 1, power: 15, description: 'Aumenta a capacidade de compreender as nuances da comunicação.', imageUrl: './habitica-images-main/gear/head/shop/shop_head_warrior_1.png' },
+                        { id: 'helm_2', name: 'Elmo da Empatia', subject: 'Língua Portuguesa', tier: 2, power: 30, description: 'Permite se colocar no lugar do outro, fortalecendo o vínculo terapêutico.', imageUrl: './habitica-images-main/gear/head/shop/shop_head_warrior_2.png' },
+                        { id: 'helm_3', name: 'Elmo do Acolhimento', subject: 'Língua Portuguesa', tier: 3, power: 55, description: 'Cria um ambiente seguro e livre de julgamentos.', imageUrl: './habitica-images-main/gear/head/shop/shop_head_warrior_3.png' },
+                        { id: 'helm_4', name: 'Coroa da Sabedoria', subject: 'Língua Portuguesa', tier: 4, power: 85, description: 'Concede clareza e discernimento nas situações mais complexas.', imageUrl: './habitica-images-main/gear/armoire/shop/shop_head_armoire_crownOfHearts.png' },
+                        
+                        { id: 'wpn_1', name: 'Adaga da Análise', subject: 'Conhecimentos Específicos', tier: 1, power: 20, description: 'Ferramenta básica para dissecar comportamentos e pensamentos.', imageUrl: './habitica-images-main/gear/weapon/shop/shop_weapon_rogue_1.png' },
+                        { id: 'wpn_2', name: 'Espada da Intervenção', subject: 'Conhecimentos Específicos', tier: 2, power: 35, description: 'Permite aplicar técnicas com precisão e eficácia.', imageUrl: './habitica-images-main/gear/weapon/shop/shop_weapon_warrior_2.png' },
+                        { id: 'wpn_3', name: 'Machado da Reestruturação Cognitiva', subject: 'Conhecimentos Específicos', tier: 3, power: 60, description: 'Uma arma poderosa para quebrar padrões de pensamento disfuncionais.', imageUrl: './habitica-images-main/gear/weapon/shop/shop_weapon_warrior_3.png' },
+                        { id: 'wpn_4', name: 'Cajado da Resiliência', subject: 'Conhecimentos Específicos', tier: 4, power: 90, description: 'Canaliza a força interior para superar as maiores adversidades.', imageUrl: './habitica-images-main/gear/armoire/shop/shop_weapon_armoire_crystalCrescentStaff.png' },
+                        
+                        { id: 'arm_1', name: 'Armadura do Vínculo', subject: 'Conhecimentos Específicos', tier: 1, power: 15, description: 'Proteção inicial baseada na confiança e na aliança terapêutica.', imageUrl: './habitica-images-main/gear/armor/shop/shop_armor_rogue_1.png' },
+                        { id: 'arm_2', name: 'Peitoral da Ética Profissional', subject: 'Conhecimentos Específicos', tier: 2, power: 30, description: 'Defende contra dilemas e garante uma prática justa e correta.', imageUrl: './habitica-images-main/gear/armor/shop/shop_armor_warrior_2.png' },
+                        { id: 'arm_3', name: 'Cota de Malha da Saúde Mental', subject: 'Conhecimentos Específicos', tier: 3, power: 55, description: 'Oferece proteção robusta no campo das políticas públicas.', imageUrl: './habitica-images-main/gear/armor/shop/shop_armor_warrior_3.png' },
+                        { id: 'arm_4', name: 'Armadura de Placas do SUAS', subject: 'Conhecimentos Específicos', tier: 4, power: 85, description: 'Equipamento de elite para a atuação no Sistema Único de Assistência Social.', imageUrl: './habitica-images-main/gear/armor/shop/shop_armor_warrior_4.png' },
+                        
+                        { id: 'shd_1', name: 'Broquel da Lei Orgânica', subject: 'Administração Pública', tier: 1, power: 10, description: 'Defesa básica contra as particularidades do serviço municipal.', imageUrl: './habitica-images-main/gear/shield/shop/shop_shield_warrior_1.png' },
+                        { id: 'shd_2', name: 'Escudo do Servidor Público', subject: 'Administração Pública', tier: 2, power: 25, description: 'Protege com base nos direitos e deveres do funcionalismo.', imageUrl: './habitica-images-main/gear/shield/shop/shop_shield_warrior_2.png' },
+                        { id: 'shd_3', name: 'Escudo da Constituição', subject: 'Administração Pública', tier: 3, power: 50, description: 'Inabalável, fundamentado nos princípios da Carta Magna.', imageUrl: './habitica-images-main/gear/shield/shop/shop_shield_warrior_3.png' },
+                        { id: 'shd_4', name: 'Baluarte da Probidade', subject: 'Administração Pública', tier: 4, power: 80, description: 'Repele a corrupção e ilumina o caminho da administração justa.', imageUrl: './habitica-images-main/gear/armoire/shop/shop_shield_armoire_royalCane.png' },
+                        
+                        { id: 'bts_1', name: 'Sapatos da Lógica', subject: 'Raciocínio Lógico-Matemático', tier: 1, power: 10, description: 'Permitem dar os primeiros passos firmes na resolução de problemas.', imageUrl: './habitica-images-main/gear/armoire/shop/shop_shoes_rogue_1.png' },
+                        { id: 'bts_2', name: 'Botas da Dedução', subject: 'Raciocínio Lógico-Matemático', tier: 2, power: 25, description: 'Aumentam a velocidade para chegar a conclusões válidas.', imageUrl: './habitica-images-main/gear/armoire/shop/shop_shoes_warrior_2.png' },
+                        { id: 'bts_3', name: 'Grevas da Análise Combinatória', subject: 'Raciocínio Lógico-Matemático', tier: 3, power: 50, description: 'Protegem contra as armadilhas de múltiplas possibilidades.', imageUrl: './habitica-images-main/gear/armoire/shop/shop_shoes_warrior_3.png' },
+                        { id: 'bts_4', name: 'Sabatons da Probabilidade', subject: 'Raciocínio Lógico-Matemático', tier: 4, power: 80, description: 'Permitem caminhar com segurança, calculando os riscos e as chances.', imageUrl: './habitica-images-main/gear/armoire/shop/shop_shoes_armoire_4.png' }
+                    ]
+                }
+            };
+        }
+
+        function renderPage(data) {
+            if (!data.gamification) return;
+            renderAvatar(data);
+            renderInventory(data);
+            renderProgressBars(data);
+            renderXpBar(data);
+        }
+
+        function renderAvatar(data) {
+            if (!data.gamification || !data.gamification.player) return;
+            const { equipped } = data.gamification.player;
+            const { items } = data.gamification.config;
+
+            for (const slotName in equipped) {
+                const slotElement = document.getElementById(`slot-${slotName}`);
+                if (!slotElement) continue;
+
+                const itemId = equipped[slotName];
+                const slotNameSpan = slotElement.querySelector('.slot-name');
+                slotElement.innerHTML = '';
+                if (slotNameSpan) slotElement.appendChild(slotNameSpan);
+
+                if (itemId) {
+                    const item = items.find(i => i.id === itemId);
+                    if (item && item.imageUrl) {
+                        const itemImg = document.createElement('img');
+                        itemImg.className = 'item-sprite';
+                        itemImg.src = item.imageUrl;
+                        itemImg.alt = item.name;
+                        slotElement.insertBefore(itemImg, slotNameSpan);
+                        slotElement.title = item.name;
+                    }
+                } else {
+                    slotElement.title = slotName.charAt(0).toUpperCase() + slotName.slice(1);
+                }
+            }
+        }
+
+        function renderInventory(data) {
+            if (!data.gamification || !data.gamification.config || !data.gamification.config.slotMapping) return;
+            const { items, slotMapping } = data.gamification.config;
+            const inventoryContainer = document.getElementById('inventory-container');
+            inventoryContainer.innerHTML = '';
+            
+            const itemTypes = ['helmet', 'weapon', 'armor', 'shield', 'boots'];
+            const typeNames = { helmet: 'Elmos', weapon: 'Armas', armor: 'Armaduras', shield: 'Escudos', boots: 'Botas' };
+
+            itemTypes.forEach(type => {
+                const itemsForType = items.filter(item => {
+                    const subject = Object.keys(slotMapping).find(key => slotMapping[key] === type);
+                    return item.subject === subject;
+                }).sort((a,b) => a.tier - b.tier);
+
+                if (itemsForType.length === 0) return;
+
+                let sectionHTML = `
+                    <div>
+                        <h3 class="text-xl font-bold mb-2">${typeNames[type]}</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                `;
+
+                itemsForType.forEach(item => {
+                    const isEquipped = data.gamification.player.equipped[type] === item.id;
+                    const isUnlocked = isItemUnlocked(item, data);
+                    
+                    sectionHTML += `
+                        <div class="item-card card rounded-lg p-3 text-center ${isEquipped ? 'equipped' : ''} ${isUnlocked ? 'unlocked' : ''}" data-item-id="${item.id}">
+                            <div class="h-24 w-full flex items-center justify-center">
+                                <img src="${item.imageUrl}" alt="${item.name}" class="item-sprite">
+                            </div>
+                            <p class="font-semibold mt-2 text-sm">${item.name}</p>
+                            <p class="text-xs text-gray-500">Nível ${item.tier}</p>
+                        </div>
+                    `;
+                });
+
+                sectionHTML += `</div></div>`;
+                inventoryContainer.innerHTML += sectionHTML;
+            });
+        }
+        
+        function renderProgressBars(data) {
+            const container = document.getElementById('subject-progress-bars');
+            if (!container || !data.tasks) return;
+            container.innerHTML = '';
+
+            const subjects = [...new Set(Object.values(data.tasks).flat().map(t => t.subject))].sort();
+            
+            subjects.forEach(subject => {
+                const allTasks = Object.values(data.tasks).flat().filter(t => t.subject === subject);
+                const completedTasks = allTasks.filter(t => t.completed);
+                const percentage = allTasks.length > 0 ? (completedTasks.length / allTasks.length) * 100 : 0;
+
+                const barHTML = `
+                    <div>
+                        <div class="flex justify-between text-sm font-medium mb-1">
+                            <span>${subject}</span>
+                            <span>${completedTasks.length}/${allTasks.length}</span>
+                        </div>
+                        <div class="w-full progress-bar-bg rounded-full h-2.5">
+                            <div class="progress-bar-fill h-2.5 rounded-full" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += barHTML;
+            });
+        }
+
+        function renderXpBar(data) {
+            if (!data.gamification || !data.gamification.player) return;
+            const xpBar = document.getElementById('xp-bar');
+            const xp = data.gamification.player.xp || 0;
+            const level = data.gamification.player.level || 1;
+            const xpToNextLevel = level * 100;
+            const percentage = (xp / xpToNextLevel) * 100;
+
+            xpBar.style.width = `${percentage}%`;
+            xpBar.textContent = `${xp}/${xpToNextLevel}`;
+        }
+        
+        function isItemUnlocked(item, data) {
+            if (!data.gamification || !data.gamification.player) return false;
+            const allTasks = Object.values(data.tasks || {}).flat();
+            const tasksForSubject = allTasks.filter(t => t.subject === item.subject);
+            const completedCount = tasksForSubject.filter(t => t.completed).length;
+            const progress = tasksForSubject.length > 0 ? completedCount / tasksForSubject.length : 0;
+
+            const thresholds = { 1: 0.01, 2: 0.25, 3: 0.50, 4: 0.75 };
+            return progress >= (thresholds[item.tier] || 1.0);
+        }
+
+        function getPowerClass(power) {
+            if (power >= 80) return 'power-legendary';
+            if (power >= 50) return 'power-rare';
+            if (power >= 25) return 'power-uncommon';
+            return 'power-common';
+        }
+
+        function openItemDetailsModal(item, isUnlocked) {
+            const modal = document.getElementById('item-details-modal');
+            document.getElementById('item-modal-name').textContent = item.name;
+            document.getElementById('item-modal-image').src = item.imageUrl;
+            document.getElementById('item-modal-description').textContent = item.description || 'Um item valioso para sua jornada.';
+            
+            const powerSpan = document.getElementById('item-modal-power');
+            powerSpan.textContent = item.power;
+            powerSpan.className = `font-bold ${getPowerClass(item.power)}`;
+            
+            const equipBtn = document.getElementById('item-modal-equip-btn');
+            equipBtn.dataset.itemId = item.id;
+            
+            if (isUnlocked) {
+                equipBtn.disabled = false;
+                equipBtn.textContent = 'Equipar';
+                equipBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                equipBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+            } else {
+                equipBtn.disabled = true;
+                equipBtn.textContent = 'Bloqueado';
+                equipBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                equipBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        function openDevModal() {
+            const devModal = document.getElementById('dev-modal');
+            const devControlsContainer = document.getElementById('dev-controls-container');
+            const devSimulateBtn = document.getElementById('dev-simulate-btn');
+
+            devModal.classList.remove('hidden');
+
+            if (!studyPlan.gamification || !studyPlan.gamification.config) {
+                devControlsContainer.innerHTML = `<p class="text-center text-gray-500">Aguardando dados do Firebase... Por favor, tente novamente em um instante.</p>`;
+                devSimulateBtn.disabled = true;
+                return;
+            }
+            
+            devSimulateBtn.disabled = false;
+            devControlsContainer.innerHTML = '';
+            const { slotMapping } = studyPlan.gamification.config;
+            const allTasks = Object.values(studyPlan.tasks || {}).flat();
+            
+            const subjects = [...new Set(Object.values(slotMapping))].map(slot => {
+                return Object.keys(slotMapping).find(key => slotMapping[key] === slot);
+            }).filter(Boolean);
+
+            subjects.forEach(subject => {
+                const totalTasks = allTasks.filter(t => t.subject === subject).length;
+                const completedTasks = allTasks.filter(t => t.subject === subject && t.completed).length;
+                
+                const controlHTML = `
+                    <div>
+                        <label class="block text-sm font-medium">${subject}</label>
+                        <div class="flex items-center gap-2 mt-1">
+                            <input type="number" id="dev-input-${subject.replace(/\s/g, '')}" value="${completedTasks}" min="0" max="${totalTasks}" class="w-24 border-gray-300 rounded-md shadow-sm text-sm">
+                            <span class="text-sm text-gray-500">/ ${totalTasks} aulas</span>
+                        </div>
+                    </div>
+                `;
+                devControlsContainer.innerHTML += controlHTML;
+            });
+        }
+
+        function renderGallery(filter = 'all') {
+            const gallery = document.getElementById('sprite-gallery');
+            gallery.innerHTML = '';
+            
+            const filteredPaths = fileList.filter(path => {
+                if (filter === 'all') return true;
+                return path.includes(`/${filter}/`) || path.includes(`_${filter}_`);
+            });
+
+            filteredPaths.forEach(path => {
+                const card = document.createElement('div');
+                card.className = 'sprite-card p-2 border rounded-md flex items-center justify-center';
+                card.dataset.path = path;
+                
+                const img = document.createElement('img');
+                img.src = `./${path}`;
+                img.className = 'item-sprite';
+                
+                card.appendChild(img);
+                gallery.appendChild(card);
+            });
+        }
+
+        // =================== EXECUÇÃO PRINCIPAL E EVENT LISTENERS ===================
+        document.addEventListener('DOMContentLoaded', () => {
+            const devButton = document.getElementById('dev-button');
+            const devModal = document.getElementById('dev-modal');
+            const devCloseBtn = document.getElementById('dev-close-btn');
+            const devSimulateBtn = document.getElementById('dev-simulate-btn');
+            const devResetBtn = document.getElementById('dev-reset-btn');
+            const createItemBtn = document.getElementById('create-item-btn');
+            const createItemModal = document.getElementById('create-item-modal');
+            const createModalClose = document.getElementById('create-modal-close');
+            const createItemFormModal = document.getElementById('create-item-form-modal');
+            const createFormClose = document.getElementById('create-form-close');
+
+            startApp();
+
+            devButton.addEventListener('click', openDevModal);
+            devCloseBtn.addEventListener('click', () => devModal.classList.add('hidden'));
+            
+            devResetBtn.addEventListener('click', () => {
+                renderPage(studyPlan);
+                devModal.classList.add('hidden');
+            });
+
+            devSimulateBtn.addEventListener('click', () => {
+                const simulatedPlan = JSON.parse(JSON.stringify(studyPlan));
+                const allSimulatedTasks = Object.values(simulatedPlan.tasks).flat();
+                const { items, slotMapping } = simulatedPlan.gamification.config;
+
+                allSimulatedTasks.forEach(t => t.completed = false);
+                Object.keys(simulatedPlan.gamification.player.equipped).forEach(slot => {
+                    simulatedPlan.gamification.player.equipped[slot] = null;
+                });
+
+                const subjects = [...new Set(Object.values(slotMapping))].map(slot => {
+                    return Object.keys(slotMapping).find(key => slotMapping[key] === slot);
+                }).filter(Boolean);
+
+                subjects.forEach(subject => {
+                    const input = document.getElementById(`dev-input-${subject.replace(/\s/g, '')}`);
+                    const completedCount = parseInt(input.value, 10);
+                    const tasksForSubject = allSimulatedTasks.filter(t => t.subject === subject);
+                    for(let i = 0; i < completedCount && i < tasksForSubject.length; i++) {
+                        tasksForSubject[i].completed = true;
+                    }
+                });
+
+                const thresholds = { TIER_1: 0.01, TIER_2: 0.25, TIER_3: 0.50, TIER_4: 0.75 };
+                
+                subjects.forEach(subject => {
+                    const tasksForSubject = allSimulatedTasks.filter(t => t.subject === subject);
+                    const total = tasksForSubject.length;
+                    const completed = tasksForSubject.filter(t => t.completed).length;
+                    const progress = total > 0 ? completed / total : 0;
+                    
+                    let bestTierUnlocked = 0;
+                    if (progress >= thresholds.TIER_1) bestTierUnlocked = 1;
+                    if (progress >= thresholds.TIER_2) bestTierUnlocked = 2;
+                    if (progress >= thresholds.TIER_3) bestTierUnlocked = 3;
+                    if (progress >= thresholds.TIER_4) bestTierUnlocked = 4;
+                    
+                    if (bestTierUnlocked > 0) {
+                        const itemToEquip = items.find(item => item.subject === subject && item.tier === bestTierUnlocked);
+                        if (itemToEquip) {
+                            const slot = slotMapping[subject];
+                            simulatedPlan.gamification.player.equipped[slot] = itemToEquip.id;
+                            if (slot === 'weapon') {
+                               const armorToEquip = items.find(item => item.id.startsWith('arm_') && item.tier === bestTierUnlocked);
+                               if(armorToEquip) simulatedPlan.gamification.player.equipped['armor'] = armorToEquip.id;
+                            }
+                        }
+                    }
+                });
+
+                renderPage(simulatedPlan);
+                devModal.classList.add('hidden');
+            });
+
+            document.getElementById('inventory-container').addEventListener('click', (e) => {
+                const card = e.target.closest('.item-card');
+                if (card && card.dataset.itemId) {
+                    const item = studyPlan.gamification.config.items.find(i => i.id === card.dataset.itemId);
+                    const isUnlocked = card.classList.contains('unlocked');
+                    if (item) {
+                        openItemDetailsModal(item, isUnlocked);
+                    }
+                }
+            });
+            
+            document.querySelector('#app-container').addEventListener('click', (e) => {
+                const slot = e.target.closest('.slot');
+                if (slot && slot.dataset.slot) {
+                    const equippedId = studyPlan.gamification.player.equipped[slot.dataset.slot];
+                    if (equippedId) {
+                        const item = studyPlan.gamification.config.items.find(i => i.id === equippedId);
+                        if (item) {
+                            openItemDetailsModal(item, true);
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('item-modal-close').addEventListener('click', () => {
+                document.getElementById('item-details-modal').classList.add('hidden');
+            });
+
+            document.getElementById('item-modal-equip-btn').addEventListener('click', async (e) => {
+                const itemId = e.target.dataset.itemId;
+                const item = studyPlan.gamification.config.items.find(i => i.id === itemId);
+                if (!item) return;
+
+                const slotType = studyPlan.gamification.config.slotMapping[item.subject];
+                if (slotType) {
+                    studyPlan.gamification.player.equipped[slotType] = itemId;
+                    
+                    const docRef = db.collection("progresso").doc("meuPlano");
+                    await docRef.set({ gamification: studyPlan.gamification }, { merge: true });
+                    
+                    document.getElementById('item-details-modal').classList.add('hidden');
+                }
+            });
+
+            createItemBtn.addEventListener('click', () => {
+                createItemModal.classList.remove('hidden');
+                renderGallery();
+            });
+
+            createModalClose.addEventListener('click', () => {
+                createItemModal.classList.add('hidden');
+            });
+            
+            createFormClose.addEventListener('click', () => {
+                createItemFormModal.classList.add('hidden');
+            });
+
+            document.getElementById('filter-type').addEventListener('change', (e) => {
+                renderGallery(e.target.value);
+            });
+
+            document.getElementById('sprite-gallery').addEventListener('click', (e) => {
+                const card = e.target.closest('.sprite-card');
+                if (card) {
+                    const imagePath = card.dataset.path;
+                    document.getElementById('modal-sprite-preview').src = `./${imagePath}`;
+                    document.getElementById('item-image-url').value = `./${imagePath}`;
+                    
+                    const subjectSelect = document.getElementById('item-subject');
+                    const subjects = [...new Set(Object.values(studyPlan.tasks || {}).flat().map(t => t.subject))].sort();
+                    subjectSelect.innerHTML = subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+
+                    createItemFormModal.classList.remove('hidden');
+                }
+            });
+
+            document.getElementById('create-item-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newItem = {
+                    id: `item_${new Date().getTime()}`,
+                    name: document.getElementById('item-name').value,
+                    description: document.getElementById('item-description-form').value,
+                    subject: document.getElementById('item-subject').value,
+                    tier: parseInt(document.getElementById('item-tier').value, 10),
+                    power: parseInt(document.getElementById('item-power').value, 10),
+                    imageUrl: document.getElementById('item-image-url').value
+                };
+
+                try {
+                    const docRef = db.collection("progresso").doc("meuPlano");
+                    const doc = await docRef.get();
+                    if (doc.exists) {
+                        const currentData = doc.data();
+                        const items = currentData.gamification.config.items || [];
+                        items.push(newItem);
+                        await docRef.set({ 
+                            gamification: { 
+                                ...currentData.gamification,
+                                config: {
+                                    ...currentData.gamification.config,
+                                    items: items
+                                }
+                            } 
+                        }, { merge: true });
+                        alert('Equipamento salvo com sucesso!');
+                        createItemFormModal.classList.add('hidden');
+                        e.target.reset();
+                    }
+                } catch (error) {
+                    console.error("Erro ao salvar o item:", error);
+                    alert('Falha ao salvar o equipamento.');
+                }
+            });
+
+        });
+    </script>
 
 </body>
 </html>
