@@ -83,7 +83,7 @@
         .calendar-day.has-task::after { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background-color: var(--accent-color); position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); }
         .calendar-day.selected { background-color: var(--accent-color); color: white; font-weight: bold; }
 
-        .task-card { border-left: 4px solid #D6BFAA; transition: box-shadow 0.3s ease; position: relative; box-shadow: var(--card-shadow); border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);}
+        .task-card { border-left: 4px solid #D6BFAA; transition: box-shadow 0.3s ease; position: relative; box-shadow: var(--card-shadow); border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); cursor: grab; }
         .task-card.review-r1 { border-left-color: #6A9C89; }
         .task-card.review-r2 { border-left-color: #5A9BD5; } /* Azul */
         .task-card.review-r3 { border-left-color: var(--accent-color); }
@@ -94,6 +94,9 @@
         .task-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         .task-card.legis { border-left-color: #38bdf8; }
         .task-card.clickable { cursor: pointer; }
+        .task-card:active { cursor: grabbing; }
+
+        .block-container.drag-over { border: 2px dashed var(--accent-color); background-color: rgba(213, 160, 33, 0.05); }
 
         .task-checkbox:checked + label { text-decoration: line-through; color: #9A9A9A; }
         .chart-container { position: relative; width: 100%; max-width: 250px; margin-left: auto; margin-right: auto; height: 250px; }
@@ -106,6 +109,7 @@
 
         .action-btn { background-color: #f0f0f0; border-radius: 9999px; padding: 0.35rem; transition: background-color 0.2s ease; cursor: pointer; }
         .action-btn:hover { background-color: #e0e0e0; }
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .action-btn svg { width: 1rem; height: 1rem; color: #555; }
 
         .tab-button { padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; color: var(--muted-text-color); }
@@ -557,7 +561,6 @@ let systemSettings = {
     examDate: '2025-10-26',
     reviewCount: 3,
     subjects: {},
-    // NOVA LÓGICA DE BLOCOS - Agora é mais configurável
     blocks: [
         { 
             id: 'bloco1', 
@@ -719,7 +722,8 @@ function initializeStudyPlan(tasks) {
                 notebookLink: task.notebookLink || '',
                 notes: task.notes || '',
                 pagesRead: task.pagesRead || null,
-                pagesTotal: task.pagesTotal || null
+                pagesTotal: task.pagesTotal || null,
+                overrideBlockId: task.overrideBlockId || null // Adicionado para drag-and-drop
             });
         }
     });
@@ -753,7 +757,6 @@ const loadState = async () => {
 
     const settingsDoc = await db.collection("progresso").doc("configuracoes").get();
     if (settingsDoc.exists) {
-        // Usa deep merge para garantir que novas propriedades na configuração padrão sejam mantidas se não existirem no firebase
         const storedSettings = settingsDoc.data();
         systemSettings = {
             ...systemSettings,
@@ -789,6 +792,7 @@ function createTaskCard(task, isOverdue = false) {
     card.dataset.id = task.id;
     card.dataset.date = task.date;
     card.dataset.type = task.type;
+    card.draggable = true; // Habilita o drag-and-drop
 
     const title = task.type.startsWith('review') ? `${task.reviewType}: ${task.subject} - Aula ${task.lesson}` : `${task.subject} - Aula ${task.lesson}`;
     
@@ -914,30 +918,55 @@ const renderPlan = (date) => {
     const dateStr = formatDateYMD(date);
     planContent.innerHTML = '';
     const todayStr = formatDateYMD(new Date());
-    const tasksForDay = studyPlan.tasks[dateStr] || [];
-    const reviewsForDay = studyPlan.reviews[dateStr] || [];
+    const tasksForDay = [...(studyPlan.tasks[dateStr] || [])];
+    const reviewsForDay = [...(studyPlan.reviews[dateStr] || [])];
 
     if (tasksForDay.length === 0 && reviewsForDay.length === 0) {
         planContent.innerHTML = `<div class="text-center p-4 bg-gray-50 rounded-lg"><p class="text-gray-500">Nenhuma tarefa agendada para hoje. Dia de descanso!</p></div>`;
         return;
     }
-    
-    // NOVA LÓGICA DE RENDERIZAÇÃO DE BLOCOS
+
+    // LÓGICA DE RENDERIZAÇÃO COM DRAG-AND-DROP
+    let blocksContent = {};
     systemSettings.blocks.forEach(block => {
-        const tasksForBlock = tasksForDay.filter(t => block.associatedTypes.includes(t.type));
-        if (tasksForBlock.length > 0) {
-            let sectionHTML = `<h3 class="text-lg font-bold mt-4 border-b-2 ${block.color} pb-2">${block.title}</h3>`;
-            tasksForBlock.forEach(task => { sectionHTML += createTaskCard(task, !task.completed && task.date < todayStr).outerHTML; });
-            planContent.innerHTML += sectionHTML;
+        blocksContent[block.id] = [];
+    });
+    
+    tasksForDay.forEach(task => {
+        if (task.overrideBlockId && blocksContent[task.overrideBlockId]) {
+            blocksContent[task.overrideBlockId].push(task);
+        } else {
+            const defaultBlock = systemSettings.blocks.find(b => b.associatedTypes.includes(task.type));
+            if (defaultBlock) {
+                blocksContent[defaultBlock.id].push(task);
+            }
         }
     });
 
+    let html = '';
+    systemSettings.blocks.forEach(block => {
+        html += `
+            <div class="block-container space-y-2" data-block-id="${block.id}">
+                <h3 class="text-lg font-bold mt-4 border-b-2 ${block.color} pb-2">${block.title}</h3>
+                <div class="block-tasks space-y-2 min-h-[50px]">
+        `;
+        if (blocksContent[block.id].length > 0) {
+            blocksContent[block.id].forEach(task => {
+                html += createTaskCard(task, !task.completed && task.date < todayStr).outerHTML;
+            });
+        }
+        html += `</div></div>`;
+    });
+
     if (reviewsForDay.length > 0) {
-        let reviewHTML = `<h3 class="text-lg font-bold mt-6 border-b-2 border-red-400 pb-2">🔁 Revisões Agendadas</h3>`;
-        reviewsForDay.forEach(task => { reviewHTML += createTaskCard(task, !task.completed && task.date < todayStr).outerHTML; });
-        planContent.innerHTML += reviewHTML;
+        html += `<h3 class="text-lg font-bold mt-6 border-b-2 border-red-400 pb-2">🔁 Revisões Agendadas</h3>`;
+        reviewsForDay.forEach(task => {
+            html += createTaskCard(task, !task.completed && task.date < todayStr).outerHTML;
+        });
     }
+    planContent.innerHTML = html;
 };
+
 
 const updateProgress = () => {
     const allStudyTasks = Object.values(studyPlan.tasks || {}).flat()
@@ -1148,13 +1177,17 @@ function renderAllTasksTable() {
     });
 
     tableBody.innerHTML = itemsToShow.map(task => {
-        const typeIcon = task.type === 'video' 
-            ? `<svg title="Videoaula" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-500"><path d="m22 8-6 4 6 4V8Z"></path><rect x="2" y="6" width="14" height="12" rx="2" ry="2"></rect></svg>` 
-            : (task.type === 'pdf' 
-                ? `<svg title="PDF" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`
-                : (task.type === 'legis'
-                    ? `<svg title="Legislação" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22V2"></path><path d="M5 10.5c0-1.5 1.5-3 3-3s3 1.5 3 3-1.5 3-3 3-3-1.5-3-3z"></path><path d="M19 10.5c0-1.5-1.5-3-3-3s-3 1.5-3 3 1.5 3 3 3 3-1.5 3-3z"></path></svg>`
-                    : ''));
+        const isReview = task.type.startsWith('review');
+        let typeIcon = '';
+        if (isReview) {
+            typeIcon = `<svg title="Revisão" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-500"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M21 21v-5h-5"/></svg>`;
+        } else if (task.type === 'video') {
+            typeIcon = `<svg title="Videoaula" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-500"><path d="m22 8-6 4 6 4V8Z"></path><rect x="2" y="6" width="14" height="12" rx="2" ry="2"></rect></svg>`;
+        } else if (task.type === 'pdf') {
+            typeIcon = `<svg title="PDF" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`;
+        } else if (task.type === 'legis') {
+            typeIcon = `<svg title="Legislação" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22V2"></path><path d="M5 10.5c0-1.5 1.5-3 3-3s3 1.5 3 3-1.5 3-3 3-3-1.5-3-3z"></path><path d="M19 10.5c0-1.5-1.5-3-3-3s-3 1.5-3 3 1.5 3 3 3 3-1.5 3-3z"></path></svg>`;
+        }
 
         return `<tr>
                     <td class="px-6 py-4"><input type="checkbox" class="task-select-checkbox h-4 w-4" data-id="${task.id}" data-date="${task.date}"></td>
@@ -1164,7 +1197,9 @@ function renderAllTasksTable() {
                     <td class="px-6 py-4">${task.lesson}</td>
                     <td class="px-6 py-4">${task.topic}</td>
                     <td class="px-6 py-4 flex items-center gap-2">
-                        <button class="action-btn task-edit-btn-table" data-id="${task.id}" data-date="${task.date}" title="Editar"><svg class="pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button>
+                        <button class="action-btn task-edit-btn-table" data-id="${task.id}" data-date="${task.date}" title="${isReview ? 'Revisões automáticas não podem ser editadas' : 'Editar'}" ${isReview ? 'disabled' : ''}>
+                           <svg class="pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>
+                        </button>
                         <button class="action-btn task-delete-btn-table" data-id="${task.id}" data-date="${task.date}" title="Excluir"><svg class="pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                     </td>
                 </tr>`;
@@ -1209,11 +1244,12 @@ function renderTrashTable() {
 
 function renderAllTasksStatistics() {
     const statsContainer = document.getElementById('all-tasks-stats');
-    const allTasksList = Object.values(studyPlan.tasks || {}).flat();
-    const totalTasks = allTasksList.length;
-    const subjectCounts = allTasksList.reduce((acc, task) => { acc[task.subject] = (acc[task.subject] || 0) + 1; return acc; }, {});
+    const totalTasks = Object.values(studyPlan.tasks || {}).flat().length;
+    const totalReviews = Object.values(studyPlan.reviews || {}).flat().length;
+    const totalItems = totalTasks + totalReviews;
+    const subjectCounts = Object.values(studyPlan.tasks || {}).flat().reduce((acc, task) => { acc[task.subject] = (acc[task.subject] || 0) + 1; return acc; }, {});
     
-    let statsHtml = `<div class="p-2 rounded-lg shadow stat-card bg-amber-400 text-white selected" data-subject="all"><p class="font-bold text-lg">${totalTasks}</p><p class="text-sm">Total de Aulas</p></div>`;
+    let statsHtml = `<div class="p-2 rounded-lg shadow stat-card bg-amber-400 text-white selected" data-subject="all"><p class="font-bold text-lg">${totalItems}</p><p class="text-sm">Total de Itens</p></div>`;
     
     Object.entries(subjectCounts).sort().forEach(([subject, count]) => { 
         statsHtml += `<div class="p-2 bg-white rounded-lg stat-card shadow" data-subject="${subject}"><p class="font-bold text-lg">${count}</p><p class="text-sm text-gray-600">${subject}</p></div>`; 
@@ -1222,50 +1258,54 @@ function renderAllTasksStatistics() {
 }
 
 function openEditModalFromList(taskId, taskDate) {
+    // BUG FIX: Procura tanto em tasks quanto em reviews, mas só abre o modal para tasks.
     const task = studyPlan.tasks[taskDate]?.find(t => t.id === taskId);
-    if (task) {
-        populateSubjectSelect(document.getElementById('task-subject'));
-        document.getElementById('modal-title').textContent = 'Editar Aula';
-        document.getElementById('task-id').value = task.id;
-        document.getElementById('original-task-date-input').value = task.date;
-        document.getElementById('task-date').value = task.date;
-        document.getElementById('task-subject').value = task.subject;
-        document.getElementById('task-lesson').value = task.lesson;
-        document.getElementById('task-topic').value = task.topic;
-        document.getElementById('task-type').value = task.type;
-        document.getElementById('task-link').value = task.link || '';
-        document.getElementById('task-notebook-link').value = task.notebookLink || '';
-        document.getElementById('task-notes').value = task.notes || '';
-        
-        const originalDateContainer = document.getElementById('original-date-container');
-        if (task.originalDate && task.originalDate !== task.date) {
-            document.getElementById('original-date-text').textContent = formatDateDMY(task.originalDate);
-            originalDateContainer.classList.remove('hidden');
-        } else {
-            originalDateContainer.classList.add('hidden');
-        }
-
-        const pdfProgressContainer = document.getElementById('pdf-progress-container');
-        if (task.type === 'pdf') {
-            document.getElementById('pdf-pages-read').value = task.pagesRead || '';
-            document.getElementById('pdf-pages-total').value = task.pagesTotal || '';
-            pdfProgressContainer.classList.remove('hidden');
-        } else {
-            pdfProgressContainer.classList.add('hidden');
-        }
-
-        const completedContainer = document.getElementById('completed-checkbox-container');
-        const completedCheckbox = document.getElementById('task-completed-checkbox');
-        completedContainer.classList.remove('hidden');
-        completedContainer.classList.add('flex');
-        completedCheckbox.checked = task.completed;
-        
-        document.getElementById('task-subject').classList.remove('hidden');
-        document.getElementById('task-subject-new').classList.add('hidden');
-        document.getElementById('task-subject-new').value = '';
-
-        openModal(addTaskModal);
+    if (!task) {
+        console.error("Tentativa de editar uma revisão ou tarefa não encontrada.");
+        return;
     }
+
+    populateSubjectSelect(document.getElementById('task-subject'));
+    document.getElementById('modal-title').textContent = 'Editar Aula';
+    document.getElementById('task-id').value = task.id;
+    document.getElementById('original-task-date-input').value = task.date;
+    document.getElementById('task-date').value = task.date;
+    document.getElementById('task-subject').value = task.subject;
+    document.getElementById('task-lesson').value = task.lesson;
+    document.getElementById('task-topic').value = task.topic;
+    document.getElementById('task-type').value = task.type;
+    document.getElementById('task-link').value = task.link || '';
+    document.getElementById('task-notebook-link').value = task.notebookLink || '';
+    document.getElementById('task-notes').value = task.notes || '';
+    
+    const originalDateContainer = document.getElementById('original-date-container');
+    if (task.originalDate && task.originalDate !== task.date) {
+        document.getElementById('original-date-text').textContent = formatDateDMY(task.originalDate);
+        originalDateContainer.classList.remove('hidden');
+    } else {
+        originalDateContainer.classList.add('hidden');
+    }
+
+    const pdfProgressContainer = document.getElementById('pdf-progress-container');
+    if (task.type === 'pdf') {
+        document.getElementById('pdf-pages-read').value = task.pagesRead || '';
+        document.getElementById('pdf-pages-total').value = task.pagesTotal || '';
+        pdfProgressContainer.classList.remove('hidden');
+    } else {
+        pdfProgressContainer.classList.add('hidden');
+    }
+
+    const completedContainer = document.getElementById('completed-checkbox-container');
+    const completedCheckbox = document.getElementById('task-completed-checkbox');
+    completedContainer.classList.remove('hidden');
+    completedContainer.classList.add('flex');
+    completedCheckbox.checked = task.completed;
+    
+    document.getElementById('task-subject').classList.remove('hidden');
+    document.getElementById('task-subject-new').classList.add('hidden');
+    document.getElementById('task-subject-new').value = '';
+
+    openModal(addTaskModal);
 }
 
 function populateSubjectSelect(selectElement) {
@@ -1279,7 +1319,6 @@ function shiftAllTasks(days) {
     const tasksToMove = [];
     const newTasks = {};
 
-    // 1. Itera sobre as tarefas, separando as concluídas das não concluídas
     for (const dateStr in studyPlan.tasks) {
         const completedTasks = studyPlan.tasks[dateStr].filter(t => t.completed);
         const uncompletedTasks = studyPlan.tasks[dateStr].filter(t => !t.completed);
@@ -1290,7 +1329,6 @@ function shiftAllTasks(days) {
         tasksToMove.push(...uncompletedTasks);
     }
 
-    // 2. Calcula as novas datas para as tarefas não concluídas e as adiciona ao novo objeto
     tasksToMove.forEach(task => {
         const currentDate = new Date(task.date + 'T03:00:00Z');
         const newDate = addDays(currentDate, days);
@@ -1630,6 +1668,29 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('overdue-tab-reviews').classList.toggle('active', e.target.id === 'overdue-tab-reviews');
             document.getElementById('overdue-content-reviews').classList.toggle('hidden', e.target.id !== 'overdue-tab-reviews');
         }
+
+        // BUG FIX: Adicionado listener para o botão de restaurar da lixeira
+        if (e.target.matches('.restore-btn')) {
+            const taskId = e.target.dataset.id;
+            const taskToRestore = studyPlan.deletedTasks[taskId];
+            if (taskToRestore) {
+                const dateStr = taskToRestore.date;
+                const isReview = taskToRestore.type.startsWith('review');
+
+                if (isReview) {
+                    if (!studyPlan.reviews[dateStr]) studyPlan.reviews[dateStr] = [];
+                    studyPlan.reviews[dateStr].push(taskToRestore);
+                } else {
+                    if (!studyPlan.tasks[dateStr]) studyPlan.tasks[dateStr] = [];
+                    studyPlan.tasks[dateStr].push(taskToRestore);
+                }
+                delete studyPlan.deletedTasks[taskId];
+                saveState();
+                renderTrashTable();
+                renderAllTasksTable();
+                updateProgress();
+            }
+        }
     });
 
     planContent.addEventListener('change', (e) => {
@@ -1736,7 +1797,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPlan(viewDate);
         updateProgress();
 
-        // ADICIONADA CHAMADA DE ATUALIZAÇÃO - Corrige o bug da tabela não atualizar
         if (!allTasksModal.classList.contains('hidden')) {
             renderAllTasksTable();
             renderAllTasksStatistics();
@@ -1819,11 +1879,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         blocksContainer.innerHTML = systemSettings.blocks.map(block => {
-            const taskTypes = [
-                { value: 'video', label: 'Videoaula' },
-                { value: 'pdf', label: 'PDF' },
-                { value: 'legis', label: 'Legislação' }
-            ];
+            const taskTypes = [ { value: 'video', label: 'Videoaula' }, { value: 'pdf', label: 'PDF' }, { value: 'legis', label: 'Legislação' } ];
             const checkboxesHTML = taskTypes.map(type => `
                 <div class="flex items-center">
                     <input type="checkbox" id="block-${block.id}-type-${type.value}" data-block-id="${block.id}" data-type-value="${type.value}" class="h-4 w-4 block-type-checkbox" ${block.associatedTypes.includes(type.value) ? 'checked' : ''}>
@@ -1831,26 +1887,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `).join('');
 
-            return `
-                <div class="p-4 border rounded-lg space-y-3">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="block-name-${block.id}" class="text-sm font-medium">Nome do Bloco</label>
-                            <input type="text" id="block-name-${block.id}" data-block-id="${block.id}" value="${block.title}" class="w-full border rounded-md p-1 mt-1 text-sm">
+            return `<div class="p-4 border rounded-lg space-y-3">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="block-name-${block.id}" class="text-sm font-medium">Nome do Bloco</label>
+                                <input type="text" id="block-name-${block.id}" data-block-id="${block.id}" value="${block.title}" class="w-full border rounded-md p-1 mt-1 text-sm">
+                            </div>
+                            <div>
+                                <label for="block-duration-${block.id}" class="text-sm font-medium">Duração Estimada (horas)</label>
+                                <input type="number" step="0.5" id="block-duration-${block.id}" data-block-id="${block.id}" value="${block.targetDuration || 0}" class="w-full border rounded-md p-1 mt-1 text-sm">
+                            </div>
                         </div>
                         <div>
-                            <label for="block-duration-${block.id}" class="text-sm font-medium">Duração Estimada (horas)</label>
-                            <input type="number" step="0.5" id="block-duration-${block.id}" data-block-id="${block.id}" value="${block.targetDuration}" class="w-full border rounded-md p-1 mt-1 text-sm">
+                            <p class="text-sm font-medium mb-2">Tipos de Tarefa Associados</p>
+                            <div class="flex items-center gap-x-4 gap-y-2 flex-wrap">${checkboxesHTML}</div>
                         </div>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium mb-2">Tipos de Tarefa Associados</p>
-                        <div class="flex items-center gap-x-4 gap-y-2 flex-wrap">
-                            ${checkboxesHTML}
-                        </div>
-                    </div>
-                </div>
-            `;
+                    </div>`;
         }).join('');
 
         examDateInput.value = systemSettings.examDate || '2025-10-26';
@@ -1870,7 +1922,6 @@ document.addEventListener('DOMContentLoaded', () => {
         systemSettings.blocks.forEach(block => {
             block.title = document.getElementById(`block-name-${block.id}`).value;
             block.targetDuration = parseFloat(document.getElementById(`block-duration-${block.id}`).value) || 0;
-            
             const associatedTypes = [];
             document.querySelectorAll(`.block-type-checkbox[data-block-id="${block.id}"]`).forEach(checkbox => {
                 if (checkbox.checked) {
@@ -1898,11 +1949,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('task-id').value = '';
         document.getElementById('original-task-date-input').value = '';
         document.getElementById('completed-checkbox-container').classList.add('hidden');
-        
         document.getElementById('task-subject').classList.remove('hidden');
         document.getElementById('task-subject-new').classList.add('hidden');
         document.getElementById('task-subject-new').value = '';
-
         populateSubjectSelect(document.getElementById('task-subject'));
         openModal(addTaskModal);
     });
@@ -1913,6 +1962,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('shift-all-backward-btn').addEventListener('click', () => {
         showConfirmation('Adiantar todas as aulas não-concluídas em 1 dia?', () => shiftAllTasks(-1));
+    });
+
+    // LÓGICA DE DRAG-AND-DROP
+    planContent.addEventListener('dragstart', e => {
+        if (e.target.classList.contains('task-card')) {
+            const data = { id: e.target.dataset.id, date: e.target.dataset.date, type: e.target.dataset.type };
+            e.dataTransfer.setData('application/json', JSON.stringify(data));
+            e.dataTransfer.effectAllowed = 'move';
+        }
+    });
+
+    planContent.addEventListener('dragover', e => {
+        const blockContainer = e.target.closest('.block-container');
+        if (blockContainer) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            blockContainer.classList.add('drag-over');
+        }
+    });
+
+    planContent.addEventListener('dragleave', e => {
+        const blockContainer = e.target.closest('.block-container');
+        if (blockContainer) {
+            blockContainer.classList.remove('drag-over');
+        }
+    });
+    
+    planContent.addEventListener('drop', e => {
+        e.preventDefault();
+        const blockContainer = e.target.closest('.block-container');
+        if (blockContainer) {
+            blockContainer.classList.remove('drag-over');
+            const data = JSON.parse(e.dataTransfer.getData('application/json'));
+            const destinationBlockId = blockContainer.dataset.blockId;
+
+            const list = data.type.startsWith('review') ? studyPlan.reviews[data.date] : studyPlan.tasks[data.date];
+            const task = list?.find(t => t.id === data.id);
+
+            if (task) {
+                const defaultBlock = systemSettings.blocks.find(b => b.associatedTypes.includes(task.type));
+                if (defaultBlock && defaultBlock.id === destinationBlockId) {
+                    task.overrideBlockId = null; // Volta ao padrão se arrastado para o bloco original
+                } else {
+                    task.overrideBlockId = destinationBlockId;
+                }
+                saveState();
+                renderPlan(viewDate);
+            }
+        }
     });
 
 });
