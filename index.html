@@ -232,7 +232,7 @@
                         <div id="subject-progress-bars" class="space-y-4"></div>
                     </div>
                     <div id="buffer-card" class="bg-white p-5 rounded-lg flex flex-col justify-center text-center mt-8 border">
-                        <h3 class="font-semibold text-gray-500 mb-2">Tempo sobrando até a prova</h3>
+                        <h3 class="font-semibold text-gray-500 mb-2">Tempo Livre (Buffer)</h3>
                         <div id="buffer-hours" class="text-2xl font-bold text-green-600"></div>
                         <div id="buffer-details" class="text-xs text-gray-500 mt-1"></div>
                     </div>
@@ -539,7 +539,7 @@
 const allTasks = [
     { "date": "2025-08-18", "subject": "Língua Portuguesa", "lesson": "00", "topic": "Apresentação do Curso e Metodologia", "type": "video" },
     { "date": "2025-08-18", "subject": "Direito Constitucional", "lesson": "00", "topic": "Apresentação do Curso e Metodologia", "type": "video" },
-    // ... (O restante dos seus dados de 'data.js' iria aqui)
+    // Adicione o restante de suas aulas aqui para o carregamento inicial
 ];
 
 
@@ -1348,31 +1348,39 @@ function calculateAndRenderBuffer() {
     const bufferDetailsEl = document.getElementById('buffer-details');
     if (!bufferHoursEl || !bufferDetailsEl) return;
 
-    const examDate = new Date(systemSettings.examDate + 'T11:00:00Z');
-    const today = new Date();
-    const daysRemaining = Math.max(0, Math.ceil((examDate - today) / (1000 * 60 * 60 * 24)));
-    
-    const totalStudyHoursAvailable = daysRemaining * systemSettings.dailyStudyHours;
-    
-    const remainingTasks = Object.values(studyPlan.tasks || {}).flat().filter(t => !t.completed);
-    const remainingReviews = Object.values(studyPlan.reviews || {}).flat().filter(r => !r.completed);
-    
-    let requiredHours = 0;
-    remainingTasks.forEach(task => {
-        requiredHours += systemSettings.taskDurations[task.type] || 1;
-    });
-    requiredHours += remainingReviews.length * systemSettings.taskDurations.review;
+    // Pega todas as datas das tarefas principais (vídeos, pdfs, legislação)
+    const allTaskDates = Object.keys(studyPlan.tasks || {})
+        .filter(dateStr => studyPlan.tasks[dateStr].some(task => ['video', 'pdf', 'legis'].includes(task.type)));
 
-    const buffer = totalStudyHoursAvailable - requiredHours;
-    
-    bufferHoursEl.textContent = `${buffer.toFixed(1)} horas`;
-    bufferDetailsEl.textContent = `(${totalStudyHoursAvailable.toFixed(0)}h disponíveis vs ${requiredHours.toFixed(0)}h necessárias)`;
+    if (allTaskDates.length === 0) {
+        bufferHoursEl.textContent = "N/A";
+        bufferDetailsEl.textContent = "Nenhuma aula agendada.";
+        return;
+    }
 
-    if (buffer < 0) {
+    // Encontra a data mais recente entre as tarefas
+    const lastTaskDateStr = allTaskDates.reduce((a, b) => a > b ? a : b);
+    
+    // Cria objetos Date para cálculo, garantindo consistência de fuso horário (UTC)
+    const lastTaskDate = new Date(lastTaskDateStr + 'T00:00:00Z');
+    const examDate = new Date(systemSettings.examDate + 'T00:00:00Z');
+
+    // Calcula a diferença em milissegundos e depois em dias
+    const timeDiff = examDate.getTime() - lastTaskDate.getTime();
+    const daysDifference = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+    // Os dias de buffer são os dias entre a última aula e a prova, excluindo o dia da prova.
+    const bufferDays = Math.max(0, daysDifference - 1);
+    const bufferHours = bufferDays * 6; // 6 horas por dia livre, como solicitado
+
+    bufferHoursEl.textContent = `${bufferHours} horas`;
+    bufferDetailsEl.textContent = `(${bufferDays} dia(s) livres aproximadamente)`;
+
+    if (bufferHours <= 0) {
         bufferHoursEl.classList.remove('text-green-600');
-        bufferHoursEl.classList.add('text-red-600');
+        bufferHoursEl.classList.add('text-orange-600');
     } else {
-        bufferHoursEl.classList.remove('text-red-600');
+        bufferHoursEl.classList.remove('text-orange-600');
         bufferHoursEl.classList.add('text-green-600');
     }
 }
