@@ -539,7 +539,9 @@
 const allTasks = [
     { "date": "2025-08-18", "subject": "Língua Portuguesa", "lesson": "00", "topic": "Apresentação do Curso e Metodologia", "type": "video" },
     { "date": "2025-08-18", "subject": "Direito Constitucional", "lesson": "00", "topic": "Apresentação do Curso e Metodologia", "type": "video" },
-    // Adicione o restante de suas aulas aqui para o carregamento inicial
+    // ... (O restante dos seus dados de 'data.js' iria aqui)
+    // Exemplo de como as aulas de legislação devem ser
+    { "date": "2025-08-23", "subject": "Legislação Municipal", "lesson": "L1", "topic": "Lei Orgânica do Município de Uberlândia - Art. 1º ao 15º", "type": "legis" }
 ];
 
 
@@ -684,7 +686,14 @@ function closeModal(modalElement) {
 // =================== LÓGICA PRINCIPAL DA APLICAÇÃO ===================
 function initializeStudyPlan(tasks) {
     let plan = { tasks: {}, reviews: {}, history: [], dailyGoals: {}, deletedTasks: {} };
-    let combinedTasks = [...tasks]; 
+    
+    // CORREÇÃO: Altera a matéria das aulas de legislação
+    let combinedTasks = tasks.map(task => {
+        if (task.type === 'legis') {
+            return { ...task, subject: 'Legislação Municipal' };
+        }
+        return task;
+    });
 
     combinedTasks.forEach(task => {
         const id = generateUniqueId(task);
@@ -1295,9 +1304,10 @@ function startCountdown() {
         }
 
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const weeks = (days / 7).toFixed(1);
 
-        countdownEl.textContent = `${days} dias`;
+        countdownEl.textContent = `${days}d ${hours}h`;
         countdownWeeksEl.textContent = `Aproximadamente ${weeks} semanas`;
     };
     
@@ -1309,15 +1319,40 @@ function renderOverdueTasks() {
     document.getElementById('calendar-container').style.display = 'none';
     const todayStr = formatDateYMD(new Date());
     
-    const overdueTasks = Object.values(studyPlan.tasks || {}).flat()
-        .filter(task => !task.completed && task.date < todayStr)
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
-        
-    const overdueReviews = Object.values(studyPlan.reviews || {}).flat()
-        .filter(review => !review.completed && review.date < todayStr)
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
+    const allTasks = Object.values(studyPlan.tasks || {}).flat();
+    const allReviews = Object.values(studyPlan.reviews || {}).flat();
+    
+    const overdueTasks = allTasks.filter(task => !task.completed && task.date < todayStr);
+    const overdueReviews = allReviews.filter(review => !review.completed && review.date < todayStr);
+    const allOverdue = [...overdueTasks, ...overdueReviews];
 
-    let html = `
+    const totalOverdueCount = allOverdue.length;
+    const totalTaskCount = allTasks.length + allReviews.length;
+    const percentageOverdue = totalTaskCount > 0 ? ((totalOverdueCount / totalTaskCount) * 100).toFixed(1) : 0;
+    
+    let accumulatedHours = 0;
+    allOverdue.forEach(task => {
+        accumulatedHours += systemSettings.taskDurations[task.type] || (task.type.startsWith('review') ? systemSettings.taskDurations.review : 1);
+    });
+
+    let statsHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="p-4 bg-red-50 border border-red-200 rounded-lg text-center">
+                <p class="text-2xl font-bold text-red-600">${totalOverdueCount}</p>
+                <p class="text-sm text-red-800">Total de Aulas Atrasadas</p>
+            </div>
+            <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+                <p class="text-2xl font-bold text-yellow-600">${percentageOverdue}%</p>
+                <p class="text-sm text-yellow-800">do Total de Aulas</p>
+            </div>
+            <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                <p class="text-2xl font-bold text-blue-600">${accumulatedHours.toFixed(1)} horas</p>
+                <p class="text-sm text-blue-800">de Estudo Acumulado (aprox.)</p>
+            </div>
+        </div>
+    `;
+
+    let html = statsHTML + `
         <div class="mb-4 border-b">
             <button id="overdue-tab-tasks" class="tab-button active">Aulas Atrasadas (${overdueTasks.length})</button>
             <button id="overdue-tab-reviews" class="tab-button">Revisões Atrasadas (${overdueReviews.length})</button>
@@ -1326,7 +1361,7 @@ function renderOverdueTasks() {
 
     html += `<div id="overdue-content-tasks">`;
     if (overdueTasks.length > 0) {
-        html += overdueTasks.map(task => createTaskCard(task, true).outerHTML).join('');
+        html += overdueTasks.sort((a, b) => new Date(a.date) - new Date(b.date)).map(task => createTaskCard(task, true).outerHTML).join('');
     } else {
         html += `<p class="text-center text-gray-500 p-4">Nenhuma aula atrasada. Bom trabalho!</p>`;
     }
@@ -1334,7 +1369,7 @@ function renderOverdueTasks() {
 
     html += `<div id="overdue-content-reviews" class="hidden">`;
     if (overdueReviews.length > 0) {
-        html += overdueReviews.map(review => createTaskCard(review, true).outerHTML).join('');
+        html += overdueReviews.sort((a, b) => new Date(a.date) - new Date(b.date)).map(review => createTaskCard(review, true).outerHTML).join('');
     } else {
         html += `<p class="text-center text-gray-500 p-4">Nenhuma revisão atrasada. Continue assim!</p>`;
     }
@@ -1348,7 +1383,6 @@ function calculateAndRenderBuffer() {
     const bufferDetailsEl = document.getElementById('buffer-details');
     if (!bufferHoursEl || !bufferDetailsEl) return;
 
-    // Pega todas as datas das tarefas principais (vídeos, pdfs, legislação)
     const allTaskDates = Object.keys(studyPlan.tasks || {})
         .filter(dateStr => studyPlan.tasks[dateStr].some(task => ['video', 'pdf', 'legis'].includes(task.type)));
 
@@ -1358,20 +1392,16 @@ function calculateAndRenderBuffer() {
         return;
     }
 
-    // Encontra a data mais recente entre as tarefas
     const lastTaskDateStr = allTaskDates.reduce((a, b) => a > b ? a : b);
     
-    // Cria objetos Date para cálculo, garantindo consistência de fuso horário (UTC)
     const lastTaskDate = new Date(lastTaskDateStr + 'T00:00:00Z');
     const examDate = new Date(systemSettings.examDate + 'T00:00:00Z');
 
-    // Calcula a diferença em milissegundos e depois em dias
     const timeDiff = examDate.getTime() - lastTaskDate.getTime();
     const daysDifference = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
-    // Os dias de buffer são os dias entre a última aula e a prova, excluindo o dia da prova.
     const bufferDays = Math.max(0, daysDifference - 1);
-    const bufferHours = bufferDays * 6; // 6 horas por dia livre, como solicitado
+    const bufferHours = bufferDays * 6;
 
     bufferHoursEl.textContent = `${bufferHours} horas`;
     bufferDetailsEl.textContent = `(${bufferDays} dia(s) livres aproximadamente)`;
@@ -1762,6 +1792,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         closeModal(systemSettingsModal);
     });
+
+    // Event listeners para os botões de gerenciamento
+    document.getElementById('add-task-btn-modal').addEventListener('click', () => {
+        document.getElementById('modal-title').textContent = 'Incluir Nova Aula';
+        document.getElementById('add-task-form').reset();
+        document.getElementById('task-id').value = '';
+        document.getElementById('original-task-date-input').value = '';
+        document.getElementById('completed-checkbox-container').classList.add('hidden');
+        populateSubjectSelect(document.getElementById('task-subject'));
+        openModal(addTaskModal);
+    });
+
+    document.getElementById('shift-all-forward-btn').addEventListener('click', () => {
+        showConfirmation('Adiar todas as aulas não-concluídas em 1 dia?', () => shiftAllTasks(1));
+    });
+
+    document.getElementById('shift-all-backward-btn').addEventListener('click', () => {
+        showConfirmation('Adiantar todas as aulas não-concluídas em 1 dia?', () => shiftAllTasks(-1));
+    });
+
 });
 </script>
 
