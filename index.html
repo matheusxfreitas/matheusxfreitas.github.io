@@ -85,7 +85,9 @@
 
         .task-card { border-left: 4px solid #D6BFAA; transition: box-shadow 0.3s ease; position: relative; box-shadow: var(--card-shadow); border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);}
         .task-card.review-r1 { border-left-color: #6A9C89; }
+        .task-card.review-r2 { border-left-color: #5A9BD5; } /* Azul */
         .task-card.review-r3 { border-left-color: var(--accent-color); }
+        .task-card.review-r4 { border-left-color: #7030A0; } /* Roxo */
         .task-card.review-r5 { border-left-color: #A25B5B; }
         .task-card.overdue { border-left-color: #ef4444; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
@@ -121,7 +123,6 @@
 </head>
 <body class="bg-gray-50 text-gray-800">
 
-<!-- Mural de Senha -->
 <div id="password-wall" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 backdrop-blur-sm">
     <div class="w-full max-w-xs bg-white p-6 rounded-lg shadow-xl">
         <h2 class="text-xl font-bold text-center text-gray-800 mb-4">Acessar Painel</h2>
@@ -184,7 +185,6 @@
         </div>
     </header>
 
-    <!-- Cards de Informação -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div class="bg-white p-5 rounded-lg flex flex-col justify-center items-center text-center">
             <h3 class="font-semibold text-gray-500 mb-2">Contagem Regressiva</h3>
@@ -206,7 +206,6 @@
         </div>
     </div>
 
-    <!-- Conteúdo Principal -->
     <main class="bg-white p-4 sm:p-6 rounded-lg">
         <div class="flex flex-col lg:flex-row gap-8">
             <div class="w-full lg:w-2/3">
@@ -223,7 +222,9 @@
                     <div class="mt-8 p-4 rounded-lg bg-gray-50 border">
                         <h3 class="font-bold text-lg mb-2">Legenda de Revisões</h3>
                          <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-[#6A9C89]"></div><span class="text-gray-700">R1 (D+1) - Rápida</span></div>
+                         <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-[#5A9BD5]"></div><span class="text-gray-700">R2 (D+3) - Curto Prazo</span></div>
                          <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-[#D5A021]"></div><span class="text-gray-700">R3 (D+7) - Intermediária</span></div>
+                         <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-[#7030A0]"></div><span class="text-gray-700">R4 (D+15) - Média</span></div>
                          <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-[#A25B5B]"></div><span class="text-gray-700">R5 (D+30) - Longo Prazo</span></div>
                          <div class="flex items-center space-x-2 text-sm"><div class="w-4 h-4 rounded-full bg-red-500"></div><span class="text-gray-700">Tarefa Atrasada</span></div>
                     </div>
@@ -242,7 +243,6 @@
     </main>
 </div>
 
-<!-- Modal Adicionar/Editar Aula -->
 <div id="addTaskModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
     <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl">
         <div class="flex justify-between items-center p-4 border-b">
@@ -265,6 +265,7 @@
                     <div>
                         <label for="task-subject" class="block text-sm font-medium text-gray-700">Matéria</label>
                         <select id="task-subject" required class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3"></select>
+                        <input type="text" id="task-subject-new" placeholder="Digite o nome da nova matéria" class="hidden mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
                     </div>
                     <div>
                         <label for="task-lesson" class="block text-sm font-medium text-gray-700">Nº da Aula</label>
@@ -317,7 +318,6 @@
     </div>
 </div>
 
-<!-- Modal Visualizar Todas as Aulas -->
 <div id="allTasksModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col">
         <div class="flex justify-between items-center p-4 border-b flex-shrink-0">
@@ -483,46 +483,37 @@
 </div>
 
 <div id="systemSettingsModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[70]">
-    <div class="bg-white rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col">
         <div class="flex justify-between items-center p-4 border-b">
             <h3 class="text-xl font-bold">Ajustes do Sistema</h3>
             <button class="close-modal text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
         </div>
-        <div class="p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-                <div class="mb-6">
-                    <h4 class="text-lg font-semibold mb-3 border-b pb-2">Geral</h4>
-                    <div class="space-y-4">
-                        <div>
-                            <label for="exam-date-setting" class="block text-sm font-medium text-gray-700">Data da Prova</label>
-                            <input type="date" id="exam-date-setting" class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
-                        </div>
-                        <div>
-                            <label for="review-count-setting" class="block text-sm font-medium text-gray-700">Revisões Automáticas por Aula</label>
-                            <select id="review-count-setting" class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
-                                <option value="1">1 Revisão (R1)</option>
-                                <option value="3">3 Revisões (R1, R3)</option>
-                                <option value="5">5 Revisões (R1, R3, R5)</option>
-                            </select>
-                        </div>
+        <div class="p-6 overflow-y-auto">
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold mb-3 border-b pb-2">Geral</h4>
+                <div class="space-y-4">
+                    <div>
+                        <label for="exam-date-setting" class="block text-sm font-medium text-gray-700">Data da Prova</label>
+                        <input type="date" id="exam-date-setting" class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
+                    </div>
+                    <div>
+                        <label for="review-count-setting" class="block text-sm font-medium text-gray-700">Revisões Automáticas por Aula</label>
+                        <select id="review-count-setting" class="mt-1 block w-full border rounded-md shadow-sm py-2 px-3">
+                            <option value="1">1 Revisão (R1)</option>
+                            <option value="3">3 Revisões (R1, R3, R5)</option>
+                            <option value="5">5 Revisões (R1 a R5)</option>
+                        </select>
                     </div>
                 </div>
-                <div class="mb-6">
-                    <h4 class="text-lg font-semibold mb-3 border-b pb-2">Nomes dos Blocos de Estudo</h4>
-                    <div id="block-names-container" class="space-y-3"></div>
-                </div>
             </div>
-            <div>
-                 <div class="mb-6">
-                    <h4 class="text-lg font-semibold mb-3 border-b pb-2">Matérias no Progresso Geral</h4>
-                    <p class="text-sm text-gray-600 mb-3">Desmarque para ignorar nos cálculos.</p>
-                    <div id="subject-progress-toggle-container" class="space-y-2 max-h-40 overflow-y-auto border rounded-lg p-3 bg-gray-50"></div>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold mb-3 border-b pb-2">Matérias na Barra de Progresso</h4>
-                    <p class="text-sm text-gray-600 mb-3">Escolha quais matérias exibir na página inicial.</p>
-                    <div id="subject-display-toggle-container" class="space-y-2 max-h-40 overflow-y-auto border rounded-lg p-3 bg-gray-50"></div>
-                </div>
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold mb-3 border-b pb-2">Nomes dos Blocos de Estudo</h4>
+                <div id="block-names-container" class="space-y-3"></div>
+            </div>
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold mb-3 border-b pb-2">Matérias no Progresso Geral</h4>
+                <p class="text-sm text-gray-600 mb-3">Desmarque as matérias que você deseja ignorar nos cálculos de progresso e na exibição das barras.</p>
+                <div id="subject-progress-toggle-container" class="space-y-2 max-h-60 overflow-y-auto border rounded-lg p-3 bg-gray-50"></div>
             </div>
         </div>
         <div class="flex justify-end p-4 border-t bg-gray-50">
@@ -565,7 +556,7 @@ viewDate.setHours(0, 0, 0, 0);
 let studyPlan = {};
 let systemSettings = {
     examDate: '2025-10-26',
-    reviewCount: 5,
+    reviewCount: 3,
     subjects: {},
     blocks: [
         { id: 'video', title: '☕ Bloco 1: Conteúdo Principal (Vídeo)', color: 'border-amber-500', types: ['video'] },
@@ -753,8 +744,7 @@ const loadState = async () => {
     subjects.forEach(subject => {
         if (!systemSettings.subjects[subject]) {
             systemSettings.subjects[subject] = { 
-                countsTowardsProgress: true,
-                showInProgressBar: true 
+                countsTowardsProgress: true
             };
         }
     });
@@ -819,10 +809,10 @@ function scheduleReviews(completedTask) {
     const completionDate = new Date(completedTask.date + 'T03:00:00Z');
     const reviewMap = {
         1: { 'review-r1': 1 },
-        3: { 'review-r1': 1, 'review-r3': 7 },
-        5: { 'review-r1': 1, 'review-r3': 7, 'review-r5': 30 }
+        3: { 'review-r1': 1, 'review-r3': 7, 'review-r5': 30 },
+        5: { 'review-r1': 1, 'review-r2': 3, 'review-r3': 7, 'review-r4': 15, 'review-r5': 30 }
     };
-    const reviewsToSchedule = reviewMap[systemSettings.reviewCount] || reviewMap[5];
+    const reviewsToSchedule = reviewMap[systemSettings.reviewCount] || reviewMap[3];
 
     for (const [reviewType, daysToAdd] of Object.entries(reviewsToSchedule)) {
         const reviewDate = addDays(completionDate, daysToAdd);
@@ -836,7 +826,7 @@ function scheduleReviews(completedTask) {
 }
 
 function unscheduleReviews(deselectedTask) {
-    const reviewDays = { 'review-r1': 1, 'review-r3': 7, 'review-r5': 30 };
+    const reviewDays = { 'review-r1': 1, 'review-r2': 3, 'review-r3': 7, 'review-r4': 15, 'review-r5': 30 };
     for (const [reviewType, daysToAdd] of Object.entries(reviewDays)) {
         const reviewDate = addDays(new Date(deselectedTask.date + 'T03:00:00Z'), daysToAdd);
         const reviewDateStr = formatDateYMD(reviewDate);
@@ -955,11 +945,10 @@ const renderSubjectProgress = () => {
     const container = document.getElementById('subject-progress-bars');
     if (!container) return;
     
-    const allStudyTasks = Object.values(studyPlan.tasks || {}).flat()
-        .filter(t => systemSettings.subjects[t.subject]?.countsTowardsProgress);
+    const allStudyTasks = Object.values(studyPlan.tasks || {}).flat();
     
     const subjectsToShow = [...new Set(allStudyTasks.map(task => task.subject))]
-        .filter(subject => systemSettings.subjects[subject]?.showInProgressBar);
+        .filter(subject => systemSettings.subjects[subject]?.countsTowardsProgress);
         
     container.innerHTML = subjectsToShow.sort().map(subject => {
         const tasksForSubject = allStudyTasks.filter(task => task.subject === subject);
@@ -1250,6 +1239,11 @@ function openEditModalFromList(taskId, taskDate) {
         completedContainer.classList.remove('hidden');
         completedContainer.classList.add('flex');
         completedCheckbox.checked = task.completed;
+        
+        // Reset subject input field
+        document.getElementById('task-subject').classList.remove('hidden');
+        document.getElementById('task-subject-new').classList.add('hidden');
+        document.getElementById('task-subject-new').value = '';
 
         openModal(addTaskModal);
     }
@@ -1317,29 +1311,33 @@ function startCountdown() {
 
 function renderOverdueTasks() {
     document.getElementById('calendar-container').style.display = 'none';
-    const todayStr = formatDateYMD(new Date());
     
-    const allTasks = Object.values(studyPlan.tasks || {}).flat();
-    const allReviews = Object.values(studyPlan.reviews || {}).flat();
-    
-    const overdueTasks = allTasks.filter(task => !task.completed && task.date < todayStr);
-    const overdueReviews = allReviews.filter(review => !review.completed && review.date < todayStr);
-    const allOverdue = [...overdueTasks, ...overdueReviews];
+    const updateView = () => {
+        const includeReviews = document.getElementById('overdue-include-reviews').checked;
+        const todayStr = formatDateYMD(new Date());
 
-    const totalOverdueCount = allOverdue.length;
-    const totalTaskCount = allTasks.length + allReviews.length;
-    const percentageOverdue = totalTaskCount > 0 ? ((totalOverdueCount / totalTaskCount) * 100).toFixed(1) : 0;
-    
-    let accumulatedHours = 0;
-    allOverdue.forEach(task => {
-        accumulatedHours += systemSettings.taskDurations[task.type] || (task.type.startsWith('review') ? systemSettings.taskDurations.review : 1);
-    });
+        const allTasks = Object.values(studyPlan.tasks || {}).flat();
+        const allReviews = Object.values(studyPlan.reviews || {}).flat();
 
-    let statsHTML = `
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        const overdueTasks = allTasks.filter(task => !task.completed && task.date < todayStr);
+        const overdueReviews = allReviews.filter(review => !review.completed && review.date < todayStr);
+
+        const itemsForStats = includeReviews ? [...overdueTasks, ...overdueReviews] : [...overdueTasks];
+        const totalItemsInPlan = includeReviews ? (allTasks.length + allReviews.length) : allTasks.length;
+
+        const totalOverdueCount = itemsForStats.length;
+        const percentageOverdue = totalItemsInPlan > 0 ? ((totalOverdueCount / totalItemsInPlan) * 100).toFixed(1) : 0;
+        
+        let accumulatedHours = 0;
+        itemsForStats.forEach(task => {
+            const durationKey = task.type.startsWith('review') ? 'review' : task.type;
+            accumulatedHours += systemSettings.taskDurations[durationKey] || 1;
+        });
+
+        document.getElementById('overdue-stats-cards').innerHTML = `
             <div class="p-4 bg-red-50 border border-red-200 rounded-lg text-center">
                 <p class="text-2xl font-bold text-red-600">${totalOverdueCount}</p>
-                <p class="text-sm text-red-800">Total de Aulas Atrasadas</p>
+                <p class="text-sm text-red-800">Total de Itens Atrasados</p>
             </div>
             <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
                 <p class="text-2xl font-bold text-yellow-600">${percentageOverdue}%</p>
@@ -1349,33 +1347,39 @@ function renderOverdueTasks() {
                 <p class="text-2xl font-bold text-blue-600">${accumulatedHours.toFixed(1)} horas</p>
                 <p class="text-sm text-blue-800">de Estudo Acumulado (aprox.)</p>
             </div>
-        </div>
-    `;
+        `;
 
-    let html = statsHTML + `
+        const tasksContentDiv = document.getElementById('overdue-content-tasks');
+        if (overdueTasks.length > 0) {
+            tasksContentDiv.innerHTML = overdueTasks.sort((a, b) => new Date(a.date) - new Date(b.date)).map(task => createTaskCard(task, true).outerHTML).join('');
+        } else {
+            tasksContentDiv.innerHTML = `<p class="text-center text-gray-500 p-4">Nenhuma aula atrasada. Bom trabalho!</p>`;
+        }
+
+        const reviewsContentDiv = document.getElementById('overdue-content-reviews');
+        if (overdueReviews.length > 0) {
+            reviewsContentDiv.innerHTML = overdueReviews.sort((a, b) => new Date(a.date) - new Date(b.date)).map(review => createTaskCard(review, true).outerHTML).join('');
+        } else {
+            reviewsContentDiv.innerHTML = `<p class="text-center text-gray-500 p-4">Nenhuma revisão atrasada. Continue assim!</p>`;
+        }
+    };
+
+    planContent.innerHTML = `
+        <div id="overdue-stats-cards" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4"></div>
+        <div class="flex items-center justify-center mb-4">
+            <input type="checkbox" id="overdue-include-reviews" class="h-4 w-4 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" checked>
+            <label for="overdue-include-reviews" class="ml-2 text-sm font-medium">Incluir revisões nos cálculos de estatísticas</label>
+        </div>
         <div class="mb-4 border-b">
-            <button id="overdue-tab-tasks" class="tab-button active">Aulas Atrasadas (${overdueTasks.length})</button>
-            <button id="overdue-tab-reviews" class="tab-button">Revisões Atrasadas (${overdueReviews.length})</button>
+            <button id="overdue-tab-tasks" class="tab-button active">Aulas Atrasadas</button>
+            <button id="overdue-tab-reviews" class="tab-button">Revisões Atrasadas</button>
         </div>
+        <div id="overdue-content-tasks"></div>
+        <div id="overdue-content-reviews" class="hidden"></div>
     `;
 
-    html += `<div id="overdue-content-tasks">`;
-    if (overdueTasks.length > 0) {
-        html += overdueTasks.sort((a, b) => new Date(a.date) - new Date(b.date)).map(task => createTaskCard(task, true).outerHTML).join('');
-    } else {
-        html += `<p class="text-center text-gray-500 p-4">Nenhuma aula atrasada. Bom trabalho!</p>`;
-    }
-    html += `</div>`;
-
-    html += `<div id="overdue-content-reviews" class="hidden">`;
-    if (overdueReviews.length > 0) {
-        html += overdueReviews.sort((a, b) => new Date(a.date) - new Date(b.date)).map(review => createTaskCard(review, true).outerHTML).join('');
-    } else {
-        html += `<p class="text-center text-gray-500 p-4">Nenhuma revisão atrasada. Continue assim!</p>`;
-    }
-    html += `</div>`;
-
-    planContent.innerHTML = html;
+    document.getElementById('overdue-include-reviews').addEventListener('change', updateView);
+    updateView();
 }
 
 function calculateAndRenderBuffer() {
@@ -1618,7 +1622,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const id = document.getElementById('task-id').value;
         const originalDateFromInput = document.getElementById('original-task-date-input').value;
         const date = document.getElementById('task-date').value;
-        const subject = document.getElementById('task-subject').value;
+        
+        let subject = document.getElementById('task-subject').value;
+        if (subject === 'new') {
+            subject = document.getElementById('task-subject-new').value.trim();
+            if (!subject) {
+                alert('Por favor, insira um nome para a nova matéria.');
+                return;
+            }
+        }
+
         const lesson = document.getElementById('task-lesson').value;
         const topic = document.getElementById('task-topic').value;
         const type = document.getElementById('task-type').value;
@@ -1689,6 +1702,19 @@ document.addEventListener('DOMContentLoaded', () => {
         closeModal(addTaskModal);
     });
 
+    document.getElementById('task-subject').addEventListener('change', (e) => {
+        const subjectSelect = document.getElementById('task-subject');
+        const subjectInput = document.getElementById('task-subject-new');
+        if (e.target.value === 'new') {
+            subjectSelect.classList.add('hidden');
+            subjectInput.classList.remove('hidden');
+            subjectInput.focus();
+        } else {
+            subjectSelect.classList.remove('hidden');
+            subjectInput.classList.add('hidden');
+        }
+    });
+
     const tabs = ['active', 'history', 'trash'];
     tabs.forEach(tabId => {
         document.getElementById(`tab-${tabId}`).addEventListener('click', () => {
@@ -1736,19 +1762,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const allSubjects = [...new Set(Object.values(studyPlan.tasks || {}).flat().map(t => t.subject))].sort();
         const progressContainer = document.getElementById('subject-progress-toggle-container');
-        const displayContainer = document.getElementById('subject-display-toggle-container');
         const blocksContainer = document.getElementById('block-names-container');
         
         progressContainer.innerHTML = '';
-        displayContainer.innerHTML = '';
         blocksContainer.innerHTML = '';
 
         allSubjects.forEach(subject => {
             const progChecked = systemSettings.subjects[subject]?.countsTowardsProgress ?? true;
-            const dispChecked = systemSettings.subjects[subject]?.showInProgressBar ?? true;
-
             progressContainer.innerHTML += `<div class="flex items-center"><input id="prog-toggle-${subject}" type="checkbox" ${progChecked ? 'checked' : ''} data-subject="${subject}" class="h-4 w-4"><label for="prog-toggle-${subject}" class="ml-2">${subject}</label></div>`;
-            displayContainer.innerHTML += `<div class="flex items-center"><input id="disp-toggle-${subject}" type="checkbox" ${dispChecked ? 'checked' : ''} data-subject="${subject}" class="h-4 w-4"><label for="disp-toggle-${subject}" class="ml-2">${subject}</label></div>`;
         });
 
         systemSettings.blocks.forEach(block => {
@@ -1756,7 +1777,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         examDateInput.value = systemSettings.examDate || '2025-10-26';
-        document.getElementById('review-count-setting').value = systemSettings.reviewCount || 5;
+        document.getElementById('review-count-setting').value = systemSettings.reviewCount || 3;
 
         openModal(systemSettingsModal);
         settingsMenu.classList.add('hidden');
@@ -1768,11 +1789,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(!systemSettings.subjects[subject]) systemSettings.subjects[subject] = {};
             systemSettings.subjects[subject].countsTowardsProgress = cb.checked;
         });
-        document.querySelectorAll('#subject-display-toggle-container input').forEach(cb => {
-            const subject = cb.dataset.subject;
-            if(!systemSettings.subjects[subject]) systemSettings.subjects[subject] = {};
-            systemSettings.subjects[subject].showInProgressBar = cb.checked;
-        });
+
         document.querySelectorAll('#block-names-container input').forEach(input => {
             const blockId = input.dataset.blockId;
             const block = systemSettings.blocks.find(b => b.id === blockId);
@@ -1793,13 +1810,17 @@ document.addEventListener('DOMContentLoaded', () => {
         closeModal(systemSettingsModal);
     });
 
-    // Event listeners para os botões de gerenciamento
     document.getElementById('add-task-btn-modal').addEventListener('click', () => {
         document.getElementById('modal-title').textContent = 'Incluir Nova Aula';
         document.getElementById('add-task-form').reset();
         document.getElementById('task-id').value = '';
         document.getElementById('original-task-date-input').value = '';
         document.getElementById('completed-checkbox-container').classList.add('hidden');
+        
+        document.getElementById('task-subject').classList.remove('hidden');
+        document.getElementById('task-subject-new').classList.add('hidden');
+        document.getElementById('task-subject-new').value = '';
+
         populateSubjectSelect(document.getElementById('task-subject'));
         openModal(addTaskModal);
     });
