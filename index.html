@@ -549,7 +549,9 @@
     const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // js/main.js
+    // =================== CÓDIGO PRINCIPAL ===================
+    document.addEventListener('DOMContentLoaded', async () => {
+// js/main.js
 // Este arquivo contém toda a lógica da aplicação.
 
 // =================== CONFIGURAÇÃO E VARIÁVEIS GLOBAIS ===================
@@ -1647,7 +1649,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         closeModal(systemSettingsModal);
     });
 });
-
+    });
 </script>
 
 </body>
