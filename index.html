@@ -483,7 +483,7 @@
 </div>
 
 <div id="systemSettingsModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[70]">
-    <div class="bg-white rounded-lg shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         <div class="flex justify-between items-center p-4 border-b">
             <h3 class="text-xl font-bold">Ajustes do Sistema</h3>
             <button class="close-modal text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
@@ -507,8 +507,8 @@
                 </div>
             </div>
             <div class="mb-6">
-                <h4 class="text-lg font-semibold mb-3 border-b pb-2">Nomes dos Blocos de Estudo</h4>
-                <div id="block-names-container" class="space-y-3"></div>
+                <h4 class="text-lg font-semibold mb-3 border-b pb-2">Configuração dos Blocos de Estudo</h4>
+                <div id="blocks-config-container" class="space-y-6"></div>
             </div>
             <div class="mb-6">
                 <h4 class="text-lg font-semibold mb-3 border-b pb-2">Matérias no Progresso Geral</h4>
@@ -531,7 +531,6 @@ const allTasks = [
     { "date": "2025-08-18", "subject": "Língua Portuguesa", "lesson": "00", "topic": "Apresentação do Curso e Metodologia", "type": "video" },
     { "date": "2025-08-18", "subject": "Direito Constitucional", "lesson": "00", "topic": "Apresentação do Curso e Metodologia", "type": "video" },
     // ... (O restante dos seus dados de 'data.js' iria aqui)
-    // Exemplo de como as aulas de legislação devem ser
     { "date": "2025-08-23", "subject": "Legislação Municipal", "lesson": "L1", "topic": "Lei Orgânica do Município de Uberlândia - Art. 1º ao 15º", "type": "legis" }
 ];
 
@@ -558,10 +557,29 @@ let systemSettings = {
     examDate: '2025-10-26',
     reviewCount: 3,
     subjects: {},
+    // NOVA LÓGICA DE BLOCOS - Agora é mais configurável
     blocks: [
-        { id: 'video', title: '☕ Bloco 1: Conteúdo Principal (Vídeo)', color: 'border-amber-500', types: ['video'] },
-        { id: 'pdf', title: '📖 Bloco 2: Leitura e Lógica (PDF)', color: 'border-sky-500', types: ['pdf'] },
-        { id: 'active', title: '🎯 Bloco 3: Estudo Ativo e Fixação', color: 'border-emerald-500', types: ['legis', 'goal'] }
+        { 
+            id: 'bloco1', 
+            title: '☕ Bloco 1 (Manhã)', 
+            color: 'border-amber-500', 
+            associatedTypes: ['video'],
+            targetDuration: 3 
+        },
+        { 
+            id: 'bloco2', 
+            title: '📖 Bloco 2 (Tarde)', 
+            color: 'border-sky-500', 
+            associatedTypes: ['pdf', 'legis'],
+            targetDuration: 2.5
+        },
+        { 
+            id: 'bloco3', 
+            title: '🎯 Bloco 3 (Noite)', 
+            color: 'border-emerald-500', 
+            associatedTypes: [],
+            targetDuration: 1.5 
+        }
     ],
     taskDurations: {
         video: 0.75, 
@@ -678,7 +696,6 @@ function closeModal(modalElement) {
 function initializeStudyPlan(tasks) {
     let plan = { tasks: {}, reviews: {}, history: [], dailyGoals: {}, deletedTasks: {} };
     
-    // CORREÇÃO: Altera a matéria das aulas de legislação
     let combinedTasks = tasks.map(task => {
         if (task.type === 'legis') {
             return { ...task, subject: 'Legislação Municipal' };
@@ -736,7 +753,16 @@ const loadState = async () => {
 
     const settingsDoc = await db.collection("progresso").doc("configuracoes").get();
     if (settingsDoc.exists) {
-        systemSettings = {...systemSettings, ...settingsDoc.data()};
+        // Usa deep merge para garantir que novas propriedades na configuração padrão sejam mantidas se não existirem no firebase
+        const storedSettings = settingsDoc.data();
+        systemSettings = {
+            ...systemSettings,
+            ...storedSettings,
+            blocks: systemSettings.blocks.map(defaultBlock => {
+                const storedBlock = storedSettings.blocks?.find(b => b.id === defaultBlock.id);
+                return storedBlock ? {...defaultBlock, ...storedBlock} : defaultBlock;
+            })
+        };
     }
     
     const allTasksList = Object.values(studyPlan.tasks || {}).flat();
@@ -896,21 +922,15 @@ const renderPlan = (date) => {
         return;
     }
     
+    // NOVA LÓGICA DE RENDERIZAÇÃO DE BLOCOS
     systemSettings.blocks.forEach(block => {
-        const tasksForBlock = tasksForDay.filter(t => block.types.includes(t.type));
+        const tasksForBlock = tasksForDay.filter(t => block.associatedTypes.includes(t.type));
         if (tasksForBlock.length > 0) {
             let sectionHTML = `<h3 class="text-lg font-bold mt-4 border-b-2 ${block.color} pb-2">${block.title}</h3>`;
             tasksForBlock.forEach(task => { sectionHTML += createTaskCard(task, !task.completed && task.date < todayStr).outerHTML; });
             planContent.innerHTML += sectionHTML;
         }
     });
-
-    const activeBlock = systemSettings.blocks.find(b => b.id === 'active');
-    if (activeBlock && activeBlock.types.includes('goal')) {
-        const dailyGoal = studyPlan.dailyGoals[dateStr] || { exercisesCompleted: false };
-        const goalCard = `<div class="task-card p-4 rounded-lg bg-white border-l-4 border-gray-400"><div class="flex items-start space-x-4"><div class="flex-shrink-0 pt-1"><input type="checkbox" id="exercises-checkbox-${dateStr}" data-date="${dateStr}" class="daily-goal-checkbox h-5 w-5 rounded border-gray-300 text-[#D5A021] focus:ring-[#D5A021]" ${dailyGoal.exercisesCompleted ? 'checked' : ''}></div><div class="flex-1"><label for="exercises-checkbox-${dateStr}" class="cursor-pointer"><p class="font-semibold text-gray-800">🎯 Meta de Exercícios do Dia</p><p class="text-sm text-gray-600">Focar em 2 matérias conforme o plano de rotação semanal.</p></label></div></div></div>`;
-        planContent.querySelector(`h3.${activeBlock.color}`)?.insertAdjacentHTML('afterend', goalCard);
-    }
 
     if (reviewsForDay.length > 0) {
         let reviewHTML = `<h3 class="text-lg font-bold mt-6 border-b-2 border-red-400 pb-2">🔁 Revisões Agendadas</h3>`;
@@ -1240,7 +1260,6 @@ function openEditModalFromList(taskId, taskDate) {
         completedContainer.classList.add('flex');
         completedCheckbox.checked = task.completed;
         
-        // Reset subject input field
         document.getElementById('task-subject').classList.remove('hidden');
         document.getElementById('task-subject-new').classList.add('hidden');
         document.getElementById('task-subject-new').value = '';
@@ -1255,28 +1274,45 @@ function populateSubjectSelect(selectElement) {
     selectElement.innerHTML = subjects.map(s => `<option value="${s}">${s}</option>`).join('') + '<option value="new">Adicionar nova...</option>';
 }
 
+// FUNÇÃO CORRIGIDA - Agora funciona corretamente
 function shiftAllTasks(days) {
+    const tasksToMove = [];
     const newTasks = {};
-    const allTasksList = Object.values(studyPlan.tasks).flat();
-    
-    allTasksList.forEach(task => {
-        if (!task.completed) {
-            const currentDate = new Date(task.date + 'T03:00:00Z');
-            const newDate = addDays(currentDate, days);
-            const newDateStr = formatDateYMD(newDate);
-            task.date = newDateStr;
-            task.lastModified = new Date().toISOString();
+
+    // 1. Itera sobre as tarefas, separando as concluídas das não concluídas
+    for (const dateStr in studyPlan.tasks) {
+        const completedTasks = studyPlan.tasks[dateStr].filter(t => t.completed);
+        const uncompletedTasks = studyPlan.tasks[dateStr].filter(t => !t.completed);
+
+        if (completedTasks.length > 0) {
+            newTasks[dateStr] = completedTasks;
         }
-        const dateStr = task.date;
-        if (!newTasks[dateStr]) newTasks[dateStr] = [];
-        newTasks[dateStr].push(task);
+        tasksToMove.push(...uncompletedTasks);
+    }
+
+    // 2. Calcula as novas datas para as tarefas não concluídas e as adiciona ao novo objeto
+    tasksToMove.forEach(task => {
+        const currentDate = new Date(task.date + 'T03:00:00Z');
+        const newDate = addDays(currentDate, days);
+        const newDateStr = formatDateYMD(newDate);
+        
+        task.date = newDateStr;
+        task.lastModified = new Date().toISOString();
+
+        if (!newTasks[newDateStr]) {
+            newTasks[newDateStr] = [];
+        }
+        newTasks[newDateStr].push(task);
     });
+
     studyPlan.tasks = newTasks;
     saveState();
     renderAllTasksTable();
     updateProgress();
     renderPlan(viewDate);
+    alert('Tarefas não concluídas foram remanejadas com sucesso!');
 }
+
 
 // =================== FUNÇÕES CORRIGIDAS/ADICIONADAS ===================
 
@@ -1405,7 +1441,7 @@ function calculateAndRenderBuffer() {
     const daysDifference = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
     const bufferDays = Math.max(0, daysDifference - 1);
-    const bufferHours = bufferDays * 6;
+    const bufferHours = bufferDays * (systemSettings.dailyStudyHours || 6);
 
     bufferHoursEl.textContent = `${bufferHours} horas`;
     bufferDetailsEl.textContent = `(${bufferDays} dia(s) livres aproximadamente)`;
@@ -1699,6 +1735,18 @@ document.addEventListener('DOMContentLoaded', () => {
         saveState();
         renderPlan(viewDate);
         updateProgress();
+
+        // ADICIONADA CHAMADA DE ATUALIZAÇÃO - Corrige o bug da tabela não atualizar
+        if (!allTasksModal.classList.contains('hidden')) {
+            renderAllTasksTable();
+            renderAllTasksStatistics();
+            const subjects = [...new Set(Object.values(studyPlan.tasks || {}).flat().map(task => task.subject))].sort();
+            const filterSelect = document.getElementById('filter-subject');
+            const currentFilterValue = filterSelect.value;
+            filterSelect.innerHTML = '<option value="">Todas</option>' + subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+            filterSelect.value = currentFilterValue;
+        }
+
         closeModal(addTaskModal);
     });
 
@@ -1762,19 +1810,48 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const allSubjects = [...new Set(Object.values(studyPlan.tasks || {}).flat().map(t => t.subject))].sort();
         const progressContainer = document.getElementById('subject-progress-toggle-container');
-        const blocksContainer = document.getElementById('block-names-container');
+        const blocksContainer = document.getElementById('blocks-config-container');
         
         progressContainer.innerHTML = '';
-        blocksContainer.innerHTML = '';
-
         allSubjects.forEach(subject => {
             const progChecked = systemSettings.subjects[subject]?.countsTowardsProgress ?? true;
             progressContainer.innerHTML += `<div class="flex items-center"><input id="prog-toggle-${subject}" type="checkbox" ${progChecked ? 'checked' : ''} data-subject="${subject}" class="h-4 w-4"><label for="prog-toggle-${subject}" class="ml-2">${subject}</label></div>`;
         });
+        
+        blocksContainer.innerHTML = systemSettings.blocks.map(block => {
+            const taskTypes = [
+                { value: 'video', label: 'Videoaula' },
+                { value: 'pdf', label: 'PDF' },
+                { value: 'legis', label: 'Legislação' }
+            ];
+            const checkboxesHTML = taskTypes.map(type => `
+                <div class="flex items-center">
+                    <input type="checkbox" id="block-${block.id}-type-${type.value}" data-block-id="${block.id}" data-type-value="${type.value}" class="h-4 w-4 block-type-checkbox" ${block.associatedTypes.includes(type.value) ? 'checked' : ''}>
+                    <label for="block-${block.id}-type-${type.value}" class="ml-2 text-sm">${type.label}</label>
+                </div>
+            `).join('');
 
-        systemSettings.blocks.forEach(block => {
-            blocksContainer.innerHTML += `<div class="flex items-center gap-2"><label for="block-name-${block.id}" class="text-sm">${block.id.toUpperCase()}:</label><input type="text" id="block-name-${block.id}" data-block-id="${block.id}" value="${block.title}" class="w-full border rounded-md p-1 text-sm"></div>`;
-        });
+            return `
+                <div class="p-4 border rounded-lg space-y-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="block-name-${block.id}" class="text-sm font-medium">Nome do Bloco</label>
+                            <input type="text" id="block-name-${block.id}" data-block-id="${block.id}" value="${block.title}" class="w-full border rounded-md p-1 mt-1 text-sm">
+                        </div>
+                        <div>
+                            <label for="block-duration-${block.id}" class="text-sm font-medium">Duração Estimada (horas)</label>
+                            <input type="number" step="0.5" id="block-duration-${block.id}" data-block-id="${block.id}" value="${block.targetDuration}" class="w-full border rounded-md p-1 mt-1 text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium mb-2">Tipos de Tarefa Associados</p>
+                        <div class="flex items-center gap-x-4 gap-y-2 flex-wrap">
+                            ${checkboxesHTML}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
 
         examDateInput.value = systemSettings.examDate || '2025-10-26';
         document.getElementById('review-count-setting').value = systemSettings.reviewCount || 3;
@@ -1790,12 +1867,17 @@ document.addEventListener('DOMContentLoaded', () => {
             systemSettings.subjects[subject].countsTowardsProgress = cb.checked;
         });
 
-        document.querySelectorAll('#block-names-container input').forEach(input => {
-            const blockId = input.dataset.blockId;
-            const block = systemSettings.blocks.find(b => b.id === blockId);
-            if (block) {
-                block.title = input.value;
-            }
+        systemSettings.blocks.forEach(block => {
+            block.title = document.getElementById(`block-name-${block.id}`).value;
+            block.targetDuration = parseFloat(document.getElementById(`block-duration-${block.id}`).value) || 0;
+            
+            const associatedTypes = [];
+            document.querySelectorAll(`.block-type-checkbox[data-block-id="${block.id}"]`).forEach(checkbox => {
+                if (checkbox.checked) {
+                    associatedTypes.push(checkbox.dataset.typeValue);
+                }
+            });
+            block.associatedTypes = associatedTypes;
         });
 
         systemSettings.examDate = examDateInput.value;
