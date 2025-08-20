@@ -1,4 +1,3 @@
-/* Este arquivo contém todos os estilos que antes estavam no seu index.html */
 :root {
     --bg-color: #FDFBF8;
     --card-bg-color: #FFFFFF;
@@ -20,6 +19,8 @@ html.theme-dark {
     --border-color: #374151;
     --control-button-bg: #374151;
     --control-button-border: #4b5563;
+    /* Cor de destaque otimizada para o tema escuro */
+    --accent-color: #b88d1c;
 }
 html.theme-sepia {
     --bg-color: #f1e7d0;
@@ -70,15 +71,19 @@ h1, h2, h3, #modal-title { color: var(--header-text-color); }
 .calendar-day.has-task::after { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background-color: var(--accent-color); position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); }
 .calendar-day.selected { background-color: var(--accent-color); color: white; font-weight: bold; }
 
-.task-card { border-left: 4px solid #D6BFAA; transition: box-shadow 0.3s ease; position: relative; box-shadow: var(--card-shadow); border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);}
+.task-card { border-left: 4px solid #D6BFAA; transition: all 0.2s ease; position: relative; box-shadow: var(--card-shadow); border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); cursor: grab; }
 .task-card.review-r1 { border-left-color: #6A9C89; }
+.task-card.review-r2 { border-left-color: #5A9BD5; } /* Azul */
 .task-card.review-r3 { border-left-color: var(--accent-color); }
+.task-card.review-r4 { border-left-color: #7030A0; } /* Roxo */
 .task-card.review-r5 { border-left-color: #A25B5B; }
 .task-card.overdue { border-left-color: #ef4444; animation: pulse 2s infinite; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
 .task-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
 .task-card.legis { border-left-color: #38bdf8; }
-.task-card.clickable { cursor: pointer; }
+.task-card:active { cursor: grabbing; opacity: 0.8; transform: scale(1.02); }
+
+.block-container.drag-over .block-tasks { border: 2px dashed var(--accent-color); background-color: rgba(213, 160, 33, 0.05); border-radius: 8px; }
 
 .task-checkbox:checked + label { text-decoration: line-through; color: #9A9A9A; }
 .chart-container { position: relative; width: 100%; max-width: 250px; margin-left: auto; margin-right: auto; height: 250px; }
@@ -91,6 +96,7 @@ body.modal-open { overflow: hidden; }
 
 .action-btn { background-color: #f0f0f0; border-radius: 9999px; padding: 0.35rem; transition: background-color 0.2s ease; cursor: pointer; }
 .action-btn:hover { background-color: #e0e0e0; }
+.action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .action-btn svg { width: 1rem; height: 1rem; color: #555; }
 
 .tab-button { padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; color: var(--muted-text-color); }
